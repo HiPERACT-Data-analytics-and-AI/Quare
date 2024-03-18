@@ -1,5 +1,5 @@
 # Quare
-QUality Analyzer of application Efficiency
+QUality AnalyzeR of application Efficiency
 
 In Latin, "quare" means therefore, because of this, why, in connection with this.
 
