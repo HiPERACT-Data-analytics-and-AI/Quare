@@ -5,9 +5,6 @@ from pathlib import Path
 def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
     file_counter: int = 0
     for path in raw_data_path.glob("**/prof.AMD.*.csv"):
-        # print(
-        #     "New path: ", Path.cwd().as_posix()[:-9] + "/csvized" + path.as_posix()[2:]
-        # )
         print("New path: ", (csvized_path / path).as_posix())
         # if "parsed.csv" in path.as_posix():
         #     continue
@@ -39,12 +36,10 @@ def csvize() -> None:
         "MPIuProf": _csvize_uprof_mpi,
     }
 
-    work_dir: Path = Path(__file__).resolve().parent
-
-
     raw_data_path: Path = Path("raw_data")
     if not raw_data_path.exists():
         raise FileNotFoundError(raw_data_path.resolve().as_posix())
+
     csvized_data_path: Path = Path("csvized_data")
     if not csvized_data_path.exists():
         csvized_data_path.mkdir()
