@@ -2,4 +2,4 @@
 *.pyc
 venv
 .venv
-data/
+raw_data/
