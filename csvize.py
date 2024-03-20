@@ -16,26 +16,31 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
 
     file_counter: int = 0
     for input_file_path in raw_data_path.glob("**/prof.AMD.*.csv"):
-        print("New path: ", csvized_path / input_file_path.relative_to(raw_data_path))
         file_counter += 1
         with input_file_path.open() as input_file:
-            for key, block_prefix in FILE_BLOCKS.items():
-                resulting_file_path: tuple[str, ...] = (
+            for filename_suffix, csv_block_prefix in FILE_BLOCKS.items():
+                new_filename: str = f"{input_file_path.stem}.{filename_suffix}.csv"
+                output_file_path: Path = (
                     csvized_path / input_file_path.relative_to(raw_data_path)
-                ).parts
-                # open(
-                #     path.as_posix()[:-3] + "parsed.csv", mode="w"
-                # ) as out_file:
-            #     core_metrics_flag: bool = False
-            #     for line in file:
-            #         if line.startswith("CORE METRICS"):
-            #             core_metrics_flag = True
-            #             continue
-            #         if core_metrics_flag:
-            #             if not line.strip():
-            #                 core_metrics_flag = False
-            #                 continue
-            #             out_file.write(line)
+                ).parent / new_filename
+                # print(output_file_path)
+
+                previous_line: str = ""
+                for line in input_file:
+                    if line.startswith(csv_block_prefix[0]):
+                        previous_line = line
+                        break
+                else:
+                    continue
+
+                output_file_path.parent.mkdir(parents=True, exist_ok=True)
+                with output_file_path.open("w") as output_file:
+                    if csv_block_prefix[1]:
+                        output_file.write(previous_line)
+                    for line in input_file:
+                        if not line.strip():
+                            break
+                        output_file.write(line)
     return file_counter
 
 
@@ -61,6 +66,7 @@ def csvize() -> None:
     file_counter: int = 0
     for _, csvizer in CSVIZERS.items():
         file_counter += csvizer(raw_data_path, csvized_data_path)
+    print(f"Processed {file_counter} input files")
 
 
 if __name__ == "__main__":
