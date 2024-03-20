@@ -18,7 +18,10 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
     for input_file_path in raw_data_path.glob("**/prof.AMD.*.csv"):
         file_counter += 1
         with input_file_path.open() as input_file:
-            for filename_suffix, csv_block_prefix in FILE_BLOCKS.items():
+            for filename_suffix, (
+                csv_block_prefix,
+                included_in_data,
+            ) in FILE_BLOCKS.items():
                 new_filename: str = f"{input_file_path.stem}.{filename_suffix}.csv"
                 output_file_path: Path = (
                     csvized_path / input_file_path.relative_to(raw_data_path)
@@ -27,7 +30,7 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
 
                 previous_line: str = ""
                 for line in input_file:
-                    if line.startswith(csv_block_prefix[0]):
+                    if line.startswith(csv_block_prefix):
                         previous_line = line
                         break
                 else:
@@ -35,7 +38,7 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
 
                 output_file_path.parent.mkdir(parents=True, exist_ok=True)
                 with output_file_path.open("w") as output_file:
-                    if csv_block_prefix[1]:
+                    if included_in_data:
                         output_file.write(previous_line)
                     for line in input_file:
                         if not line.strip():
