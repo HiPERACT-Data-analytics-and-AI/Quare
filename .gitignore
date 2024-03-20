@@ -2,4 +2,5 @@
 *.pyc
 venv
 .venv
-data/
+raw_data/
+csvized_data/
