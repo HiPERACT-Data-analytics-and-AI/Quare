@@ -18,9 +18,10 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
     for input_file_path in raw_data_path.glob("**/prof.AMD.*.csv"):
         file_counter += 1
         with input_file_path.open() as input_file:
+            # TODO: Check each block per line - with this it will be lacking-block-prone
             for filename_suffix, (
                 csv_block_prefix,
-                included_in_data,
+                part_of_data,
             ) in FILE_BLOCKS.items():
                 new_filename: str = f"{input_file_path.stem}.{filename_suffix}.csv"
                 output_file_path: Path = (
@@ -38,7 +39,7 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
 
                 output_file_path.parent.mkdir(parents=True, exist_ok=True)
                 with output_file_path.open("w") as output_file:
-                    if included_in_data:
+                    if part_of_data:
                         output_file.write(previous_line)
                     for line in input_file:
                         if not line.strip():
