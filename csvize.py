@@ -2,6 +2,46 @@ from collections.abc import Callable
 from pathlib import Path
 
 
+def _csvize_multi_block_csv(
+    raw_data_path: Path,
+    csvized_path: Path,
+    filename_pattern: str,
+    file_blocks: dict[str, tuple[str, bool]],
+) -> int:
+    file_counter: int = 0
+    for input_file_path in raw_data_path.glob(filename_pattern):
+        file_counter += 1
+        with input_file_path.open() as input_file:
+            # TODO: Check each block per line - with this it will be lacking-block-prone
+            for filename_suffix, (
+                csv_block_prefix,
+                part_of_data,
+            ) in file_blocks.items():
+                new_filename: str = f"{input_file_path.stem}.{filename_suffix}.csv"
+                output_file_path: Path = (
+                    csvized_path / input_file_path.relative_to(raw_data_path)
+                ).parent / new_filename
+                # print(output_file_path)
+
+                previous_line: str = ""
+                for line in input_file:
+                    if line.startswith(csv_block_prefix):
+                        previous_line = line
+                        break
+                else:
+                    continue
+
+                output_file_path.parent.mkdir(parents=True, exist_ok=True)
+                with output_file_path.open("w") as output_file:
+                    if part_of_data:
+                        output_file.write(previous_line)
+                    for line in input_file:
+                        if not line.strip():
+                            break
+                        output_file.write(line)
+    return file_counter
+
+
 def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
     FILE_BLOCKS: dict[str, tuple[str, bool]] = {
         "machine_info": ("System:,", True),
@@ -14,39 +54,21 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
     # True means that specified string is already a part of data
     # Order of entries must be preserved
 
-    file_counter: int = 0
-    for input_file_path in raw_data_path.glob("**/prof.AMD.*.csv"):
-        file_counter += 1
-        with input_file_path.open() as input_file:
-            for filename_suffix, csv_block_prefix in FILE_BLOCKS.items():
-                new_filename: str = f"{input_file_path.stem}.{filename_suffix}.csv"
-                output_file_path: Path = (
-                    csvized_path / input_file_path.relative_to(raw_data_path)
-                ).parent / new_filename
-                # print(output_file_path)
-
-                previous_line: str = ""
-                for line in input_file:
-                    if line.startswith(csv_block_prefix[0]):
-                        previous_line = line
-                        break
-                else:
-                    continue
-
-                output_file_path.parent.mkdir(parents=True, exist_ok=True)
-                with output_file_path.open("w") as output_file:
-                    if csv_block_prefix[1]:
-                        output_file.write(previous_line)
-                    for line in input_file:
-                        if not line.strip():
-                            break
-                        output_file.write(line)
-    return file_counter
+    return _csvize_multi_block_csv(
+        raw_data_path, csvized_path, "**/prof.AMD.*.csv", FILE_BLOCKS
+    )
 
 
 def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
-    file_counter: int = 0
-    return file_counter
+    FILE_BLOCKS: dict[str, tuple[str, bool]] = {
+        "environment": ("ENVIRONMENT", False),
+        "functions_summary": ("MPI FUNCTIONS SUMMARY", False),
+        "rank_summary": ("MPI RANK SUMMARY", False),
+    }
+
+    return _csvize_multi_block_csv(
+        raw_data_path, csvized_path, "**/mpi-summary.csv", FILE_BLOCKS
+    )
 
 
 def csvize() -> None:
