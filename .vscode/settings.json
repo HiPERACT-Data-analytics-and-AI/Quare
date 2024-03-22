@@ -4,6 +4,7 @@
         "csvized",
         "csvizer",
         "csvizers",
+        "sqlalchemy",
         "uprof"
     ]
 }
