@@ -47,7 +47,7 @@ def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
         "machine_info": ("System:,", True),
         "machine_cpu_topology": ("CPU Topology", False),
         "further_machine_info": ("Core P0 state frequency", True),
-        "core metrics": ("CORE METRICS", False),
+        "core_metrics": ("CORE METRICS", False),
         "l3_metrics": ("L3 METRICS", False),
     }
     # False means that string is not included in the first line of data
