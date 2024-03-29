@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db_quare_models import DBBase
+from .quare_models import DBBase
 
 
 class AMDuProfPcm_machine_info(DBBase):
