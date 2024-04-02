@@ -4,3 +4,4 @@ venv
 .venv
 raw_data/
 csvized_data/
+**/*.sqlite3

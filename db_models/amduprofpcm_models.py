@@ -5,7 +5,7 @@ from .quare_models import DBBase, ProfilingSession
 
 
 # machine_info refers to profiling_session
-# as machine_info file is generated in each session
+# as machine_info file is generated session-wise
 class AMDuProfPcm_machine_info(DBBase):
     __tablename__ = "AMDuProfPcm_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
