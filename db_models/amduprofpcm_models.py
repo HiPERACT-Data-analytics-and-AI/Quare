@@ -9,7 +9,7 @@ from .quare_models import DBBase, ProfilingSession
 class AMDuProfPcm_machine_info(DBBase):
     __tablename__ = "AMDuProfPcm_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     system: Mapped[str] = mapped_column(String(256))
     num_of_sockets: Mapped[int]
     num_of_ccds: Mapped[int]
@@ -23,7 +23,7 @@ class AMDuProfPcm_machine_info(DBBase):
 class AMDuProfPcm_machine_cpu_topology(DBBase):
     __tablename__ = "AMDuProfPcm_machine_cpu_topology"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     socket: Mapped[int]
     ccd: Mapped[int]
     cores: Mapped[str] = mapped_column(String(128))
@@ -32,7 +32,7 @@ class AMDuProfPcm_machine_cpu_topology(DBBase):
 class AMDuProfPcm_further_machine_info(DBBase):
     __tablename__ = "AMDuProfPcm_further_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     core_p0_state_freq: Mapped[float]
     multiplex_interval_for_core: Mapped[float]
     multiplex_interval_for_l3: Mapped[float]
@@ -49,7 +49,7 @@ class AMDuProfPcm_metrics_dict(DBBase):
 class AMDuProfPcm_core_metrics(DBBase):
     __tablename__ = "AMDuProfPcm_core_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     core: Mapped[int]
     metric: Mapped[str] = mapped_column(ForeignKey(AMDuProfPcm_metrics_dict.name))
     value: Mapped[float]
@@ -58,7 +58,7 @@ class AMDuProfPcm_core_metrics(DBBase):
 class AMDuProfPcm_l3_metrics(DBBase):
     __tablename__ = "AMDuProfPcm_l3_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     ccx: Mapped[int]
     l3_access: Mapped[float]
     l3_miss: Mapped[float]

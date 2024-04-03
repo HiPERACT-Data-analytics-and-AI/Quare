@@ -16,11 +16,18 @@ class Machine(DBBase):
     sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
+class Use_case(DBBase):
+    __tablename__ = "Use_case"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(256))
+
+    sessions: Mapped[list["ProfilingSession"]] = relationship()
+
+
 class ProfilingSession(DBBase):
     __tablename__ = "Profiling_session"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str | None] = mapped_column(String(128))
-    use_case: Mapped[str] = mapped_column(String(128))
-    use_case_size: Mapped[str] = mapped_column(String(32))
+    name: Mapped[str | None] = mapped_column(String(128), primary_key=True)
+    use_case: Mapped[str] = mapped_column(ForeignKey(Use_case.id))
+    task_size: Mapped[str] = mapped_column(String(32))
     date: Mapped[datetime | None]
-    machine: Mapped[int] = mapped_column(ForeignKey("Machine.id"))
+    machine: Mapped[int] = mapped_column(ForeignKey(Machine.id))
