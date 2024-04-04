@@ -42,7 +42,7 @@ def _csvize_multi_block_csv(
     return file_counter
 
 
-def _csvize_uprof_amd(raw_data_path: Path, csvized_path: Path) -> int:
+def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
     FILE_BLOCKS: dict[str, tuple[str, bool]] = {
         "machine_info": ("System:,", True),
         "machine_cpu_topology": ("CPU Topology", False),
@@ -73,7 +73,7 @@ def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
 
 def csvize() -> None:
     CSVIZERS: dict[str, Callable[[Path, Path], int]] = {
-        "AMDuProfPcm": _csvize_uprof_amd,
+        "AMDuProfPcm": _csvize_uprof_pcm,
         "MPIuProf": _csvize_uprof_mpi,
     }
 
