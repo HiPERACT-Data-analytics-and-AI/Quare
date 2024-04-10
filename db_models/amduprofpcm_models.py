@@ -12,7 +12,8 @@ class AMDuProfPcm_machine_info(DBBase):
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     system: Mapped[str] = mapped_column(String(256))
     num_of_sockets: Mapped[int]
-    num_of_ccds: Mapped[int]
+    num_of_ccds: Mapped[int | None]
+    num_of_ccxs: Mapped[int | None]
     num_of_cores: Mapped[int]
     num_of_threads: Mapped[int]
     smt_enabled_in_hw: Mapped[bool]

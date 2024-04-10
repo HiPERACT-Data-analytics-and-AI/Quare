@@ -19,40 +19,43 @@ def _extract_from_path(key: str, path: Path) -> str:
     return ".".join(path.parts[i] for i in path_struct[key])
 
 
-def _load_machine_info(path: Path, session: ProfilingSession) -> object:
+def _load_machine_info(path: Path, session: ProfilingSession) -> DBBase:
     machine_csv = pd.read_csv(path, header=None).T
     # for i, row in machine_csv.iterrows():
     #     print("\n\n\n", row, "\n\n\n")
+    print("\n\n\n", machine_csv.iloc[0].to_dict(), "\n\n\n")
     print("\n\n\n", machine_csv.iloc[1].to_dict(), "\n\n\n")
     converted = machine_csv.iloc[1].to_dict()
+
     machine_uprof = amduprofpcm_models.AMDuProfPcm_machine_info(
         profiling_session=session.name,
         system=converted[0],
         num_of_sockets=converted[1],
         num_of_ccds=converted[2],
-        num_of_cores=converted[3],
-        num_of_threads=converted[4],
-        smt_enabled_in_hw=converted[5],
-        smt_enabled_in_os=converted[6],
-        num_of_threads_sharing_l3=converted[7],
+        num_of_ccxs=converted[3],
+        num_of_cores=converted[4],
+        num_of_threads=converted[5],
+        smt_enabled_in_hw=converted[6],
+        smt_enabled_in_os=converted[7],
+        num_of_threads_sharing_l3=converted[8],
     )
     return machine_uprof
 
 
-def _load_further_machine_info(path: Path, session: ProfilingSession) -> object: ...
+def _load_further_machine_info(path: Path, session: ProfilingSession) -> DBBase: ...
 
 
-def _load_machine_cpu_topology(path: Path, session: ProfilingSession) -> object: ...
+def _load_machine_cpu_topology(path: Path, session: ProfilingSession) -> DBBase: ...
 
 
-def _load_core_metrics(path: Path, session: ProfilingSession) -> object: ...
+def _load_core_metrics(path: Path, session: ProfilingSession) -> DBBase: ...
 
 
-def _load_l3_metrics(path: Path, session: ProfilingSession) -> object: ...
+def _load_l3_metrics(path: Path, session: ProfilingSession) -> DBBase: ...
 
 
 def load_uprof_pcm(db_session: Session) -> None:
-    FILE_SUFFIXES: list[tuple[str, Callable[[Path, ProfilingSession], object]]] = [
+    FILE_SUFFIXES: list[tuple[str, Callable[[Path, ProfilingSession], DBBase]]] = [
         ("machine_info.csv", _load_machine_info),
         ("further_machine_info.csv", _load_further_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
@@ -76,12 +79,12 @@ def load_uprof_pcm(db_session: Session) -> None:
         )
 
         db_session.add(session)
+        db_session.commit()
 
         for suffix, function in FILE_SUFFIXES:
             path: Path = general_path / (name_base + suffix)
-            # db_session.add(function(path, session))
-
-        db_session.commit()
+            db_session.add(function(path, session))
+            db_session.commit()
 
 
 def main():

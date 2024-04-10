@@ -13,7 +13,7 @@ class Machine(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128))
 
-    sessions: Mapped[list["ProfilingSession"]] = relationship()
+    # sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
 class Use_case(DBBase):
@@ -21,7 +21,7 @@ class Use_case(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256))
 
-    sessions: Mapped[list["ProfilingSession"]] = relationship()
+    # sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
 class ProfilingSession(DBBase):
