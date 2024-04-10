@@ -26,7 +26,7 @@ class Use_case(DBBase):
 
 class ProfilingSession(DBBase):
     __tablename__ = "Profiling_session"
-    name: Mapped[str | None] = mapped_column(String(128), primary_key=True)
+    name: Mapped[str | None] = mapped_column(String(256), primary_key=True)
     use_case: Mapped[str] = mapped_column(ForeignKey(Use_case.id))
     task_size: Mapped[str] = mapped_column(String(32))
     date: Mapped[datetime | None]
