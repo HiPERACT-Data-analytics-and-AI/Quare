@@ -7,15 +7,14 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from db_models import DBBase, Machine, ProfilingSession, UseCase, amduprofpcm_models
 
-path_struct: dict[str, tuple[int, ...]] = {
-    "use_case": (2,),
-    "machine": (3,),
-    "task_size": (5,),
-    "session": (4, 5, 6),
-}
 
-
-def _extract_from_path(key: str, path: Path) -> str:
+def extract_from_path(key: str, path: Path) -> str:
+    path_struct: dict[str, tuple[int, ...]] = {
+        "use_case": (2,),
+        "machine": (3,),
+        "task_size": (5,),
+        "session": (4, 5, 6),
+    }
     return ".".join(path.parts[i] for i in path_struct[key])
 
 
@@ -83,7 +82,7 @@ def load_uprof_pcm(db_session: Session) -> None:
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(FILE_SUFFIXES[0][0])]
 
-        machine_name = _extract_from_path("machine", input_path)
+        machine_name = extract_from_path("machine", input_path)
         machine = Machine(name=machine_name)
         create_if_not_exists(
             db_session=db_session,
@@ -92,7 +91,7 @@ def load_uprof_pcm(db_session: Session) -> None:
             equal_to=machine_name,
         )
 
-        use_case_name = _extract_from_path("use_case", input_path)
+        use_case_name = extract_from_path("use_case", input_path)
         use_case = UseCase(name=use_case_name)
         create_if_not_exists(
             db_session=db_session,
@@ -101,11 +100,11 @@ def load_uprof_pcm(db_session: Session) -> None:
             equal_to=use_case_name,
         )
 
-        session_name = _extract_from_path("session", input_path)
+        session_name = extract_from_path("session", input_path)
         session = ProfilingSession(
             name=session_name,
             use_case=use_case.name,
-            task_size=_extract_from_path("task_size", input_path),
+            task_size=extract_from_path("task_size", input_path),
             machine=machine.name,
         )
         create_if_not_exists(
