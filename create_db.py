@@ -2,16 +2,16 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy import Engine, create_engine, select
+from sqlalchemy.orm import InstrumentedAttribute, Session
 
-from db_models import DBBase, Machine, UseCase, ProfilingSession, amduprofpcm_models
+from db_models import DBBase, Machine, ProfilingSession, UseCase, amduprofpcm_models
 
 path_struct: dict[str, tuple[int, ...]] = {
     "use_case": (2,),
     "machine": (3,),
     "task_size": (5,),
-    "session": (3, 4, 5, 6, 7),
+    "session": (4, 5, 6),
 }
 
 
@@ -19,7 +19,22 @@ def _extract_from_path(key: str, path: Path) -> str:
     return ".".join(path.parts[i] for i in path_struct[key])
 
 
-def _load_machine_info(path: Path, session: ProfilingSession) -> amduprofpcm_models.AMDuProfPcm_machine_info:
+def create_if_not_exists(
+    db_session: Session,
+    to_create: DBBase,
+    where_column: InstrumentedAttribute,
+    equal_to: str | int | float | bool,
+) -> None:
+    selected_row = db_session.execute(
+        select(where_column).where(where_column == equal_to)
+    ).first()
+    if not selected_row:
+        db_session.add(to_create)
+
+
+def _load_machine_info(
+    path: Path, session: ProfilingSession
+) -> amduprofpcm_models.AMDuProfPcm_machine_info:
     machine_csv = pd.read_csv(path, header=None, index_col=0).T
     # for i, row in machine_csv.iterrows():
     #     print("\n\n\n", row, "\n\n\n")
@@ -36,7 +51,9 @@ def _load_machine_info(path: Path, session: ProfilingSession) -> amduprofpcm_mod
         num_of_threads=row.get("Number of Threads :", default=None),
         smt_enabled_in_hw=bool(row.get("SMT Enabled in HW:")),
         smt_enabled_in_os=bool(row.get("SMT Enabled by OS :")),
-        num_of_threads_sharing_l3=row.get("Number of Threads sharing L3:", default=None),
+        num_of_threads_sharing_l3=row.get(
+            "Number of Threads sharing L3:", default=None
+        ),
     )
     return machine_uprof
 
@@ -66,19 +83,39 @@ def load_uprof_pcm(db_session: Session) -> None:
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(FILE_SUFFIXES[0][0])]
 
-        machine = Machine(name=_extract_from_path("machine", input_path))
-        db_session.add(machine)
+        machine_name = _extract_from_path("machine", input_path)
+        machine = Machine(name=machine_name)
+        create_if_not_exists(
+            db_session=db_session,
+            to_create=machine,
+            where_column=Machine.name,
+            equal_to=machine_name,
+        )
 
-        use_case = UseCase(name=_extract_from_path("use_case", input_path))
-        db_session.add(use_case)
+        use_case_name = _extract_from_path("use_case", input_path)
+        use_case = UseCase(name=use_case_name)
+        create_if_not_exists(
+            db_session=db_session,
+            to_create=use_case,
+            where_column=UseCase.name,
+            equal_to=use_case_name,
+        )
 
+        session_name = _extract_from_path("session", input_path)
         session = ProfilingSession(
-            name=_extract_from_path("session", input_path),
-            use_case=_extract_from_path("use_case", input_path),
+            name=session_name,
+            use_case=use_case.name,
             task_size=_extract_from_path("task_size", input_path),
             machine=machine.name,
         )
-        db_session.add(session)
+        create_if_not_exists(
+            db_session=db_session,
+            to_create=session,
+            where_column=ProfilingSession.name,
+            equal_to=session_name,
+        )
+
+        db_session.commit()
 
         for suffix, function in FILE_SUFFIXES:
             path: Path = general_path / (name_base + suffix)
