@@ -33,7 +33,7 @@ def create_if_not_exists(
 
 def _load_machine_info(
     path: Path, session: ProfilingSession
-) -> tuple[amduprofpcm_models.AMDuProfPcm_machine_info]:
+) -> list[amduprofpcm_models.AMDuProfPcm_machine_info]:
     machine_csv = pd.read_csv(path, header=None, index_col=0).T
     row = machine_csv.iloc[0]
 
@@ -51,12 +51,12 @@ def _load_machine_info(
             "Number of Threads sharing L3:", default=None
         ),
     )
-    return (machine_uprof,)
+    return [machine_uprof]
 
 
 def _load_machine_cpu_topology(
     path: Path, session: ProfilingSession
-) -> tuple[amduprofpcm_models.AMDuProfPcm_machine_cpu_topology, ...]:
+) -> list[amduprofpcm_models.AMDuProfPcm_machine_cpu_topology]:
     cpu_csv = pd.read_csv(path)
 
     instances_to_add: list[amduprofpcm_models.AMDuProfPcm_machine_cpu_topology] = list()
@@ -69,12 +69,12 @@ def _load_machine_cpu_topology(
             cores=row.get(" Core(s)", default=None),
         )
         instances_to_add.append(instance)
-    return tuple(instances_to_add)
+    return instances_to_add
 
 
 def _load_further_machine_info(
     path: Path, session: ProfilingSession
-) -> tuple[amduprofpcm_models.AMDuProfPcm_further_machine_info]:
+) -> list[amduprofpcm_models.AMDuProfPcm_further_machine_info]:
     further_machine_csv = pd.read_csv(path, header=None, index_col=0).T
     row = further_machine_csv.iloc[0]
 
@@ -94,12 +94,12 @@ def _load_further_machine_info(
         multiplex_interval=row.get("Multiplex interval (ms):", default=None),
         version=row.get("Version:", default=None),
     )
-    return (further_machine_uprof,)
+    return [further_machine_uprof]
 
 
 def _load_core_metrics(
     path: Path, session: ProfilingSession
-) -> tuple[amduprofpcm_models.AMDuProfPcm_core_metrics, ...]:
+) -> list[amduprofpcm_models.AMDuProfPcm_core_metrics]:
     core_metrics_csv = pd.read_csv(path, header=None, index_col=0).T
 
     instances_to_add: list[amduprofpcm_models.AMDuProfPcm_core_metrics] = list()
@@ -111,12 +111,12 @@ def _load_core_metrics(
             # TODO: Add metric to metrics dict if does not exist
             instance = amduprofpcm_models.AMDuProfPcm_core_metrics(
                 profiling_session=session.name,
-                core=int(row.get("Metric", default=-1)[4:]),
+                core=int(row.get("Metric", default=-1)[5:]),
                 metric=name,
                 value=value,
             )
             instances_to_add.append(instance)
-    return tuple(instances_to_add)
+    return instances_to_add
 
 
 def _load_l3_metrics(path: Path, session: ProfilingSession) -> DBBase: ...
@@ -124,7 +124,7 @@ def _load_l3_metrics(path: Path, session: ProfilingSession) -> DBBase: ...
 
 def load_uprof_pcm(db_session: Session) -> None:
     FILE_SUFFIXES: list[
-        tuple[str, Callable[[Path, ProfilingSession], tuple[DBBase, ...]]]
+        tuple[str, Callable[[Path, ProfilingSession], list]]
     ] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
