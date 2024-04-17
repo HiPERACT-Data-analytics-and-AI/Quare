@@ -10,24 +10,25 @@ class DBBase(DeclarativeBase):
 
 class Machine(DBBase):
     __tablename__ = "Machine"
-    # id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(128), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
 
     # sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
 class UseCase(DBBase):
     __tablename__ = "Use_case"
-    # id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(256), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(256))
 
     # sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
 class ProfilingSession(DBBase):
     __tablename__ = "Profiling_session"
-    name: Mapped[str] = mapped_column(String(256), primary_key=True)
-    use_case: Mapped[str] = mapped_column(ForeignKey(UseCase.name))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(256))
+    use_case: Mapped[int] = mapped_column(ForeignKey(UseCase.id))
     task_size: Mapped[str] = mapped_column(String(32))
     date: Mapped[datetime | None]
-    machine: Mapped[int] = mapped_column(ForeignKey(Machine.name))
+    machine: Mapped[int] = mapped_column(ForeignKey(Machine.id))
