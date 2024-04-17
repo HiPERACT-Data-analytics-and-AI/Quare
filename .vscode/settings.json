@@ -12,6 +12,7 @@
         "dtlb",
         "hwpf",
         "iloc",
+        "iterrows",
         "itlb",
         "misprediction",
         "mispredicts",

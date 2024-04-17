@@ -33,11 +33,8 @@ def create_if_not_exists(
 
 def _load_machine_info(
     path: Path, session: ProfilingSession
-) -> amduprofpcm_models.AMDuProfPcm_machine_info:
+) -> tuple[amduprofpcm_models.AMDuProfPcm_machine_info]:
     machine_csv = pd.read_csv(path, header=None, index_col=0).T
-    # for i, row in machine_csv.iterrows():
-    #     print("\n\n\n", row, "\n\n\n")
-    # print("\n\n\n", type(machine_csv.iloc[0].get("SMT Enabled in HW:")), "\n\n\n")
     row = machine_csv.iloc[0]
 
     machine_uprof = amduprofpcm_models.AMDuProfPcm_machine_info(
@@ -54,27 +51,85 @@ def _load_machine_info(
             "Number of Threads sharing L3:", default=None
         ),
     )
-    return machine_uprof
+    return (machine_uprof,)
 
 
-def _load_further_machine_info(path: Path, session: ProfilingSession) -> DBBase: ...
+def _load_machine_cpu_topology(
+    path: Path, session: ProfilingSession
+) -> tuple[amduprofpcm_models.AMDuProfPcm_machine_cpu_topology, ...]:
+    cpu_csv = pd.read_csv(path)
+
+    instances_to_add: list[amduprofpcm_models.AMDuProfPcm_machine_cpu_topology] = list()
+    for _, row in cpu_csv.iterrows():
+        instance = amduprofpcm_models.AMDuProfPcm_machine_cpu_topology(
+            profiling_session=session.name,
+            socket=row.get("Socket", default=None),
+            ccd=row.get(" CCD", default=None),
+            ccx=row.get(" CCX", default=None),
+            cores=row.get(" Core(s)", default=None),
+        )
+        instances_to_add.append(instance)
+    return tuple(instances_to_add)
 
 
-def _load_machine_cpu_topology(path: Path, session: ProfilingSession) -> DBBase: ...
+def _load_further_machine_info(
+    path: Path, session: ProfilingSession
+) -> tuple[amduprofpcm_models.AMDuProfPcm_further_machine_info]:
+    further_machine_csv = pd.read_csv(path, header=None, index_col=0).T
+    row = further_machine_csv.iloc[0]
+
+    further_machine_uprof = amduprofpcm_models.AMDuProfPcm_further_machine_info(
+        profiling_session=session.name,
+        core_p0_state_freq=row.get("Core P0 state frequency (MHz):", default=None),
+        multiplex_interval_for_core=row.get(
+            "Multiplex interval for core (ms):", default=None
+        ),
+        multiplex_interval_for_l3=row.get(
+            "Multiplex interval for l3 (ms):", default=None
+        ),
+        multiplex_interval_for_df=row.get(
+            "Multiplex interval for df (ms):", default=None
+        ),
+        measured_df_frequency=row.get("Measured DF Frequency (MHz):", default=None),
+        multiplex_interval=row.get("Multiplex interval (ms):", default=None),
+        version=row.get("Version:", default=None),
+    )
+    return (further_machine_uprof,)
 
 
-def _load_core_metrics(path: Path, session: ProfilingSession) -> DBBase: ...
+def _load_core_metrics(
+    path: Path, session: ProfilingSession
+) -> tuple[amduprofpcm_models.AMDuProfPcm_core_metrics, ...]:
+    core_metrics_csv = pd.read_csv(path, header=None, index_col=0).T
+
+    instances_to_add: list[amduprofpcm_models.AMDuProfPcm_core_metrics] = list()
+    for _, row in core_metrics_csv.iterrows():
+        for name, value in row.items():
+            if name == "Metric":
+                continue
+
+            # TODO: Add metric to metrics dict if does not exist
+            instance = amduprofpcm_models.AMDuProfPcm_core_metrics(
+                profiling_session=session.name,
+                core=int(row.get("Metric", default=-1)[4:]),
+                metric=name,
+                value=value,
+            )
+            instances_to_add.append(instance)
+    return tuple(instances_to_add)
 
 
 def _load_l3_metrics(path: Path, session: ProfilingSession) -> DBBase: ...
 
 
 def load_uprof_pcm(db_session: Session) -> None:
-    FILE_SUFFIXES: list[tuple[str, Callable[[Path, ProfilingSession], DBBase]]] = [
+    FILE_SUFFIXES: list[
+        tuple[str, Callable[[Path, ProfilingSession], tuple[DBBase, ...]]]
+    ] = [
         ("machine_info.csv", _load_machine_info),
-        # ("further_machine_info.csv", _load_further_machine_info),
-        # ("machine_cpu_topology.csv", _load_machine_cpu_topology),
-        # ("core_metrics.csv", _load_core_metrics),
+        ("machine_cpu_topology.csv", _load_machine_cpu_topology),
+        ("further_machine_info.csv", _load_further_machine_info),
+        ("core_metrics.csv", _load_core_metrics),
         # ("l3_metrics.csv", _load_l3_metrics),
     ]
 
@@ -118,7 +173,7 @@ def load_uprof_pcm(db_session: Session) -> None:
 
         for suffix, function in FILE_SUFFIXES:
             path: Path = general_path / (name_base + suffix)
-            db_session.add(function(path, session))
+            db_session.add_all(function(path, session))
 
 
 def main():

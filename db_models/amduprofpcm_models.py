@@ -11,34 +11,37 @@ class AMDuProfPcm_machine_info(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
     system: Mapped[str] = mapped_column(String(256))
-    num_of_sockets: Mapped[int]
+    num_of_sockets: Mapped[int | None]
     num_of_ccds: Mapped[int | None]
     num_of_ccxs: Mapped[int | None]
-    num_of_cores: Mapped[int]
-    num_of_threads: Mapped[int]
+    num_of_cores: Mapped[int | None]
+    num_of_threads: Mapped[int | None]
     smt_enabled_in_hw: Mapped[bool]
     smt_enabled_in_os: Mapped[bool]
-    num_of_threads_sharing_l3: Mapped[int]
+    num_of_threads_sharing_l3: Mapped[int | None]
 
 
 class AMDuProfPcm_machine_cpu_topology(DBBase):
     __tablename__ = "AMDuProfPcm_machine_cpu_topology"
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
-    socket: Mapped[int]
-    ccd: Mapped[int]
-    cores: Mapped[str] = mapped_column(String(128))
+    socket: Mapped[int | None]
+    ccd: Mapped[int | None]
+    ccx: Mapped[int | None]
+    cores: Mapped[str | None] = mapped_column(String(128))
 
 
 class AMDuProfPcm_further_machine_info(DBBase):
     __tablename__ = "AMDuProfPcm_further_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.name))
-    core_p0_state_freq: Mapped[float]
-    multiplex_interval_for_core: Mapped[float]
-    multiplex_interval_for_l3: Mapped[float]
-    multiplex_interval_for_df: Mapped[float]
-    version: Mapped[str] = mapped_column(String(16))
+    core_p0_state_freq: Mapped[float | None]
+    multiplex_interval_for_core: Mapped[float | None]
+    multiplex_interval_for_l3: Mapped[float | None]
+    multiplex_interval_for_df: Mapped[float | None]
+    measured_df_frequency: Mapped[float | None]
+    multiplex_interval: Mapped[float | None]
+    version: Mapped[str | None] = mapped_column(String(16))
 
 
 class AMDuProfPcm_metrics_dict(DBBase):
