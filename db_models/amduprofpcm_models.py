@@ -46,7 +46,8 @@ class AMDuProfPcm_further_machine_info(DBBase):
 
 class AMDuProfPcm_metrics_dict(DBBase):
     __tablename__ = "AMDuProfPcm_metrics_dict"
-    name: Mapped[str] = mapped_column(String(128), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
     desc: Mapped[str | None] = mapped_column(String(1024))
 
 
@@ -55,7 +56,7 @@ class AMDuProfPcm_core_metrics(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
     core: Mapped[int]
-    metric: Mapped[str] = mapped_column(ForeignKey(AMDuProfPcm_metrics_dict.name))
+    metric: Mapped[str] = mapped_column(ForeignKey(AMDuProfPcm_metrics_dict.id))
     value: Mapped[float]
 
 

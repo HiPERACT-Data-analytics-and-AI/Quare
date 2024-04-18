@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import TypeVar
 
 import pandas as pd
-from sqlalchemy import Engine, create_engine, select, BaseRow
+from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from db_models import DBBase, Machine, ProfilingSession, UseCase, amduprofpcm_models
@@ -19,20 +19,21 @@ def extract_from_path(key: str, path: Path) -> str:
     return ".".join(path.parts[i] for i in path_struct[key])
 
 
-T = TypeVar("T", bound=DBBase)
+DBBaseModel = TypeVar("DBBaseModel", bound=DBBase)
+
 
 def create_if_not_exists(
     db_session: Session,
-    to_create: T,
+    to_create: DBBaseModel,
     where_column: InstrumentedAttribute,
     equal_to: str | int | float | bool,
-) -> T:
+) -> DBBaseModel:
     selected_row = db_session.execute(
         select(where_column.parent).where(where_column == equal_to)
     ).first()
 
     if not selected_row:
-        db_session.add(to_create)
+        db_session.add(to_create)  # Needs a commit after returning <- add to docs
         return to_create
     return selected_row[0]
 
@@ -159,7 +160,7 @@ def load_uprof_pcm(db_session: Session) -> None:
             equal_to=use_case_name,
         )
 
-        db_session.commit()
+        db_session.commit()  # commit needed to obtain the ids of the added objects
 
         session_name = extract_from_path("session", input_path)
         session = ProfilingSession(

@@ -15,7 +15,8 @@ class MPIuProf_environment(DBBase):
 
 class MPIuProf_functions_dict(DBBase):
     __tablename__ = "MPIuProf_functions_dict"
-    name: Mapped[str] = mapped_column(String(128), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
     desc: Mapped[str | None] = mapped_column(String(1024))
 
 
@@ -23,7 +24,7 @@ class MPIuProf_functions_summary(DBBase):
     __tablename__ = "MPIuProf_functions_summary"
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
-    function: Mapped[str] = mapped_column(ForeignKey(MPIuProf_functions_dict.name))
+    function: Mapped[int] = mapped_column(ForeignKey(MPIuProf_functions_dict.id))
     min_time: Mapped[float]
     max_time: Mapped[float]
     average_time: Mapped[float]
