@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from pathlib import Path
+from typing import TypeVar
 
 import pandas as pd
 from sqlalchemy import Engine, create_engine, select, BaseRow
@@ -18,20 +19,22 @@ def extract_from_path(key: str, path: Path) -> str:
     return ".".join(path.parts[i] for i in path_struct[key])
 
 
+T = TypeVar("T", bound=DBBase)
+
 def create_if_not_exists(
     db_session: Session,
-    to_create: DBBase,
+    to_create: T,
     where_column: InstrumentedAttribute,
     equal_to: str | int | float | bool,
-) -> BaseRow | DBBase:
+) -> T:
     selected_row = db_session.execute(
-        select(where_column).where(where_column == equal_to)
+        select(where_column.parent).where(where_column == equal_to)
     ).first()
-    print(selected_row._fields)
+
     if not selected_row:
         db_session.add(to_create)
         return to_create
-    return selected_row
+    return selected_row[0]
 
 
 def _load_machine_info(
@@ -122,15 +125,15 @@ def _load_core_metrics(
     return instances_to_add
 
 
-def _load_l3_metrics(path: Path, session_id: ProfilingSession) -> DBBase: ...
+def _load_l3_metrics(path: Path, session_id: int) -> DBBase: ...
 
 
 def load_uprof_pcm(db_session: Session) -> None:
     FILE_SUFFIXES: list[tuple[str, Callable[[Path, int], list]]] = [
         ("machine_info.csv", _load_machine_info),
-        # ("machine_cpu_topology.csv", _load_machine_cpu_topology),
-        # ("further_machine_info.csv", _load_further_machine_info),
-        # ("core_metrics.csv", _load_core_metrics),
+        ("machine_cpu_topology.csv", _load_machine_cpu_topology),
+        ("further_machine_info.csv", _load_further_machine_info),
+        ("core_metrics.csv", _load_core_metrics),
         # ("l3_metrics.csv", _load_l3_metrics),
     ]
 
@@ -161,9 +164,9 @@ def load_uprof_pcm(db_session: Session) -> None:
         session_name = extract_from_path("session", input_path)
         session = ProfilingSession(
             name=session_name,
-            use_case=0, # use_case.id,
+            use_case=use_case.id,
             task_size=extract_from_path("task_size", input_path),
-            machine=0, # machine.id,
+            machine=machine.id,
         )
         session = create_if_not_exists(
             db_session=db_session,
