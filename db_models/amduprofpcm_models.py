@@ -64,7 +64,7 @@ class AMDuProfPcm_l3_metrics(DBBase):
     __tablename__ = "AMDuProfPcm_l3_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
-    ccx: Mapped[int]
+    ccx_number: Mapped[int]
     l3_access: Mapped[float]
     l3_miss: Mapped[float]
     l3_miss_percent: Mapped[float]

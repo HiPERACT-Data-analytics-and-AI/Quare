@@ -130,7 +130,20 @@ def _load_core_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_core_met
     return instances_to_add
 
 
-def _load_l3_metrics(path: Path, session_id: int) -> DBBase: ...
+def _load_l3_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_l3_metrics]:
+    l3_metrics_csv = pd.read_csv(path, header=None, index_col=0).T
+    instances_to_add: list[AMDuProfPcm_l3_metrics] = list()
+    for _, row in l3_metrics_csv.iterrows():
+        instance = AMDuProfPcm_l3_metrics(
+            profiling_session=session_id,
+            ccx_number=int(row.get("Metric", default=-1)[4:]),
+            l3_access=row.get("L3 Access", default=None),
+            l3_miss=row.get("L3 Miss", default=None),
+            l3_miss_percent=row.get("L3 Miss %", default=None),
+            ave_l3_miss_latency=row.get("Ave L3 Miss Latency", default=None),
+        )
+        instances_to_add.append(instance)
+    return instances_to_add
 
 
 def load_uprof_pcm(db_session: Session) -> None:
@@ -139,7 +152,7 @@ def load_uprof_pcm(db_session: Session) -> None:
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
         ("further_machine_info.csv", _load_further_machine_info),
         ("core_metrics.csv", _load_core_metrics),
-        # ("l3_metrics.csv", _load_l3_metrics),
+        ("l3_metrics.csv", _load_l3_metrics),
     ]
 
     for input_path in Path("csvized_data").glob(f"**/*.{FILE_SUFFIXES[0][0]}"):
