@@ -56,7 +56,10 @@ def create_if_not_exists(
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPcm_machine_info]:
-    machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    try:
+        machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    except FileNotFoundError:
+        return []
     row = machine_csv.iloc[0]
 
     machine_uprof = AMDuProfPcm_machine_info(
@@ -79,7 +82,10 @@ def _load_machine_info(context: MetricContext) -> list[AMDuProfPcm_machine_info]
 def _load_machine_cpu_topology(
     context: MetricContext,
 ) -> list[AMDuProfPcm_machine_cpu_topology]:
-    cpu_csv = pd.read_csv(context.path)
+    try:
+        cpu_csv = pd.read_csv(context.path)
+    except FileNotFoundError:
+        return []
 
     instances_to_add: list[AMDuProfPcm_machine_cpu_topology] = list()
     for _, row in cpu_csv.iterrows():
@@ -97,7 +103,10 @@ def _load_machine_cpu_topology(
 def _load_further_machine_info(
     context: MetricContext,
 ) -> list[AMDuProfPcm_further_machine_info]:
-    further_machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    try:
+        further_machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    except FileNotFoundError:
+        return []
     row = further_machine_csv.iloc[0]
 
     further_machine_uprof = AMDuProfPcm_further_machine_info(
@@ -120,7 +129,10 @@ def _load_further_machine_info(
 
 
 def _load_core_metrics(context: MetricContext) -> list[AMDuProfPcm_core_metrics]:
-    core_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    try:
+        core_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    except FileNotFoundError:
+        return []
 
     instances_to_add: list[AMDuProfPcm_core_metrics] = list()
     for _, row in core_metrics_csv.iterrows():
@@ -148,7 +160,10 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPcm_core_metrics]
 
 
 def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPcm_l3_metrics]:
-    l3_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    try:
+        l3_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    except FileNotFoundError:
+        return []
     instances_to_add: list[AMDuProfPcm_l3_metrics] = list()
     for _, row in l3_metrics_csv.iterrows():
         instance = AMDuProfPcm_l3_metrics(
