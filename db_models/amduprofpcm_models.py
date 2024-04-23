@@ -56,7 +56,7 @@ class AMDuProfPcm_core_metrics(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
     core: Mapped[int]
-    metric: Mapped[str] = mapped_column(ForeignKey(AMDuProfPcm_metrics_dict.id))
+    metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPcm_metrics_dict.id))
     value: Mapped[float]
 
 
@@ -64,8 +64,8 @@ class AMDuProfPcm_l3_metrics(DBBase):
     __tablename__ = "AMDuProfPcm_l3_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
     profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
-    ccx_number: Mapped[int]
-    l3_access: Mapped[float]
-    l3_miss: Mapped[float]
-    l3_miss_percent: Mapped[float]
-    ave_l3_miss_latency: Mapped[float]
+    ccx_number: Mapped[int | None]
+    l3_access: Mapped[float | None]
+    l3_miss: Mapped[float | None]
+    l3_miss_percent: Mapped[float | None]
+    ave_l3_miss_latency: Mapped[float | None]

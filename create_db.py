@@ -19,10 +19,10 @@ from db_models.amduprofpcm_models import (
 
 
 @dataclass
-class Thumb:
+class MetricContext:
     path: Path
     session_id: int
-    db_session: Session | None = None
+    db_session: Session
 
 
 def extract_from_path(key: str, path: Path) -> str:
@@ -55,12 +55,12 @@ def create_if_not_exists(
     return selected_row[0]
 
 
-def _load_machine_info(thumb: Thumb) -> list[AMDuProfPcm_machine_info]:
-    machine_csv = pd.read_csv(thumb.path, header=None, index_col=0).T
+def _load_machine_info(context: MetricContext) -> list[AMDuProfPcm_machine_info]:
+    machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
     row = machine_csv.iloc[0]
 
     machine_uprof = AMDuProfPcm_machine_info(
-        profiling_session=thumb.session_id,
+        profiling_session=context.session_id,
         system=row.get("System:", default=None),
         num_of_sockets=row.get("Number of Sockets :", default=None),
         num_of_ccds=row.get("Number of CCDs :", default=None),
@@ -77,14 +77,14 @@ def _load_machine_info(thumb: Thumb) -> list[AMDuProfPcm_machine_info]:
 
 
 def _load_machine_cpu_topology(
-    path: Path, session_id: int
+    context: MetricContext,
 ) -> list[AMDuProfPcm_machine_cpu_topology]:
-    cpu_csv = pd.read_csv(path)
+    cpu_csv = pd.read_csv(context.path)
 
     instances_to_add: list[AMDuProfPcm_machine_cpu_topology] = list()
     for _, row in cpu_csv.iterrows():
         instance = AMDuProfPcm_machine_cpu_topology(
-            profiling_session=session_id,
+            profiling_session=context.session_id,
             socket=row.get("Socket", default=None),
             ccd=row.get(" CCD", default=None),
             ccx=row.get(" CCX", default=None),
@@ -95,13 +95,13 @@ def _load_machine_cpu_topology(
 
 
 def _load_further_machine_info(
-    path: Path, session_id: int
+    context: MetricContext,
 ) -> list[AMDuProfPcm_further_machine_info]:
-    further_machine_csv = pd.read_csv(path, header=None, index_col=0).T
+    further_machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
     row = further_machine_csv.iloc[0]
 
     further_machine_uprof = AMDuProfPcm_further_machine_info(
-        profiling_session=session_id,
+        profiling_session=context.session_id,
         core_p0_state_freq=row.get("Core P0 state frequency (MHz):", default=None),
         multiplex_interval_for_core=row.get(
             "Multiplex interval for core (ms):", default=None
@@ -119,8 +119,8 @@ def _load_further_machine_info(
     return [further_machine_uprof]
 
 
-def _load_core_metrics(path: Path, session_id: int, db_session: Session|None = None) -> list[AMDuProfPcm_core_metrics]:
-    core_metrics_csv = pd.read_csv(path, header=None, index_col=0).T
+def _load_core_metrics(context: MetricContext) -> list[AMDuProfPcm_core_metrics]:
+    core_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
 
     instances_to_add: list[AMDuProfPcm_core_metrics] = list()
     for _, row in core_metrics_csv.iterrows():
@@ -128,25 +128,31 @@ def _load_core_metrics(path: Path, session_id: int, db_session: Session|None = N
             if name == "Metric":
                 continue
 
-            # TODO: Add metric to metrics dict if does not exist
-            # create_if_not_exists()
+            metric = AMDuProfPcm_metrics_dict(name=name)
+            metric = create_if_not_exists(
+                db_session=context.db_session,
+                to_create=metric,
+                where_column=AMDuProfPcm_metrics_dict.name,
+                equal_to=str(name),
+            )
+            context.db_session.commit()
 
             instance = AMDuProfPcm_core_metrics(
-                profiling_session=session_id,
+                profiling_session=context.session_id,
                 core=int(row.get("Metric", default=-1)[5:]),
-                metric=name,
+                metric=metric.id,
                 value=value,
             )
             instances_to_add.append(instance)
     return instances_to_add
 
 
-def _load_l3_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_l3_metrics]:
-    l3_metrics_csv = pd.read_csv(path, header=None, index_col=0).T
+def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPcm_l3_metrics]:
+    l3_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
     instances_to_add: list[AMDuProfPcm_l3_metrics] = list()
     for _, row in l3_metrics_csv.iterrows():
         instance = AMDuProfPcm_l3_metrics(
-            profiling_session=session_id,
+            profiling_session=context.session_id,
             ccx_number=int(row.get("Metric", default=-1)[4:]),
             l3_access=row.get("L3 Access", default=None),
             l3_miss=row.get("L3 Miss", default=None),
@@ -158,7 +164,7 @@ def _load_l3_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_l3_metrics
 
 
 def load_uprof_pcm(db_session: Session) -> None:
-    FILE_SUFFIXES: list[tuple[str,Callable[[Thumb], list]]] = [
+    FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
         ("further_machine_info.csv", _load_further_machine_info),
@@ -208,7 +214,13 @@ def load_uprof_pcm(db_session: Session) -> None:
 
         for suffix, function in FILE_SUFFIXES:
             path: Path = general_path / (name_base + suffix)
-            db_session.add_all(function(Thumb(path=path, session_id=session.id, db_session=db_session)))
+            db_session.add_all(
+                function(
+                    MetricContext(
+                        path=path, session_id=session.id, db_session=db_session
+                    )
+                )
+            )
 
 
 def main():
