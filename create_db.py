@@ -187,6 +187,9 @@ def load_uprof_pcm(db_session: Session) -> None:
         ("l3_metrics.csv", _load_l3_metrics),
     ]
 
+    core_metrics_dict = db_session.execute(select(AMDuProfPcm_metrics_dict.id, AMDuProfPcm_metrics_dict.name)).all()
+    print("L2 Hit (pti)" in core_metrics_dict)
+
     for input_path in Path("csvized_data").glob(f"**/*.{FILE_SUFFIXES[0][0]}"):
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(FILE_SUFFIXES[0][0])]
@@ -209,7 +212,7 @@ def load_uprof_pcm(db_session: Session) -> None:
             equal_to=use_case_name,
         )
 
-        db_session.commit()  # commit needed to obtain the ids of the added objects
+        db_session.commit()  # the commit needed to obtain the ids of the added objects
 
         session_name = extract_from_path("session", input_path)
         session = ProfilingSession(
