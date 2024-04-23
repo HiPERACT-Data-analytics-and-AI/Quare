@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar
 
@@ -17,6 +18,13 @@ from db_models.amduprofpcm_models import (
 )
 
 
+@dataclass
+class Thumb:
+    path: Path
+    session_id: int
+    db_session: Session | None = None
+
+
 def extract_from_path(key: str, path: Path) -> str:
     path_struct: dict[str, tuple[int, ...]] = {
         "use_case": (2,),
@@ -28,30 +36,31 @@ def extract_from_path(key: str, path: Path) -> str:
 
 
 DBBaseModel = TypeVar("DBBaseModel", bound=DBBase)
+T = TypeVar("T")
 
 
 def create_if_not_exists(
     db_session: Session,
     to_create: DBBaseModel,
-    where_column: InstrumentedAttribute,
-    equal_to: str | int | float | bool,
+    where_column: InstrumentedAttribute[T],
+    equal_to: T,
 ) -> DBBaseModel:
     selected_row = db_session.execute(
         select(where_column.parent).where(where_column == equal_to)
     ).first()
 
     if not selected_row:
-        db_session.add(to_create)  # Needs a commit after returning <- add to docs
+        db_session.add(to_create)  # needs a commit after returning <- add to docs
         return to_create
     return selected_row[0]
 
 
-def _load_machine_info(path: Path, session_id: int) -> list[AMDuProfPcm_machine_info]:
-    machine_csv = pd.read_csv(path, header=None, index_col=0).T
+def _load_machine_info(thumb: Thumb) -> list[AMDuProfPcm_machine_info]:
+    machine_csv = pd.read_csv(thumb.path, header=None, index_col=0).T
     row = machine_csv.iloc[0]
 
     machine_uprof = AMDuProfPcm_machine_info(
-        profiling_session=session_id,
+        profiling_session=thumb.session_id,
         system=row.get("System:", default=None),
         num_of_sockets=row.get("Number of Sockets :", default=None),
         num_of_ccds=row.get("Number of CCDs :", default=None),
@@ -110,7 +119,7 @@ def _load_further_machine_info(
     return [further_machine_uprof]
 
 
-def _load_core_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_core_metrics]:
+def _load_core_metrics(path: Path, session_id: int, db_session: Session|None = None) -> list[AMDuProfPcm_core_metrics]:
     core_metrics_csv = pd.read_csv(path, header=None, index_col=0).T
 
     instances_to_add: list[AMDuProfPcm_core_metrics] = list()
@@ -120,6 +129,8 @@ def _load_core_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_core_met
                 continue
 
             # TODO: Add metric to metrics dict if does not exist
+            # create_if_not_exists()
+
             instance = AMDuProfPcm_core_metrics(
                 profiling_session=session_id,
                 core=int(row.get("Metric", default=-1)[5:]),
@@ -147,7 +158,7 @@ def _load_l3_metrics(path: Path, session_id: int) -> list[AMDuProfPcm_l3_metrics
 
 
 def load_uprof_pcm(db_session: Session) -> None:
-    FILE_SUFFIXES: list[tuple[str, Callable[[Path, int], list]]] = [
+    FILE_SUFFIXES: list[tuple[str,Callable[[Thumb], list]]] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
         ("further_machine_info.csv", _load_further_machine_info),
@@ -197,7 +208,7 @@ def load_uprof_pcm(db_session: Session) -> None:
 
         for suffix, function in FILE_SUFFIXES:
             path: Path = general_path / (name_base + suffix)
-            db_session.add_all(function(path, session.id))
+            db_session.add_all(function(Thumb(path=path, session_id=session.id, db_session=db_session)))
 
 
 def main():
