@@ -18,13 +18,6 @@ from db_models.amduprofpcm_models import (
 )
 
 
-@dataclass
-class MetricContext:
-    path: Path
-    session_id: int
-    db_session: Session
-
-
 def extract_from_path(key: str, path: Path) -> str:
     path_struct: dict[str, tuple[int, ...]] = {
         "use_case": (2,),
@@ -53,6 +46,24 @@ def create_if_not_exists(
         db_session.add(to_create)  # needs a commit after returning <- add to docs
         return to_create
     return selected_row[0]
+
+
+class InMemoryTables:
+    core_metrics: dict[str, int] = {}
+
+    @classmethod
+    def update_core_metrics(cls, db_session: Session) -> None:
+        core_metrics_list = db_session.execute(
+            select(AMDuProfPcm_metrics_dict.id, AMDuProfPcm_metrics_dict.name)
+        ).all()
+        cls.core_metrics = {row[1]: row[0] for row in core_metrics_list}
+
+
+@dataclass
+class MetricContext:
+    path: Path
+    session_id: int
+    db_session: Session
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPcm_machine_info]:
@@ -140,19 +151,16 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPcm_core_metrics]
             if name == "Metric":
                 continue
 
-            metric = AMDuProfPcm_metrics_dict(name=name)
-            metric = create_if_not_exists(
-                db_session=context.db_session,
-                to_create=metric,
-                where_column=AMDuProfPcm_metrics_dict.name,
-                equal_to=str(name),
-            )
-            context.db_session.commit()
+            if name not in InMemoryTables.core_metrics.keys():
+                metric = AMDuProfPcm_metrics_dict(name=name)
+                context.db_session.add(metric)
+                context.db_session.commit()
+                InMemoryTables.update_core_metrics(context.db_session)
 
             instance = AMDuProfPcm_core_metrics(
                 profiling_session=context.session_id,
                 core=int(row.get("Metric", default=-1)[5:]),
-                metric=metric.id,
+                metric=InMemoryTables.core_metrics[str(name)],
                 value=value,
             )
             instances_to_add.append(instance)
@@ -179,6 +187,8 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPcm_l3_metrics]:
 
 
 def load_uprof_pcm(db_session: Session) -> None:
+    InMemoryTables.update_core_metrics(db_session)
+
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
@@ -186,9 +196,6 @@ def load_uprof_pcm(db_session: Session) -> None:
         ("core_metrics.csv", _load_core_metrics),
         ("l3_metrics.csv", _load_l3_metrics),
     ]
-
-    core_metrics_dict = db_session.execute(select(AMDuProfPcm_metrics_dict.id, AMDuProfPcm_metrics_dict.name)).all()
-    print("L2 Hit (pti)" in core_metrics_dict)
 
     for input_path in Path("csvized_data").glob(f"**/*.{FILE_SUFFIXES[0][0]}"):
         general_path: Path = input_path.parent
