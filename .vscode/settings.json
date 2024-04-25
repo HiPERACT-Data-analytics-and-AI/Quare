@@ -16,6 +16,7 @@
         "itlb",
         "misprediction",
         "mispredicts",
+        "mpiuprof",
         "quare",
         "sqlalchemy",
         "swpf",

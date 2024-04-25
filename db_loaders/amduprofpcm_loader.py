@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from utils import create_if_not_exists, extract_from_path
+from .utils import create_if_not_exists, extract_from_path
 
 from db_models import Machine, ProfilingSession, UseCase
 from db_models.amduprofpcm_models import (
