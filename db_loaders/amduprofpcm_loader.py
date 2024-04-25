@@ -19,14 +19,14 @@ from db_models.amduprofpcm_models import (
 
 
 class InMemoryTables:
-    core_metrics: dict[str, int] = {}
+    metrics_dict: dict[str, int] = {}
 
     @classmethod
-    def update_core_metrics(cls, db_session: Session) -> None:
-        core_metrics_list = db_session.execute(
+    def update_metrics_dict(cls, db_session: Session) -> None:
+        metrics_dict_list = db_session.execute(
             select(AMDuProfPcm_metrics_dict.id, AMDuProfPcm_metrics_dict.name)
         ).all()
-        cls.core_metrics = {row[1]: row[0] for row in core_metrics_list}
+        cls.metrics_dict = {row[1]: row[0] for row in metrics_dict_list}
 
 
 @dataclass
@@ -121,16 +121,16 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPcm_core_metrics]
             if name == "Metric":
                 continue
 
-            if name not in InMemoryTables.core_metrics.keys():
+            if name not in InMemoryTables.metrics_dict.keys():
                 metric = AMDuProfPcm_metrics_dict(name=name)
                 context.db_session.add(metric)
                 context.db_session.commit()
-                InMemoryTables.update_core_metrics(context.db_session)
+                InMemoryTables.update_metrics_dict(context.db_session)
 
             instance = AMDuProfPcm_core_metrics(
                 profiling_session=context.session_id,
                 core=int(row.get("Metric", default=-1)[5:]),
-                metric=InMemoryTables.core_metrics[str(name)],
+                metric=InMemoryTables.metrics_dict[str(name)],
                 value=value,
             )
             instances_to_add.append(instance)
@@ -156,8 +156,8 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPcm_l3_metrics]:
     return instances_to_add
 
 
-def load_uprof_pcm(db_session: Session) -> None:
-    InMemoryTables.update_core_metrics(db_session)
+def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
+    InMemoryTables.update_metrics_dict(db_session)
 
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),
@@ -167,7 +167,7 @@ def load_uprof_pcm(db_session: Session) -> None:
         ("l3_metrics.csv", _load_l3_metrics),
     ]
 
-    for input_path in Path("csvized_data").glob(f"**/*.{FILE_SUFFIXES[0][0]}"):
+    for input_path in Path(data_dir_path).glob(f"**/*.{FILE_SUFFIXES[0][0]}"):
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(FILE_SUFFIXES[0][0])]
 
