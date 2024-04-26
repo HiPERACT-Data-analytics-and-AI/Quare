@@ -1,9 +1,26 @@
 {
     "cSpell.words": [
+        "alnum",
+        "amduprofpcm",
+        "ccds",
+        "ccxs",
         "csvize",
         "csvized",
         "csvizer",
         "csvizers",
+        "disp",
+        "dtlb",
+        "hwpf",
+        "iloc",
+        "iterrows",
+        "itlb",
+        "misprediction",
+        "mispredicts",
+        "mpiuprof",
+        "quare",
+        "sqlalchemy",
+        "swpf",
+        "tlbs",
         "uprof"
     ]
 }
