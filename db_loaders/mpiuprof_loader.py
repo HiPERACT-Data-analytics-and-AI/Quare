@@ -111,7 +111,6 @@ def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
         ("rank_summary.csv", _load_rank_summary),
     ]
 
-    # TODO: Enclose the code below in more generic way
     for input_path in Path(data_dir_path).glob(f"**/*.{FILE_SUFFIXES[0][0]}"):
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(FILE_SUFFIXES[0][0])]
