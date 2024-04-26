@@ -16,7 +16,7 @@ def main():
     with Session(db_engine) as db_session:
         load_amduprofpcm(db_session, data_dir_path)
         load_mpiuprof(db_session, data_dir_path)
-        
+
         db_session.commit()
 
 

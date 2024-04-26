@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from .utils import create_if_not_exists, extract_from_path
 
 from db_models import Machine, ProfilingSession, UseCase
 from db_models.amduprofpcm_models import (
@@ -16,6 +15,8 @@ from db_models.amduprofpcm_models import (
     AMDuProfPcm_machine_info,
     AMDuProfPcm_metrics_dict,
 )
+
+from .utils import create_if_not_exists, extract_from_path
 
 
 class InMemoryTables:
@@ -41,8 +42,8 @@ def _load_machine_info(context: MetricContext) -> list[AMDuProfPcm_machine_info]
         machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
-    row = machine_csv.iloc[0]
 
+    row = machine_csv.iloc[0]
     machine_uprof = AMDuProfPcm_machine_info(
         profiling_session=context.session_id,
         system=row.get("System:", default=None),
@@ -88,8 +89,8 @@ def _load_further_machine_info(
         further_machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
-    row = further_machine_csv.iloc[0]
 
+    row = further_machine_csv.iloc[0]
     further_machine_uprof = AMDuProfPcm_further_machine_info(
         profiling_session=context.session_id,
         core_p0_state_freq=row.get("Core P0 state frequency (MHz):", default=None),
@@ -142,6 +143,7 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPcm_l3_metrics]:
         l3_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
+
     instances_to_add: list[AMDuProfPcm_l3_metrics] = list()
     for _, row in l3_metrics_csv.iterrows():
         instance = AMDuProfPcm_l3_metrics(
