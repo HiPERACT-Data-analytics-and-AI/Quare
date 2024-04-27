@@ -26,12 +26,20 @@ class UseCase(DBBase):
     # sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
+class TaskSizesDict(DBBase):
+    __tablename__ = "Task_sizes_dict"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(32), unique=True)
+    size: Mapped[int | None]
+
+
 class ProfilingSession(DBBase):
     __tablename__ = "Profiling_session"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256), unique=True)
     desc: Mapped[str | None] = mapped_column(String(1024))
     use_case: Mapped[int] = mapped_column(ForeignKey(UseCase.id))
-    task_size: Mapped[str] = mapped_column(String(32))
+    task_size: Mapped[int] = mapped_column(ForeignKey(TaskSizesDict.id))
     date: Mapped[datetime | None]
     machine: Mapped[int] = mapped_column(ForeignKey(Machine.id))
+    exec_time_s: Mapped[float | None]

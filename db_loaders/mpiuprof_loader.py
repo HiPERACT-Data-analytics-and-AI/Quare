@@ -31,8 +31,8 @@ def _load_environment(context: MetricContext) -> list[MPIuProf_environment]:
         environment_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
-    row = environment_csv.iloc[0]
 
+    row = environment_csv.iloc[0]
     environment_uprof = MPIuProf_environment(
         profiling_session=context.session_id,
         total_ranks=row.get("TOTAL RANKS ", default=None),
