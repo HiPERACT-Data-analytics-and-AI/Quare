@@ -10,6 +10,9 @@
         "csvizers",
         "disp",
         "dtlb",
+        "figsize",
+        "fontsize",
+        "hspace",
         "hwpf",
         "iloc",
         "iterrows",
@@ -21,6 +24,8 @@
         "sqlalchemy",
         "swpf",
         "tlbs",
-        "uprof"
+        "twinx",
+        "uprof",
+        "wspace"
     ]
 }
