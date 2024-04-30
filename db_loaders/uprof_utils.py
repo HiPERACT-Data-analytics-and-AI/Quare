@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from db_models import Machine, ProfilingSession, TaskSizesDict, UseCase
 
-from .utils import create_if_not_exists, extract_from_path
+from .loaders_utils import create_if_not_exists, extract_from_path
 
 
 class InMemoryTables:

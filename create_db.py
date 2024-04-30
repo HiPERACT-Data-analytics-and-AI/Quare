@@ -7,9 +7,11 @@ from db_loaders.amduprofpcm_loader import load_amduprofpcm
 from db_loaders.mpiuprof_loader import load_mpiuprof
 from db_models import DBBase
 
+from .utils import create_db_engine
+
 
 def main():
-    db_engine: Engine = create_engine("sqlite:///quare.sqlite3", echo=False)
+    db_engine = create_db_engine()
     DBBase.metadata.create_all(db_engine)
     data_dir_path = Path("csvized_data")
 
