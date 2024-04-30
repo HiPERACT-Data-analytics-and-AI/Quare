@@ -7,7 +7,7 @@ from db_loaders.amduprofpcm_loader import load_amduprofpcm
 from db_loaders.mpiuprof_loader import load_mpiuprof
 from db_models import DBBase
 
-from .utils import create_db_engine
+from utils import create_db_engine
 
 
 def main():
@@ -15,12 +15,11 @@ def main():
     DBBase.metadata.create_all(db_engine)
     data_dir_path = Path("csvized_data")
 
-    with Session(db_engine) as db_session:
-        load_amduprofpcm(db_session, data_dir_path)
-        load_mpiuprof(db_session, data_dir_path)
+    # with Session(db_engine) as db_session:
+    #     load_amduprofpcm(db_session, data_dir_path)
+    #     load_mpiuprof(db_session, data_dir_path)
 
-        db_session.commit()
-
+    #     db_session.commit()
 
 if __name__ == "__main__":
     main()
