@@ -12,7 +12,7 @@ def extract_from_path(key: str, path: Path) -> str:
         "use_case": (2,),
         "machine": (3,),
         "task_size": (5,),
-        "session": (4, 5, 6),
+        "session": (3, 4, 5, 6),
     }
     return ".".join(path.parts[i] for i in path_struct[key])
 
