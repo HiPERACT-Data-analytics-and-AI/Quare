@@ -22,14 +22,6 @@ from db_models import (
 from utils import create_db_engine
 
 
-# xRange = []
-
-# for sizeId in MAP_MB_SIZES:
-#     size = MB_SIZES[sizeId]
-#     xRange.append( int(timing["rome128"][2][sizeId]/128) )
-#     x_tick_labels.append( str(xRange[-1]) + "\n("+size+")")
-
-
 def make_figures(
         axis_l,
         axis_r,
@@ -44,14 +36,23 @@ def make_figures(
     axis_l.semilogx(x_range, fvops, 'bo', markersize=8 , label="FVOPS" )
 
     #
-    # axis_r.semilogx(x_range, l2_ratios[key][0], "k", linestyle='dashed', linewidth=0.4   )
-    # axis_r.semilogx(x_range, l2_ratios[key][0], "C1d", label="L2 miss ratio (total)" )
+    axis_r.semilogx(x_range, l2_ratios[0], "k", linestyle='dashed', linewidth=0.4   )
+    axis_r.semilogx(x_range, l2_ratios[0], "C1d", label="L2 miss ratio (total)" )
 
-    # axis_r.semilogx(x_range, l2_ratios[key][1], "k", linestyle='dashed', linewidth=0.4   )
-    # axis_r.semilogx(x_range, l2_ratios[key][1], "C2d", label="L2 miss ratio from L1DC" )
+    axis_r.semilogx(x_range, l2_ratios[1], "k", linestyle='dashed', linewidth=0.4   )
+    axis_r.semilogx(x_range, l2_ratios[1], "C2d", label="L2 miss ratio from L1DC" )
 
-    # axis_r.semilogx(x_range, l2_ratios[key][2], "k", linestyle='dashed', linewidth=0.4   )
-    # axis_r.semilogx(x_range, l2_ratios[key][2], "C3d", label="L2 miss ratio from HWPF" )
+    axis_r.semilogx(x_range, l2_ratios[2], "k", linestyle='dashed', linewidth=0.4   )
+    axis_r.semilogx(x_range, l2_ratios[2], "C3d", label="L2 miss ratio from HWPF" )
+
+    axis_r.semilogx(x_range, l2_ratios[3], "k", linestyle='dashed', linewidth=0.4   )
+    axis_r.semilogx(x_range, l2_ratios[3], "C1s", label="L2 hit ratio (total)" )
+    
+    axis_r.semilogx(x_range, l2_ratios[4], "k", linestyle='dashed', linewidth=0.4   )
+    axis_r.semilogx(x_range, l2_ratios[4], "C2s", label="L2 hit ratio from L1DC" )
+    
+    axis_r.semilogx(x_range, l2_ratios[5], "k", linestyle='dashed', linewidth=0.4   )
+    axis_r.semilogx(x_range, l2_ratios[5], "C3s", label="L2 hit ratio from HWPF" )
 
     #
     axis_r.semilogx(x_range, l3_miss_ratio, "k", linestyle='dashed', linewidth=0.4)
@@ -94,7 +95,7 @@ def main():
     x_range: list = []
     x_tick_labels: list = []
     fvops: list = []
-    l2_ratios: list = [[], [], []]
+    l2_ratios: list = [[], [], [], [], [], []]
     l3_miss_ratio: list = []
     
 
@@ -118,35 +119,110 @@ def main():
             # for i, row in enumerate(db_session.execute(stmt).all()):
             #     print(i, row[0].name, row[0].use_case, row[1].name, row[2].name)
             row = db_session.execute(stmt).first()
-            if row is not None:
-                profiling_session, use_case, task_sizes_dict = row
-                print(profiling_session.name, use_case.name, task_sizes_dict.name)
-                x_range.append(task_sizes_dict.size / num_of_cores)
-                x_tick_labels.append(f"{x_range[-1]} \n(\"{task_sizes_dict.name}\")")
-                fvops.append(task_sizes_dict.size / profiling_session.exec_time_s)
-                
-                stmt = (
-                    select(AMDuProfPcm_l3_metrics)
-                    .where(AMDuProfPcm_l3_metrics.profiling_session == profiling_session.id)
-                )
-                l3_tmp = [row[0].l3_miss_percent for row in db_session.execute(stmt).all()]
-                l3_miss_ratio.append(fsum(l3_tmp) / len(l3_tmp))
+            if row is None:
+                continue
+            
+            profiling_session, use_case, task_sizes_dict = row
+            print(profiling_session.name, use_case.name, task_sizes_dict.name)
+            x_range.append(task_sizes_dict.size / num_of_cores)
+            x_tick_labels.append(f"{x_range[-1]} \n(\"{task_sizes_dict.name}\")")
+            fvops.append(task_sizes_dict.size / profiling_session.exec_time_s)
+            
+            stmt = (
+                select(AMDuProfPcm_l3_metrics)
+                .where(AMDuProfPcm_l3_metrics.profiling_session == profiling_session.id)
+            )
+            l3_tmp = [row[0].l3_miss_percent for row in db_session.execute(stmt).all()]
+            l3_miss_ratio.append(fsum(l3_tmp) / len(l3_tmp))
 
-                # stmt = (
-                #     select(AMDuProfPcm_core_metrics)
-                #     .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
-                #     .join(AMDuProfPcm_metrics_dict)
-                #     .where(AMDuProfPcm_metrics_dict.name == "L2 Miss (pti)")
-                # )
-                # l2_miss = db_session.execute(stmt).first()[0].value()
-                # stmt = (
-                #     select(AMDuProfPcm_core_metrics)
-                #     .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
-                #     .join(AMDuProfPcm_metrics_dict)
-                #     .where(AMDuProfPcm_metrics_dict.name == "L2 Access (pti)")
-                # )
-                # l2_access = [row[0].value for row in db_session.execute(stmt).all()]
-                # l2_ratios[0].append()
+            # L2
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Access (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_a = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Miss (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_m = [row[0].value for row in l2_rows]
+            
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Hit (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_h = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Access from DC Miss (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_DCa = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Miss from DC Miss (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_DCm = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Hit from DC Miss (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_DCh = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Access from HWPF (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_HWPFa = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Miss from HWPF (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_HWPFm = [row[0].value for row in l2_rows]
+
+            stmt = (
+                select(AMDuProfPcm_core_metrics)
+                .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                .join(AMDuProfPcm_metrics_dict)
+                .where(AMDuProfPcm_metrics_dict.name == "L2 Hit from HWPF (pti)")
+            )
+            l2_rows = db_session.execute(stmt).all()
+            l2_HWPFh = [row[0].value for row in l2_rows]
+
+            l2_ratios[0].append((fsum(l2_m)/len(l2_m))/(fsum(l2_a)/len(l2_a)) *100.0)
+            l2_ratios[1].append((fsum(l2_DCm)/len(l2_DCm))/(fsum(l2_DCa)/len(l2_DCa)) *100.0)
+            l2_ratios[2].append((fsum(l2_HWPFm)/len(l2_HWPFm))/(fsum(l2_HWPFa)/len(l2_HWPFa)) *100.0)
+            l2_ratios[3].append((fsum(l2_h)/len(l2_h))/(fsum(l2_a)/len(l2_a)) *100.0)
+            l2_ratios[4].append((fsum(l2_DCh)/len(l2_DCh))/(fsum(l2_DCa)/len(l2_DCa)) *100.0)
+            l2_ratios[5].append((fsum(l2_HWPFh)/len(l2_HWPFh))/(fsum(l2_HWPFa)/len(l2_HWPFa)) *100.0)
 
 
     fig, axes = plt.subplots(1,num_of_figures,figsize=(num_of_figures*12,5))
