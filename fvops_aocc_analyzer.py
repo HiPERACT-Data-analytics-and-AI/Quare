@@ -1,6 +1,7 @@
 from math import fsum
 
 from matplotlib import pyplot as plt
+import numpy as np
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -89,7 +90,7 @@ def main():
     num_of_cores: int = 128
     machine_name: str = "128_ROME"
 
-    num_of_figures: int = 1
+    num_of_figures: int = 2
 
     sizes_to_get: tuple[str, ...] = ("xsmall", "small", "smid", "mid", "high", "mhigh", "uhigh", "xhigh")
     x_range: list = []
@@ -217,25 +218,32 @@ def main():
             l2_rows = db_session.execute(stmt).all()
             l2_HWPFh = [row[0].value for row in l2_rows]
 
-            l2_ratios[0].append((fsum(l2_m)/len(l2_m))/(fsum(l2_a)/len(l2_a)) *100.0)
-            l2_ratios[1].append((fsum(l2_DCm)/len(l2_DCm))/(fsum(l2_DCa)/len(l2_DCa)) *100.0)
-            l2_ratios[2].append((fsum(l2_HWPFm)/len(l2_HWPFm))/(fsum(l2_HWPFa)/len(l2_HWPFa)) *100.0)
-            l2_ratios[3].append((fsum(l2_h)/len(l2_h))/(fsum(l2_a)/len(l2_a)) *100.0)
-            l2_ratios[4].append((fsum(l2_DCh)/len(l2_DCh))/(fsum(l2_DCa)/len(l2_DCa)) *100.0)
-            l2_ratios[5].append((fsum(l2_HWPFh)/len(l2_HWPFh))/(fsum(l2_HWPFa)/len(l2_HWPFa)) *100.0)
+            l2_ratios[0].append(np.mean(l2_m)/np.mean(l2_a) *100.0)
+            l2_ratios[1].append(np.mean(l2_DCm)/np.mean(l2_DCa) *100.0)
+            l2_ratios[2].append(np.mean(l2_HWPFm)/np.mean(l2_HWPFa) *100.0)
+            l2_ratios[3].append(np.mean(l2_h)/np.mean(l2_a) *100.0)
+            l2_ratios[4].append(np.mean(l2_DCh)/np.mean(l2_DCa) *100.0)
+            l2_ratios[5].append(np.mean(l2_HWPFh)/np.mean(l2_HWPFa) *100.0)
+
+            # l2_ratios[0].append((fsum(l2_m)/len(l2_m))/(fsum(l2_a)/len(l2_a)) *100.0)
+            # l2_ratios[1].append((fsum(l2_DCm)/len(l2_DCm))/(fsum(l2_DCa)/len(l2_DCa)) *100.0)
+            # l2_ratios[2].append((fsum(l2_HWPFm)/len(l2_HWPFm))/(fsum(l2_HWPFa)/len(l2_HWPFa)) *100.0)
+            # l2_ratios[3].append((fsum(l2_h)/len(l2_h))/(fsum(l2_a)/len(l2_a)) *100.0)
+            # l2_ratios[4].append((fsum(l2_DCh)/len(l2_DCh))/(fsum(l2_DCa)/len(l2_DCa)) *100.0)
+            # l2_ratios[5].append((fsum(l2_HWPFh)/len(l2_HWPFh))/(fsum(l2_HWPFa)/len(l2_HWPFa)) *100.0)
 
 
-    fig, axes = plt.subplots(1,num_of_figures,figsize=(num_of_figures*12,5))
+    fig, axes = plt.subplots(1,num_of_figures,figsize=(num_of_figures*12,5), squeeze=False)
     fig.subplots_adjust(left=0.05, bottom=0.07, right=0.97, top=0.95, wspace=0.4, hspace=0.4)
 
-    # axis_r = [ax.twinx() for ax in axes]
-    axis_r = [axes.twinx()]
+    axis_r = [ax.twinx() for ax in axes[0]]
+    # axis_r = [axes.twinx()]
 
-    # make_figures(axes[0], axis_r[0], "rome128")
-    make_figures(axes, axis_r[0], x_range, x_tick_labels, fvops, l2_ratios, l3_miss_ratio)
+    make_figures(axes[0][0], axis_r[0],  x_range, x_tick_labels, fvops, l2_ratios, l3_miss_ratio)
+    # make_figures(axes, axis_r[0], x_range, x_tick_labels, fvops, l2_ratios, l3_miss_ratio)
 
-    # axes[0].set_title("2x 64-core 2.25 GHz AMD EPYC 7742 (Rome) ", fontsize="12")
-    axes.set_title("2x 64-core 2.25 GHz AMD EPYC 7742 (Rome) ", fontsize="12")
+    axes[0][0].set_title("2x 64-core 2.25 GHz AMD EPYC 7742 (Rome) ", fontsize="12")
+    # axes.set_title("2x 64-core 2.25 GHz AMD EPYC 7742 (Rome) ", fontsize="12")
 
     fig.savefig("./GRAPH.png", dpi=300)
     fig.savefig("./GRAPH.svg")
