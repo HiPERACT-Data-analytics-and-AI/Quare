@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 import numpy as np
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,28 +27,34 @@ def make_figures(
         x_tick_labels: list[str],
         metrics: dict[str, list[float]],
     ) -> None:
+    # up to 9 different parameters (due to color)
     COLORS = ["C1", "C2", "C3"]
-    # up to 9 parameters (due to color):
     MARKERS = ["d", "d", "d", "s", "s", "s", "*", "*", "*"]
 
     num_of_figures: int = 1
     fig, axes = plt.subplots(1,num_of_figures,figsize=(num_of_figures*12,5), squeeze=False)
     fig.subplots_adjust(left=0.05, bottom=0.07, right=0.95, top=0.95, wspace=0.4, hspace=0.4)
 
-    axis_l = axes[0][0]
-    axis_r = [ax.twinx() for ax in axes[0]]
-    axis_r = axis_r[0]
+    axis_l: Axes = axes[0][0]
+    axis_r: Axes = [ax.twinx() for ax in axes[0]][0]
+    # axis_r = axis_r[0]
     
-    n = 0
+    n:int = 0
     for key, value_series in metrics.items():
-        axis_r.semilogx(x_range, value_series, "k", linestyle='dashed', linewidth=0.4)
-        axis_r.semilogx(x_range, value_series, f"{COLORS[n%len(COLORS)]}{MARKERS[n%len(MARKERS)]}", label=key)
+        axis_r.semilogx(
+            x_range,
+            value_series,
+            f"{MARKERS[n%len(MARKERS)]}{COLORS[n%len(COLORS)]}",
+            label=key,
+            linestyle="dashed",
+            linewidth=0.4,
+        )
         n += 1
     
     axis_l.set_xticks(x_range)
     axis_l.set_xticklabels( x_tick_labels, fontsize="8" )
     axis_l.set_xlabel("Cells per rank (size name)")
-    axis_r.set_ylabel("Metric's unit")
+    axis_r.set_ylabel("Metric unit")
     axis_l.legend(loc='upper left', fontsize="8")
     axis_r.legend(loc='upper right', fontsize="8")
 
