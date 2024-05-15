@@ -74,6 +74,12 @@ def make_figures(
 
 
 def main() -> None:
+    NO_DICT_METRICS: dict = {
+        "L3 Access": "l3_access",
+        "L3 Miss": "l3_miss",
+        "L3 Miss Percent": "l3_miss_percent",
+        "L3 Miss Latency": "ave_l3_miss_latency",
+    }
     metric_names: list[str] = ["L2 Access (pti)", "L2 Miss (pti)", "L2 Hit (pti)"]
     num_of_cores: int = 128
 
@@ -138,7 +144,20 @@ def main() -> None:
                 )
                 rows = db_session.execute(stmt).all()
                 values = [row[0].value for row in rows]
+
+                if not rows:
+                    stmt = (
+                        select(AMDuProfPcm_l3_metrics)
+                        .where(
+                            AMDuProfPcm_l3_metrics.profiling_session
+                            == profiling_session.id
+                        )
+                    )
+                    rows = db_session.execute(stmt).all()
+                    values = [getattr(row[0], NO_DICT_METRICS[metric_name]) for row in rows]
+
                 metrics[metric_name].append(np.mean(values))
+
     make_figures(x_range, x_tick_labels, fvops, metrics)
 
 
