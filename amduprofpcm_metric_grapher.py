@@ -1,40 +1,35 @@
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-import numpy as np
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from db_models import Machine, ProfilingSession, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import (
     AMDuProfPcm_core_metrics,
-    AMDuProfPcm_further_machine_info,
     AMDuProfPcm_l3_metrics,
-    AMDuProfPcm_machine_cpu_topology,
-    AMDuProfPcm_machine_info,
     AMDuProfPcm_metrics_dict,
 )
-from db_models import (
-    ProfilingSession,
-    UseCase,
-    TaskSizesDict,
-    Machine,
-)
-
 from utils import create_db_engine
 
 
 def make_figures(
-        x_range: list[float],
-        x_tick_labels: list[str],
-        fvops: list[float],
-        metrics: dict[str, list[float]],
-    ) -> None:
+    x_range: list[float],
+    x_tick_labels: list[str],
+    fvops: list[float],
+    metrics: dict[str, list[float]],
+) -> None:
     # up to 9 different parameters (due to color):
     COLORS = ["C1", "C2", "C3"]
     MARKERS = ["d", "d", "d", "s", "s", "s", "*", "*", "*"]
 
     num_of_figures: int = 1
-    fig, axes = plt.subplots(1,num_of_figures,figsize=(num_of_figures*12,5), squeeze=False)
-    fig.subplots_adjust(left=0.05, bottom=0.13, right=0.95, top=0.95, wspace=0.4, hspace=0.4)
+    fig, axes = plt.subplots(
+        1, num_of_figures, figsize=(num_of_figures * 12, 5), squeeze=False
+    )
+    fig.subplots_adjust(
+        left=0.05, bottom=0.13, right=0.95, top=0.95, wspace=0.4, hspace=0.4
+    )
 
     axis_l: Axes = axes[0][0]
     axis_r: Axes = [ax.twinx() for ax in axes[0]][0]
@@ -49,7 +44,7 @@ def make_figures(
         linewidth=0.4,
     )
 
-    n:int = 0
+    n: int = 0
     for key, value_series in metrics.items():
         axis_r.semilogx(
             x_range,
@@ -62,14 +57,14 @@ def make_figures(
         n += 1
 
     axis_l.set_xticks(x_range)
-    axis_l.set_xticklabels( x_tick_labels, fontsize="8" )
+    axis_l.set_xticklabels(x_tick_labels, fontsize="8")
     axis_l.set_xlabel("Cells per rank (size name)")
 
     axis_l.set_ylabel("FVOPS")
-    axis_r.set_ylabel("Metric unit")
+    axis_r.set_ylabel("Common scale for all the metrics")
 
-    axis_l.legend(loc='upper left', fontsize="8")
-    axis_r.legend(loc='upper right', fontsize="8")
+    axis_l.legend(loc="upper left", fontsize="8")
+    axis_r.legend(loc="upper right", fontsize="8")
 
     fig.savefig("./GRAPH.png", dpi=300)
     fig.savefig("./GRAPH.svg")
@@ -85,9 +80,17 @@ def main() -> None:
     session_name_contains: str = "IPC"
     use_case_id: int = 2
     machine_name: str = "128_ROME"
-    sizes_to_get: tuple[str, ...] = ("xsmall", "small", "smid", "mid", "high", "mhigh", "uhigh", "xhigh")
+    sizes_to_get: tuple[str, ...] = (
+        "xsmall",
+        "small",
+        "smid",
+        "mid",
+        "high",
+        "mhigh",
+        "uhigh",
+        "xhigh",
+    )
 
-    num_of_figures: int = 1
     x_range: list[float] = []
     x_tick_labels: list[str] = []
     fvops: list[float] = []
@@ -96,7 +99,7 @@ def main() -> None:
     with Session(create_db_engine()) as db_session:
         for metric_name in metric_names:
             metrics[metric_name] = []
-        
+
         for task_size in sizes_to_get:
             stmt = (
                 select(ProfilingSession, UseCase, TaskSizesDict)
@@ -115,18 +118,21 @@ def main() -> None:
             row = db_session.execute(stmt).first()
             if row is None:
                 continue
-            
+
             profiling_session, use_case, task_sizes_dict = row
             print(profiling_session.name, use_case.name, task_sizes_dict.name)
             x_range.append(task_sizes_dict.size / num_of_cores)
-            x_tick_labels.append(f"{x_range[-1]} \n(\"{task_sizes_dict.name}\")")
+            x_tick_labels.append(f'{x_range[-1]} \n("{task_sizes_dict.name}")')
 
             fvops.append(task_sizes_dict.size / profiling_session.exec_time_s)
 
             for metric_name in metric_names:
                 stmt = (
                     select(AMDuProfPcm_core_metrics)
-                    .where(AMDuProfPcm_core_metrics.profiling_session == profiling_session.id)
+                    .where(
+                        AMDuProfPcm_core_metrics.profiling_session
+                        == profiling_session.id
+                    )
                     .join(AMDuProfPcm_metrics_dict)
                     .where(AMDuProfPcm_metrics_dict.name == metric_name)
                 )

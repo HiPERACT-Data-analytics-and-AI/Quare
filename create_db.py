@@ -1,12 +1,10 @@
 from pathlib import Path
 
-from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
 from db_loaders.amduprofpcm_loader import load_amduprofpcm
 from db_loaders.mpiuprof_loader import load_mpiuprof
 from db_models import DBBase
-
 from utils import create_db_engine
 
 
@@ -20,6 +18,7 @@ def main():
         load_mpiuprof(db_session, data_dir_path)
 
         db_session.commit()
+
 
 if __name__ == "__main__":
     main()
