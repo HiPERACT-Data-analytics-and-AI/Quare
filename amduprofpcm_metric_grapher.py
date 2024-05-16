@@ -24,7 +24,7 @@ def make_figures(
         num_of_figures, 1, figsize=(12, num_of_figures * 5), squeeze=False
     )
     fig.subplots_adjust(
-        left=0.05, bottom=0.05, right=0.95, top=0.95, wspace=0.4, hspace=0.4
+        left=0.15, bottom=0.05, right=0.95, top=0.95, wspace=0.4, hspace=0.0
     )
 
     i: int = 0
@@ -41,6 +41,7 @@ def make_figures(
         axes[i][0].set_xticks(x_range)
         axes[i][0].set_ylabel("Native unit for the metric")
         axes[i][0].legend(loc="upper right", fontsize="8")
+        axes[i][0].yaxis.get_major_formatter().set_scientific(False)
 
         if i+1 == len(metrics):
             axes[i][0].set_xticklabels(x_tick_labels, fontsize="8")
@@ -62,7 +63,7 @@ def main() -> None:
         "L3 Miss Percent": "l3_miss_percent",
         "L3 Miss Latency": "ave_l3_miss_latency",
     }
-    metric_names: list[str] = ["L2 Access (pti)", "L2 Miss (pti)", "L2 Hit (pti)"]
+    metric_names: list[str] = ["L2 Access (pti)", "L2 Miss (pti)", "L2 Hit (pti)", "L3 Access"]
     num_of_cores: int = 128
 
     session_name_contains: str = "IPC"
