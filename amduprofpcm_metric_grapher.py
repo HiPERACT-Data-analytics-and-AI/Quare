@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, ticker
 from matplotlib.axes import Axes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,10 +16,11 @@ from utils import create_db_engine
 def make_figures(
     x_range: list[float],
     x_tick_labels: list[str],
-    metrics: dict[str, list[float]],
+    metrics: dict[str, list[float | int]],
 ) -> None:
 
     num_of_figures: int = len(metrics)
+    axes: list[list[Axes]]
     fig, axes = plt.subplots(
         num_of_figures, 1, figsize=(12, num_of_figures * 5), squeeze=False
     )
@@ -37,10 +38,11 @@ def make_figures(
             linestyle="dashed",
             linewidth=0.4,
         )
-
         axes[i][0].set_xticks(x_range)
         axes[i][0].set_ylabel("Native unit for the metric")
         axes[i][0].legend(loc="upper right", fontsize="8")
+        # axes[i][0].yaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=False))
+        # axes[i][0].yaxis.get_major_formatter().
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)
 
         if i+1 == len(metrics):
