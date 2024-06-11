@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from pathlib import Path
+from shutil import copytree
 
 
 def _csvize_multi_block_csv(
@@ -71,17 +72,33 @@ def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
     )
 
 
+def _copy_others(raw_data_path: Path, csvized_path: Path) -> int:
+    counter: int = 0
+    for input_file_path in raw_data_path.glob("**/others"):
+        # print(input_file_path)
+        output_file_path: Path = (
+            csvized_path / input_file_path.relative_to(raw_data_path)
+        )
+        # print(output_file_path)
+        copytree(input_file_path, output_file_path)
+        counter += 1
+    return counter
+
+
+
 def csvize() -> None:
+    raw_data_path: Path = Path("../quare-test-db/raw_data")
+    csvized_data_path: Path = Path("../quare-test-db/csvized_data")
+
     CSVIZERS: dict[str, Callable[[Path, Path], int]] = {
         "AMDuProfPcm": _csvize_uprof_pcm,
         "MPIuProf": _csvize_uprof_mpi,
+        "others": _copy_others,
     }
 
-    raw_data_path: Path = Path("raw_data")
     if not raw_data_path.exists():
         raise FileNotFoundError(raw_data_path.resolve().as_posix())
 
-    csvized_data_path: Path = Path("csvized_data")
     if not csvized_data_path.exists():
         csvized_data_path.mkdir()
 
