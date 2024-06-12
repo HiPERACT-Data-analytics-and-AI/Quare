@@ -1,15 +1,15 @@
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .quare_models import DBBase, ProfilingSession
+from .quare_models import DBBase, Repetition
 
 
-# machine_info refers to profiling_session
+# machine_info refers to repetition
 # as machine_info file is generated session-wise
-class AMDuProfPcm_machine_info(DBBase):
-    __tablename__ = "AMDuProfPcm_machine_info"
+class AMDuProfPCM_machine_info(DBBase):
+    __tablename__ = "AMDuProfPCM_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
     system: Mapped[str] = mapped_column(String(256))
     num_of_sockets: Mapped[int | None]
     num_of_ccds: Mapped[int | None]
@@ -21,20 +21,20 @@ class AMDuProfPcm_machine_info(DBBase):
     num_of_threads_sharing_l3: Mapped[int | None]
 
 
-class AMDuProfPcm_machine_cpu_topology(DBBase):
-    __tablename__ = "AMDuProfPcm_machine_cpu_topology"
+class AMDuProfPCM_machine_cpu_topology(DBBase):
+    __tablename__ = "AMDuProfPCM_machine_cpu_topology"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
     socket: Mapped[int | None]
     ccd: Mapped[int | None]
     ccx: Mapped[int | None]
     cores: Mapped[str | None] = mapped_column(String(128))
 
 
-class AMDuProfPcm_further_machine_info(DBBase):
-    __tablename__ = "AMDuProfPcm_further_machine_info"
+class AMDuProfPCM_further_machine_info(DBBase):
+    __tablename__ = "AMDuProfPCM_further_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
     core_p0_state_freq: Mapped[float | None]
     multiplex_interval_for_core: Mapped[float | None]
     multiplex_interval_for_l3: Mapped[float | None]
@@ -44,26 +44,26 @@ class AMDuProfPcm_further_machine_info(DBBase):
     version: Mapped[str | None] = mapped_column(String(16))
 
 
-class AMDuProfPcm_metrics_dict(DBBase):
-    __tablename__ = "AMDuProfPcm_metrics_dict"
+class AMDuProfPCM_metrics_dict(DBBase):
+    __tablename__ = "AMDuProfPCM_metrics_dict"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128), unique=True)
     desc: Mapped[str | None] = mapped_column(String(1024))
 
 
-class AMDuProfPcm_core_metrics(DBBase):
-    __tablename__ = "AMDuProfPcm_core_metrics"
+class AMDuProfPCM_core_metrics(DBBase):
+    __tablename__ = "AMDuProfPCM_core_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
     core: Mapped[int]
-    metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPcm_metrics_dict.id))
+    metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
     value: Mapped[float]
 
 
-class AMDuProfPcm_l3_metrics(DBBase):
-    __tablename__ = "AMDuProfPcm_l3_metrics"
+class AMDuProfPCM_l3_metrics(DBBase):
+    __tablename__ = "AMDuProfPCM_l3_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
-    profiling_session: Mapped[int] = mapped_column(ForeignKey(ProfilingSession.id))
+    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
     ccx_number: Mapped[int | None]
     l3_access: Mapped[float | None]
     l3_miss: Mapped[float | None]

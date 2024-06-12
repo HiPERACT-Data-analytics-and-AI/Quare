@@ -33,11 +33,11 @@ class TaskSizesDict(DBBase):
     size: Mapped[int | None]
 
 
-class ProfilingSession(DBBase):
-    __tablename__ = "Profiling_session"
+class Repetition(DBBase):
+    __tablename__ = "Repetition"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(256), unique=True)
-    desc: Mapped[str | None] = mapped_column(String(1024))
+    name: Mapped[str] = mapped_column(String(64), unique=True)
+    # desc: Mapped[str | None] = mapped_column(String(1024))
     use_case: Mapped[int] = mapped_column(ForeignKey(UseCase.id))
     task_size: Mapped[int] = mapped_column(ForeignKey(TaskSizesDict.id))
     date: Mapped[datetime | None]

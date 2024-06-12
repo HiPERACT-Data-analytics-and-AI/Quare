@@ -4,11 +4,11 @@ from matplotlib.axes import Axes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import Machine, ProfilingSession, TaskSizesDict, UseCase
+from db_models import Machine, Repetition, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import (
-    AMDuProfPcm_core_metrics,
-    AMDuProfPcm_l3_metrics,
-    AMDuProfPcm_metrics_dict,
+    AMDuProfPCM_core_metrics,
+    AMDuProfPCM_l3_metrics,
+    AMDuProfPCM_metrics_dict,
 )
 from utils import create_db_engine
 
@@ -92,12 +92,12 @@ def main() -> None:
 
         for task_size in sizes_to_get:
             stmt = (
-                select(ProfilingSession, UseCase, TaskSizesDict)
+                select(Repetition, UseCase, TaskSizesDict)
                 .join(UseCase)
                 .join(TaskSizesDict)
                 .join(Machine)
                 .where(
-                    ProfilingSession.name.contains(session_name_contains),
+                    Repetition.name.contains(session_name_contains),
                     UseCase.id == use_case_id,
                     TaskSizesDict.name == task_size,
                     Machine.name == machine_name,
@@ -115,22 +115,22 @@ def main() -> None:
 
             for metric_name in metric_names:
                 stmt = (
-                    select(AMDuProfPcm_core_metrics)
+                    select(AMDuProfPCM_core_metrics)
                     .where(
-                        AMDuProfPcm_core_metrics.profiling_session
+                        AMDuProfPCM_core_metrics.repetition
                         == profiling_session.id
                     )
-                    .join(AMDuProfPcm_metrics_dict)
-                    .where(AMDuProfPcm_metrics_dict.name == metric_name)
+                    .join(AMDuProfPCM_metrics_dict)
+                    .where(AMDuProfPCM_metrics_dict.name == metric_name)
                 )
                 rows = db_session.execute(stmt).all()
                 values = [row[0].value for row in rows]
 
                 if not rows:
                     stmt = (
-                        select(AMDuProfPcm_l3_metrics)
+                        select(AMDuProfPCM_l3_metrics)
                         .where(
-                            AMDuProfPcm_l3_metrics.profiling_session
+                            AMDuProfPCM_l3_metrics.repetition
                             == profiling_session.id
                         )
                     )

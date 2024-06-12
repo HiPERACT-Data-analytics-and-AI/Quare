@@ -7,14 +7,15 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 from db_models import DBBase
 
 
-def extract_from_path(key: str, path: Path) -> str:
+def extract_from_path(key: str, data_dir_path: Path, file_path: Path) -> str:
     path_struct: dict[str, tuple[int, ...]] = {
         "use_case": (2,),
-        "machine": (3,),
-        "task_size": (5,),
-        "session": (3, 4, 5, 6),
+        "machine": (1,),
+        "task_size": (3,),
+        "repetition": (0, 4),
     }
-    return ".".join(path.parts[i] for i in path_struct[key])
+    file_path = file_path.relative_to(data_dir_path)
+    return ".".join(file_path.parts[i] for i in path_struct[key])
 
 
 DBBaseModel = TypeVar("DBBaseModel", bound=DBBase)

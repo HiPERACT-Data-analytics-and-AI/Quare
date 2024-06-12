@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import Machine, ProfilingSession, TaskSizesDict, UseCase
+from db_models import Machine, Repetition, TaskSizesDict, UseCase
 
 from .loaders_utils import create_if_not_exists, extract_from_path
 
@@ -24,7 +24,7 @@ class InMemoryTables:
 @dataclass
 class MetricContext:
     path: Path
-    session_id: int
+    repetition_id: int
     db_session: Session
 
 
@@ -39,7 +39,7 @@ def walk_through_sessions(
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(file_suffixes[0][0])]
 
-        machine_name = extract_from_path("machine", input_path)
+        machine_name = extract_from_path("machine", data_dir_path, input_path)
         machine = Machine(name=machine_name)
         machine = create_if_not_exists(
             db_session=db_session,
@@ -48,7 +48,7 @@ def walk_through_sessions(
             equal_to=machine_name,
         )
 
-        use_case_name = extract_from_path("use_case", input_path)
+        use_case_name = extract_from_path("use_case", data_dir_path, input_path)
         use_case = UseCase(name=use_case_name)
         use_case = create_if_not_exists(
             db_session=db_session,
@@ -57,7 +57,7 @@ def walk_through_sessions(
             equal_to=use_case_name,
         )
 
-        task_size_name = extract_from_path("task_size", input_path)
+        task_size_name = extract_from_path("task_size", data_dir_path, input_path)
         try:
             task_size_size = int(task_size_name)
         except ValueError:
@@ -70,18 +70,18 @@ def walk_through_sessions(
 
         db_session.commit()  # the commit needed to obtain the ids of the added objects
 
-        session_name = extract_from_path("session", input_path)
-        session = ProfilingSession(
-            name=session_name,
+        repetition_name = extract_from_path("repetition", data_dir_path, input_path)
+        repetition = Repetition(
+            name=repetition_name,
             use_case=use_case.id,
             task_size=InMemoryTables.task_sizes_dict[task_size_name],
             machine=machine.id,
         )
-        session = create_if_not_exists(
+        repetition = create_if_not_exists(
             db_session=db_session,
-            to_create=session,
-            where_column=ProfilingSession.name,
-            equal_to=session_name,
+            to_create=repetition,
+            where_column=Repetition.name,
+            equal_to=repetition_name,
         )
 
         db_session.commit()
@@ -91,7 +91,7 @@ def walk_through_sessions(
             db_session.add_all(
                 function(
                     MetricContext(
-                        path=path, session_id=session.id, db_session=db_session
+                        path=path, repetition_id=repetition.id, db_session=db_session
                     )
                 )
             )
