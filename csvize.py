@@ -56,7 +56,7 @@ def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
     # Order of entries must be preserved
 
     return _csvize_multi_block_csv(
-        raw_data_path, csvized_path, "**/prof.AMD.*.csv", FILE_BLOCKS
+        raw_data_path, csvized_path, "**/AMDuProfPCM/**/*.csv", FILE_BLOCKS
     )
 
 
@@ -68,13 +68,13 @@ def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
     }
 
     return _csvize_multi_block_csv(
-        raw_data_path, csvized_path, "**/mpi-summary.csv", FILE_BLOCKS
+        raw_data_path, csvized_path, "**/AMDuProfMPI/**/*.csv", FILE_BLOCKS
     )
 
 
-def _copy_others(raw_data_path: Path, csvized_path: Path) -> int:
+def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
     counter: int = 0
-    for input_file_path in raw_data_path.glob("**/others"):
+    for input_file_path in raw_data_path.glob("**/app_logs"):
         # print(input_file_path)
         output_file_path: Path = (
             csvized_path / input_file_path.relative_to(raw_data_path)
@@ -93,7 +93,7 @@ def csvize() -> None:
     CSVIZERS: dict[str, Callable[[Path, Path], int]] = {
         "AMDuProfPcm": _csvize_uprof_pcm,
         "MPIuProf": _csvize_uprof_mpi,
-        "others": _copy_others,
+        "others": _copy_app_logs,
     }
 
     if not raw_data_path.exists():
