@@ -91,9 +91,9 @@ def csvize() -> None:
     csvized_data_path: Path = Path("../quare-test-db/csvized_data")
 
     CSVIZERS: dict[str, Callable[[Path, Path], int]] = {
-        "AMDuProfPcm": _csvize_uprof_pcm,
-        "MPIuProf": _csvize_uprof_mpi,
-        "others": _copy_app_logs,
+        "AMDuProfPCM": _csvize_uprof_pcm,
+        "AMDuProfMPI": _csvize_uprof_mpi,
+        "app_logs": _copy_app_logs,
     }
 
     if not raw_data_path.exists():
