@@ -51,3 +51,4 @@ class Repetition(DBBase):
     exec_time_s: Mapped[float | None]
     # Length set according to some default linux limits:
     file_dir: Mapped[str] = mapped_column(String(4096 - 255))
+    data_consistent: Mapped[bool] = mapped_column(default=False)

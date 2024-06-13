@@ -123,3 +123,6 @@ def walk_through_data(
                     )
                 )
             )
+
+        repetition.data_consistent = True
+        db_session.commit()

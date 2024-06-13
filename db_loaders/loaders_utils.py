@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import TypeVar
 
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from db_models import DBBase
@@ -34,7 +34,9 @@ def create_if_not_exists(
     ).first()
 
     if not selected_row:
-        db_session.add(to_create)  # needs a commit after returning <- add to docs
+        # It needs a commit after returning <- add to docs
+        # (or change the function to context manager)
+        db_session.add(to_create)
         return to_create
     return selected_row[0]
 
@@ -44,7 +46,4 @@ def record_exists(
     where_column: InstrumentedAttribute[T],
     equal_to: T,
 ) -> bool:
-    selected_row = db_session.execute(
-        select(where_column.parent).where(where_column == equal_to)
-    ).first()
-    return bool(selected_row)
+    return bool(db_session.query(exists().where(where_column == equal_to)).scalar())
