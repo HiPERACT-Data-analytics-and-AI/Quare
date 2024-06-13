@@ -104,4 +104,4 @@ def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
         ("rank_summary.csv", _load_rank_summary),
     ]
 
-    walk_through_data(data_dir_path, db_session, FILE_SUFFIXES)
+    walk_through_data(data_dir_path, db_session, "AMDuProfMPI", FILE_SUFFIXES)

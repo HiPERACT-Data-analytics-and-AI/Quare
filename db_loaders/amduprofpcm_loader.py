@@ -160,4 +160,4 @@ def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
         ("l3_metrics.csv", _load_l3_metrics),
     ]
 
-    walk_through_data(data_dir_path, db_session, FILE_SUFFIXES)
+    walk_through_data(data_dir_path, db_session, "AMDuProfPCM", FILE_SUFFIXES)

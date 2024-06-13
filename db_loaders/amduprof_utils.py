@@ -1,11 +1,12 @@
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import Machine, Repetition, TaskSizesDict, UseCase
+from db_models import Machine, ProfilingSession, Repetition, TaskSizesDict, UseCase
 
 from .loaders_utils import create_if_not_exists, extract_from_path
 
@@ -31,13 +32,25 @@ class MetricContext:
 def walk_through_data(
     data_dir_path: Path,
     db_session: Session,
+    dir_name_pattern: str,
     file_suffixes: list[tuple[str, Callable[[MetricContext], list]]],
 ) -> None:
     InMemoryTables.update_task_sizes_dict(db_session)
 
-    for input_path in Path(data_dir_path).glob(f"**/*.{file_suffixes[0][0]}"):
+    for input_path in Path(data_dir_path).glob(
+        f"**/{dir_name_pattern}/**/*.{file_suffixes[0][0]}"
+    ):
         general_path: Path = input_path.parent
         name_base: str = input_path.name[: -len(file_suffixes[0][0])]
+
+        session_name = extract_from_path("session", data_dir_path, input_path)
+        profiling_session = ProfilingSession(name=session_name)
+        profiling_session = create_if_not_exists(
+            db_session=db_session,
+            to_create=profiling_session,
+            where_column=ProfilingSession.name,
+            equal_to=session_name,
+        )
 
         machine_name = extract_from_path("machine", data_dir_path, input_path)
         machine = Machine(name=machine_name)
@@ -70,12 +83,18 @@ def walk_through_data(
 
         db_session.commit()  # the commit needed to obtain the ids of the added objects
 
-        repetition_name = extract_from_path("repetition", data_dir_path, input_path)
+        repetition_name = extract_from_path(
+            "repetition_&_date", data_dir_path, input_path
+        )
+        repetition_date = repetition_name.split(".")[0]
         repetition = Repetition(
             name=repetition_name,
+            profiling_session=profiling_session.id,
+            machine=machine.id,
             use_case=use_case.id,
             task_size=InMemoryTables.task_sizes_dict[task_size_name],
-            machine=machine.id,
+            date=datetime.strptime(repetition_date, "%Y%m%d_%H%M%S"),
+            file_dir=input_path.parent.as_posix(),
         )
         repetition = create_if_not_exists(
             db_session=db_session,
