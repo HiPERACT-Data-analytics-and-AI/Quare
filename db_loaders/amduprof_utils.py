@@ -40,13 +40,18 @@ def walk_through_data(
     for input_path in Path(data_dir_path).glob(
         f"**/{dir_name_pattern}/**/*.{file_suffixes[0][0]}"
     ):
-        general_path: Path = input_path.parent
+        repetition_name = (
+            extract_from_path("repetition_&_date", data_dir_path, input_path)
+            + "."
+            + extract_from_path("session", data_dir_path, input_path)
+        )
         if record_exists(
             db_session=db_session,
             where_column=Repetition.name,
-            equal_to=extract_from_path("repetition_&_date", data_dir_path, input_path),
+            equal_to=repetition_name,
         ):
             continue
+
         name_base: str = input_path.name[: -len(file_suffixes[0][0])]
 
         session_name = extract_from_path("session", data_dir_path, input_path)
@@ -89,9 +94,6 @@ def walk_through_data(
 
         db_session.commit()  # the commit needed to obtain the ids of the added objects
 
-        repetition_name = extract_from_path(
-            "repetition_&_date", data_dir_path, input_path
-        )
         repetition_date = repetition_name.split(".")[0]
         repetition = Repetition(
             name=repetition_name,
@@ -111,6 +113,7 @@ def walk_through_data(
 
         db_session.commit()
 
+        general_path: Path = input_path.parent
         for suffix, function in file_suffixes:
             path: Path = general_path / (name_base + suffix)
             db_session.add_all(

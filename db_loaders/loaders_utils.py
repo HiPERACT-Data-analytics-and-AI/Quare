@@ -13,7 +13,7 @@ def extract_from_path(key: str, data_dir_path: Path, file_path: Path) -> str:
         "machine": (1,),
         "use_case": (2,),
         "task_size": (3,),
-        "repetition_&_date": (4, 0),
+        "repetition_&_date": (4,),
     }
     file_path = file_path.relative_to(data_dir_path)
     return ".".join(file_path.parts[i] for i in path_struct[key])
