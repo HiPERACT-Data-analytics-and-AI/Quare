@@ -37,3 +37,14 @@ def create_if_not_exists(
         db_session.add(to_create)  # needs a commit after returning <- add to docs
         return to_create
     return selected_row[0]
+
+
+def record_exists(
+    db_session: Session,
+    where_column: InstrumentedAttribute[T],
+    equal_to: T,
+) -> bool:
+    selected_row = db_session.execute(
+        select(where_column.parent).where(where_column == equal_to)
+    ).first()
+    return bool(selected_row)

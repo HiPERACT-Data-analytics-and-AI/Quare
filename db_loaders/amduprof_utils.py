@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from db_models import Machine, ProfilingSession, Repetition, TaskSizesDict, UseCase
 
-from .loaders_utils import create_if_not_exists, extract_from_path
+from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
 
 class InMemoryTables:
@@ -41,6 +41,12 @@ def walk_through_data(
         f"**/{dir_name_pattern}/**/*.{file_suffixes[0][0]}"
     ):
         general_path: Path = input_path.parent
+        if record_exists(
+            db_session=db_session,
+            where_column=Repetition.name,
+            equal_to=extract_from_path("repetition_&_date", data_dir_path, input_path),
+        ):
+            continue
         name_base: str = input_path.name[: -len(file_suffixes[0][0])]
 
         session_name = extract_from_path("session", data_dir_path, input_path)
