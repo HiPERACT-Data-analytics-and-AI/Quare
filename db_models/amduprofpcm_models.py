@@ -5,7 +5,7 @@ from .quare_models import DBBase, Repetition
 
 
 # machine_info refers to repetition
-# as machine_info file is generated session-wise
+# as machine_info file is generated repetition-wise
 class AMDuProfPCM_machine_info(DBBase):
     __tablename__ = "AMDuProfPCM_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)

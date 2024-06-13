@@ -28,7 +28,7 @@ class MetricContext:
     db_session: Session
 
 
-def walk_through_sessions(
+def walk_through_data(
     data_dir_path: Path,
     db_session: Session,
     file_suffixes: list[tuple[str, Callable[[MetricContext], list]]],

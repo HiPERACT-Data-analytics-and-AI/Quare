@@ -12,7 +12,7 @@ from db_models.amduprofmpi_models import (
     AMDuProfMPI_rank_summary,
 )
 
-from .amduprof_utils import MetricContext, walk_through_sessions
+from .amduprof_utils import MetricContext, walk_through_data
 
 
 class InMemoryTables:
@@ -42,7 +42,9 @@ def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
     return [environment_uprof]
 
 
-def _load_functions_summary(context: MetricContext) -> list[AMDuProfMPI_functions_summary]:
+def _load_functions_summary(
+    context: MetricContext,
+) -> list[AMDuProfMPI_functions_summary]:
     try:
         summary_csv = pd.read_csv(context.path)
     except FileNotFoundError:
@@ -102,4 +104,4 @@ def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
         ("rank_summary.csv", _load_rank_summary),
     ]
 
-    walk_through_sessions(data_dir_path, db_session, FILE_SUFFIXES)
+    walk_through_data(data_dir_path, db_session, FILE_SUFFIXES)

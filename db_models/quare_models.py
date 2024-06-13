@@ -14,16 +14,12 @@ class Machine(DBBase):
     name: Mapped[str] = mapped_column(String(128), unique=True)
     desc: Mapped[str | None] = mapped_column(String(1024))
 
-    # sessions: Mapped[list["ProfilingSession"]] = relationship()
-
 
 class UseCase(DBBase):
     __tablename__ = "Use_case"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256), unique=True)
     desc: Mapped[str | None] = mapped_column(String(1024))
-
-    # sessions: Mapped[list["ProfilingSession"]] = relationship()
 
 
 class TaskSizesDict(DBBase):
