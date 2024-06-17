@@ -6,11 +6,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from db_models.amduprofpcm_models import (
-    AMDuProfPCM_core_metrics,
+    AMDuProfPCM_metrics,
     AMDuProfPCM_further_machine_info,
-    AMDuProfPCM_l3_metrics,
     AMDuProfPCM_machine_cpu_topology,
     AMDuProfPCM_machine_info,
+    AMDuProfPCM_processing_units_dict,
     AMDuProfPCM_metrics_dict,
 )
 
@@ -19,6 +19,7 @@ from .amduprof_utils import MetricContext, walk_through_data
 
 class InMemoryTables:
     metrics_dict: dict[str, int] = {}
+    processing_units_dict: dict[str, int] = {}
 
     @classmethod
     def update_metrics_dict(cls, db_session: Session) -> None:
@@ -26,6 +27,13 @@ class InMemoryTables:
             select(AMDuProfPCM_metrics_dict.id, AMDuProfPCM_metrics_dict.name)
         ).all()
         cls.metrics_dict = {row[1]: row[0] for row in metrics_dict_list}
+    
+    @classmethod
+    def update_processing_units_dict(cls, db_session: Session) -> None:
+        processing_units_dict_list = db_session.execute(
+            select(AMDuProfPCM_processing_units_dict.id, AMDuProfPCM_processing_units_dict.name)
+        ).all()
+        cls.processing_units_dict = {row[1]: row[0] for row in processing_units_dict_list}
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:
@@ -101,14 +109,14 @@ def _load_further_machine_info(
     return [further_machine_uprof]
 
 
-def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_core_metrics]:
+def _load_metrics(context: MetricContext, index_trimmer: int, processing_unit_dict_id: int) -> list[AMDuProfPCM_metrics]:
     try:
-        core_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+        metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
 
-    instances_to_add: list[AMDuProfPCM_core_metrics] = list()
-    for _, row in core_metrics_csv.iterrows():
+    instances_to_add: list[AMDuProfPCM_metrics] = list()
+    for _, row in metrics_csv.iterrows():
         for name, value in row.items():
             if name == "Metric":
                 continue
@@ -119,9 +127,10 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_core_metrics]
                 context.db_session.commit()
                 InMemoryTables.update_metrics_dict(context.db_session)
 
-            instance = AMDuProfPCM_core_metrics(
+            instance = AMDuProfPCM_metrics(
                 repetition=context.repetition_id,
-                core=int(row.get("Metric", default=-1)[5:]),
+                processing_unit=processing_unit_dict_id,
+                unit_idx=int(row.get("Metric", default=-1)[index_trimmer:]),
                 metric=InMemoryTables.metrics_dict[str(name)],
                 value=value,
             )
@@ -129,24 +138,24 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_core_metrics]
     return instances_to_add
 
 
-def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_l3_metrics]:
-    try:
-        l3_metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
-    except FileNotFoundError:
-        return []
+def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+    name: str = "core"
+    if name not in InMemoryTables.processing_units_dict.keys():
+        processing_unit = AMDuProfPCM_processing_units_dict(name=name)
+        context.db_session.add(processing_unit)
+        context.db_session.commit()
+        InMemoryTables.update_processing_units_dict(context.db_session)
+    return _load_metrics(context, 5, InMemoryTables.processing_units_dict[name])
 
-    instances_to_add: list[AMDuProfPCM_l3_metrics] = list()
-    for _, row in l3_metrics_csv.iterrows():
-        instance = AMDuProfPCM_l3_metrics(
-            repetition=context.repetition_id,
-            ccx_number=int(row.get("Metric", default=-1)[4:]),
-            l3_access=row.get("L3 Access", default=None),
-            l3_miss=row.get("L3 Miss", default=None),
-            l3_miss_percent=row.get("L3 Miss %", default=None),
-            ave_l3_miss_latency=row.get("Ave L3 Miss Latency", default=None),
-        )
-        instances_to_add.append(instance)
-    return instances_to_add
+
+def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+    name: str = "ccx"
+    if name not in InMemoryTables.processing_units_dict.keys():
+        processing_unit = AMDuProfPCM_processing_units_dict(name=name)
+        context.db_session.add(processing_unit)
+        context.db_session.commit()
+        InMemoryTables.update_processing_units_dict(context.db_session)
+    return _load_metrics(context, 4, InMemoryTables.processing_units_dict[name])
 
 
 def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:

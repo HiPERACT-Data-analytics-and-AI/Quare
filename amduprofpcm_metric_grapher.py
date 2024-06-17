@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from db_models import Machine, Repetition, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import (
-    AMDuProfPCM_core_metrics,
+    AMDuProfPCM_metrics,
     AMDuProfPCM_l3_metrics,
     AMDuProfPCM_metrics_dict,
 )
@@ -115,9 +115,9 @@ def main() -> None:
 
             for metric_name in metric_names:
                 stmt = (
-                    select(AMDuProfPCM_core_metrics)
+                    select(AMDuProfPCM_metrics)
                     .where(
-                        AMDuProfPCM_core_metrics.repetition
+                        AMDuProfPCM_metrics.repetition
                         == profiling_session.id
                     )
                     .join(AMDuProfPCM_metrics_dict)

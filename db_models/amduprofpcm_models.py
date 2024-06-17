@@ -44,6 +44,12 @@ class AMDuProfPCM_further_machine_info(DBBase):
     version: Mapped[str | None] = mapped_column(String(16))
 
 
+class AMDuProfPCM_processing_units_dict(DBBase):
+    __tablename__ = "AMDuProfPCM_processing_units_dict"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(32), unique=True)
+
+
 class AMDuProfPCM_metrics_dict(DBBase):
     __tablename__ = "AMDuProfPCM_metrics_dict"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -51,21 +57,11 @@ class AMDuProfPCM_metrics_dict(DBBase):
     desc: Mapped[str | None] = mapped_column(String(1024))
 
 
-class AMDuProfPCM_core_metrics(DBBase):
-    __tablename__ = "AMDuProfPCM_core_metrics"
+class AMDuProfPCM_metrics(DBBase):
+    __tablename__ = "AMDuProfPCM_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
-    core: Mapped[int]
+    processing_unit: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_processing_units_dict.id))
+    unit_idx: Mapped[int]
     metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
     value: Mapped[float]
-
-
-class AMDuProfPCM_l3_metrics(DBBase):
-    __tablename__ = "AMDuProfPCM_l3_metrics"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
-    ccx_number: Mapped[int | None]
-    l3_access: Mapped[float | None]
-    l3_miss: Mapped[float | None]
-    l3_miss_percent: Mapped[float | None]
-    ave_l3_miss_latency: Mapped[float | None]
