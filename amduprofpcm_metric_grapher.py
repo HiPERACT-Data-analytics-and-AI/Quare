@@ -1,13 +1,14 @@
 import numpy as np
-from matplotlib import pyplot as plt, ticker
+from matplotlib import pyplot as plt
+from matplotlib import ticker
 from matplotlib.axes import Axes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from db_models import Machine, Repetition, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import (
-    AMDuProfPCM_metrics,
     AMDuProfPCM_l3_metrics,
+    AMDuProfPCM_metrics,
     AMDuProfPCM_metrics_dict,
 )
 from utils import create_db_engine
@@ -45,7 +46,7 @@ def make_figures(
         # axes[i][0].yaxis.get_major_formatter().
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)
 
-        if i+1 == len(metrics):
+        if i + 1 == len(metrics):
             axes[i][0].set_xticklabels(x_tick_labels, fontsize="8")
             axes[i][0].set_xlabel("Cells per rank (size name)")
 
@@ -65,7 +66,12 @@ def main() -> None:
         "L3 Miss Percent": "l3_miss_percent",
         "L3 Miss Latency": "ave_l3_miss_latency",
     }
-    metric_names: list[str] = ["L2 Access (pti)", "L2 Miss (pti)", "L2 Hit (pti)", "L3 Access"]
+    metric_names: list[str] = [
+        "L2 Access (pti)",
+        "L2 Miss (pti)",
+        "L2 Hit (pti)",
+        "L3 Access",
+    ]
     num_of_cores: int = 128
 
     session_name_contains: str = "IPC"
@@ -116,10 +122,7 @@ def main() -> None:
             for metric_name in metric_names:
                 stmt = (
                     select(AMDuProfPCM_metrics)
-                    .where(
-                        AMDuProfPCM_metrics.repetition
-                        == profiling_session.id
-                    )
+                    .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                     .join(AMDuProfPCM_metrics_dict)
                     .where(AMDuProfPCM_metrics_dict.name == metric_name)
                 )
@@ -127,15 +130,13 @@ def main() -> None:
                 values = [row[0].value for row in rows]
 
                 if not rows:
-                    stmt = (
-                        select(AMDuProfPCM_l3_metrics)
-                        .where(
-                            AMDuProfPCM_l3_metrics.repetition
-                            == profiling_session.id
-                        )
+                    stmt = select(AMDuProfPCM_l3_metrics).where(
+                        AMDuProfPCM_l3_metrics.repetition == profiling_session.id
                     )
                     rows = db_session.execute(stmt).all()
-                    values = [getattr(row[0], NO_DICT_METRICS[metric_name]) for row in rows]
+                    values = [
+                        getattr(row[0], NO_DICT_METRICS[metric_name]) for row in rows
+                    ]
 
                 metrics[metric_name].append(np.mean(values))
 

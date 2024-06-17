@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from db_models import Machine, Repetition, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import (
-    AMDuProfPCM_metrics,
     AMDuProfPCM_l3_metrics,
+    AMDuProfPCM_metrics,
     AMDuProfPCM_metrics_dict,
 )
 from utils import create_db_engine
@@ -135,10 +135,7 @@ def main() -> None:
             for metric_name in metric_names:
                 stmt = (
                     select(AMDuProfPCM_metrics)
-                    .where(
-                        AMDuProfPCM_metrics.repetition
-                        == profiling_session.id
-                    )
+                    .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                     .join(AMDuProfPCM_metrics_dict)
                     .where(AMDuProfPCM_metrics_dict.name == metric_name)
                 )
@@ -146,15 +143,13 @@ def main() -> None:
                 values = [row[0].value for row in rows]
 
                 if not rows:
-                    stmt = (
-                        select(AMDuProfPCM_l3_metrics)
-                        .where(
-                            AMDuProfPCM_l3_metrics.repetition
-                            == profiling_session.id
-                        )
+                    stmt = select(AMDuProfPCM_l3_metrics).where(
+                        AMDuProfPCM_l3_metrics.repetition == profiling_session.id
                     )
                     rows = db_session.execute(stmt).all()
-                    values = [getattr(row[0], NO_DICT_METRICS[metric_name]) for row in rows]
+                    values = [
+                        getattr(row[0], NO_DICT_METRICS[metric_name]) for row in rows
+                    ]
 
                 metrics[metric_name].append(np.mean(values))
 

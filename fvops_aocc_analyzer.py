@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 from db_models import Machine, Repetition, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import (
-    AMDuProfPCM_metrics,
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_l3_metrics,
     AMDuProfPCM_machine_cpu_topology,
     AMDuProfPCM_machine_info,
+    AMDuProfPCM_metrics,
     AMDuProfPCM_metrics_dict,
 )
 from utils import create_db_engine
@@ -139,9 +139,7 @@ def main():
             # L2
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Access (pti)")
             )
@@ -150,9 +148,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Miss (pti)")
             )
@@ -161,9 +157,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Hit (pti)")
             )
@@ -172,9 +166,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Access from DC Miss (pti)")
             )
@@ -183,9 +175,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Miss from DC Miss (pti)")
             )
@@ -194,9 +184,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Hit from DC Miss (pti)")
             )
@@ -205,9 +193,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Access from HWPF (pti)")
             )
@@ -216,9 +202,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Miss from HWPF (pti)")
             )
@@ -227,9 +211,7 @@ def main():
 
             stmt = (
                 select(AMDuProfPCM_metrics)
-                .where(
-                    AMDuProfPCM_metrics.repetition == profiling_session.id
-                )
+                .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
                 .join(AMDuProfPCM_metrics_dict)
                 .where(AMDuProfPCM_metrics_dict.name == "L2 Hit from HWPF (pti)")
             )

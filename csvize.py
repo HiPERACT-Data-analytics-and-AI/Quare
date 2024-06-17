@@ -76,14 +76,13 @@ def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
     counter: int = 0
     for input_file_path in raw_data_path.glob("**/app_logs"):
         # print(input_file_path)
-        output_file_path: Path = (
-            csvized_path / input_file_path.relative_to(raw_data_path)
+        output_file_path: Path = csvized_path / input_file_path.relative_to(
+            raw_data_path
         )
         # print(output_file_path)
         copytree(input_file_path, output_file_path)
         counter += 1
     return counter
-
 
 
 def csvize() -> None:

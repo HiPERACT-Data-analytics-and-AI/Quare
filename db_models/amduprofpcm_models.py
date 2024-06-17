@@ -61,7 +61,9 @@ class AMDuProfPCM_metrics(DBBase):
     __tablename__ = "AMDuProfPCM_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
-    processing_unit: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_processing_units_dict.id))
+    processing_unit: Mapped[int] = mapped_column(
+        ForeignKey(AMDuProfPCM_processing_units_dict.id)
+    )
     unit_idx: Mapped[int]
     metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
     value: Mapped[float]
