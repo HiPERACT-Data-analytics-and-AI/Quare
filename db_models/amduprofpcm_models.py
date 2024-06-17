@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .quare_models import DBBase, Repetition
@@ -44,26 +44,22 @@ class AMDuProfPCM_further_machine_info(DBBase):
     version: Mapped[str | None] = mapped_column(String(16))
 
 
-class AMDuProfPCM_processing_units_dict(DBBase):
-    __tablename__ = "AMDuProfPCM_processing_units_dict"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(32), unique=True)
-
-
 class AMDuProfPCM_metrics_dict(DBBase):
     __tablename__ = "AMDuProfPCM_metrics_dict"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(128), unique=True)
+    name: Mapped[str] = mapped_column(String(128))
+    processing_unit: Mapped[str] = mapped_column(String(16))
     desc: Mapped[str | None] = mapped_column(String(1024))
+
+    __table_args__ = (
+        UniqueConstraint(name, processing_unit)
+    )
 
 
 class AMDuProfPCM_metrics(DBBase):
     __tablename__ = "AMDuProfPCM_metrics"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
-    processing_unit: Mapped[int] = mapped_column(
-        ForeignKey(AMDuProfPCM_processing_units_dict.id)
-    )
     unit_idx: Mapped[int]
     metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
     value: Mapped[float]

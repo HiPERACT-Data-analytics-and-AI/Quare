@@ -9,9 +9,8 @@ from db_models.amduprofpcm_models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_cpu_topology,
     AMDuProfPCM_machine_info,
-    AMDuProfPCM_metrics,
     AMDuProfPCM_metrics_dict,
-    AMDuProfPCM_processing_units_dict,
+    AMDuProfPCM_metrics,
 )
 
 from .amduprof_utils import MetricContext, walk_through_data
@@ -19,26 +18,13 @@ from .amduprof_utils import MetricContext, walk_through_data
 
 class InMemoryTables:
     metrics_dict: dict[str, int] = {}
-    processing_units_dict: dict[str, int] = {}
 
     @classmethod
     def update_metrics_dict(cls, db_session: Session) -> None:
         metrics_dict_list = db_session.execute(
-            select(AMDuProfPCM_metrics_dict.id, AMDuProfPCM_metrics_dict.name)
+            select(AMDuProfPCM_metrics_dict.id, AMDuProfPCM_metrics_dict.name, AMDuProfPCM_metrics_dict.processing_unit)
         ).all()
-        cls.metrics_dict = {row[1]: row[0] for row in metrics_dict_list}
-
-    @classmethod
-    def update_processing_units_dict(cls, db_session: Session) -> None:
-        processing_units_dict_list = db_session.execute(
-            select(
-                AMDuProfPCM_processing_units_dict.id,
-                AMDuProfPCM_processing_units_dict.name,
-            )
-        ).all()
-        cls.processing_units_dict = {
-            row[1]: row[0] for row in processing_units_dict_list
-        }
+        cls.metrics_dict = {row[1]+row[2]: row[0] for row in metrics_dict_list}
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:
@@ -115,7 +101,7 @@ def _load_further_machine_info(
 
 
 def _load_metrics(
-    context: MetricContext, index_trimmer: int, processing_unit_dict_id: int
+    context: MetricContext, index_trimmer: int, processing_unit: str
 ) -> list[AMDuProfPCM_metrics]:
     try:
         metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
