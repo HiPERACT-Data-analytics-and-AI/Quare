@@ -6,4 +6,5 @@ raw_data/
 csvized_data/
 **/*.sqlite3
 *.png
+!**/db_diagram.png
 *.svg
