@@ -6,11 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from db_models import Machine, Repetition, TaskSizesDict, UseCase
-from db_models.amduprofpcm_models import (
-    AMDuProfPCM_l3_metrics,
-    AMDuProfPCM_metrics,
-    AMDuProfPCM_metrics_dict,
-)
+from db_models.amduprofpcm_models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
 from utils import create_db_engine
 
 
@@ -60,23 +56,18 @@ def make_figures(
 
 
 def main() -> None:
-    NO_DICT_METRICS: dict = {
-        "L3 Access": "l3_access",
-        "L3 Miss": "l3_miss",
-        "L3 Miss Percent": "l3_miss_percent",
-        "L3 Miss Latency": "ave_l3_miss_latency",
-    }
-    metric_names: list[str] = [
+    # metric_names: set[str] = set()
+    metric_names: set[str] = {
         "L2 Access (pti)",
         "L2 Miss (pti)",
         "L2 Hit (pti)",
         "L3 Access",
-    ]
+    }
     num_of_cores: int = 128
 
-    session_name_contains: str = "IPC"
-    use_case_id: int = 2
-    machine_name: str = "128_ROME"
+    session_name_contains: str = "Session1"
+    use_case_id: int = 1
+    machine_name: str = "ROME_128"
     sizes_to_get: tuple[str, ...] = (
         "xsmall",
         "small",
@@ -93,6 +84,9 @@ def main() -> None:
     metrics: dict[str, list] = {}
 
     with Session(create_db_engine()) as db_session:
+        # if not metric_names:
+        #     stmt = select(AMDuProfPCM_metrics_dict)
+
         for metric_name in metric_names:
             metrics[metric_name] = []
 
@@ -130,13 +124,7 @@ def main() -> None:
                 values = [row[0].value for row in rows]
 
                 if not rows:
-                    stmt = select(AMDuProfPCM_l3_metrics).where(
-                        AMDuProfPCM_l3_metrics.repetition == profiling_session.id
-                    )
-                    rows = db_session.execute(stmt).all()
-                    values = [
-                        getattr(row[0], NO_DICT_METRICS[metric_name]) for row in rows
-                    ]
+                    continue
 
                 metrics[metric_name].append(np.mean(values))
 
