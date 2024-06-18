@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib import ticker
 from matplotlib.axes import Axes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -21,6 +20,7 @@ def make_figures(
     fig, axes = plt.subplots(
         num_of_figures, 1, figsize=(12, num_of_figures * 5), squeeze=False
     )
+
     fig.subplots_adjust(
         left=0.15, bottom=0.05, right=0.95, top=0.95, wspace=0.4, hspace=0.0
     )
@@ -48,21 +48,21 @@ def make_figures(
 
         i += 1
 
-    fig.savefig("./GRAPH.png", dpi=300)
-    fig.savefig("./GRAPH.svg")
+    # fig.savefig("./GRAPH.png", dpi=300)
+    # fig.savefig("./GRAPH.svg")
     plt.close()
     plt.cla()
     plt.clf()
 
 
 def main() -> None:
-    # metric_names: set[str] = set()
-    metric_names: set[str] = {
-        "L2 Access (pti)",
-        "L2 Miss (pti)",
-        "L2 Hit (pti)",
-        "L3 Access",
-    }
+    metric_names: set[str] = set()
+    # metric_names: set[str] = {
+    #     "L2 Access (pti)",
+    #     "L2 Miss (pti)",
+    #     "L2 Hit (pti)",
+    #     "L3 Access",
+    # }
     num_of_cores: int = 128
 
     session_name_contains: str = "Session1"
@@ -84,8 +84,11 @@ def main() -> None:
     metrics: dict[str, list] = {}
 
     with Session(create_db_engine()) as db_session:
-        # if not metric_names:
-        #     stmt = select(AMDuProfPCM_metrics_dict)
+        if not metric_names:
+            metrics_data = db_session.execute(
+                select(AMDuProfPCM_metrics_dict.name)
+            ).all()
+            metric_names = {row[0] for row in metrics_data}
 
         for metric_name in metric_names:
             metrics[metric_name] = []
