@@ -9,8 +9,8 @@ from db_models.amduprofpcm_models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_cpu_topology,
     AMDuProfPCM_machine_info,
-    AMDuProfPCM_metrics_dict,
     AMDuProfPCM_metrics,
+    AMDuProfPCM_metrics_dict,
 )
 
 from .amduprof_utils import MetricContext, walk_through_data
@@ -22,9 +22,13 @@ class InMemoryTables:
     @classmethod
     def update_metrics_dict(cls, db_session: Session) -> None:
         metrics_dict_list = db_session.execute(
-            select(AMDuProfPCM_metrics_dict.id, AMDuProfPCM_metrics_dict.name, AMDuProfPCM_metrics_dict.processing_unit)
+            select(
+                AMDuProfPCM_metrics_dict.id,
+                AMDuProfPCM_metrics_dict.name,
+                AMDuProfPCM_metrics_dict.processing_unit,
+            )
         ).all()
-        cls.metrics_dict = {row[1]+row[2]: row[0] for row in metrics_dict_list}
+        cls.metrics_dict = {row[1] + row[2]: row[0] for row in metrics_dict_list}
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:
@@ -114,17 +118,18 @@ def _load_metrics(
             if name == "Metric":
                 continue
 
-            if name not in InMemoryTables.metrics_dict.keys():
-                metric = AMDuProfPCM_metrics_dict(name=name)
+            if str(name) + processing_unit not in InMemoryTables.metrics_dict.keys():
+                metric = AMDuProfPCM_metrics_dict(
+                    name=name, processing_unit=processing_unit
+                )
                 context.db_session.add(metric)
                 context.db_session.commit()
                 InMemoryTables.update_metrics_dict(context.db_session)
 
             instance = AMDuProfPCM_metrics(
                 repetition=context.repetition_id,
-                processing_unit=processing_unit_dict_id,
                 unit_idx=int(row.get("Metric", default=-1)[index_trimmer:]),
-                metric=InMemoryTables.metrics_dict[str(name)],
+                metric=InMemoryTables.metrics_dict[str(name) + processing_unit],
                 value=value,
             )
             instances_to_add.append(instance)
@@ -133,27 +138,16 @@ def _load_metrics(
 
 def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     name: str = "core"
-    if name not in InMemoryTables.processing_units_dict.keys():
-        processing_unit = AMDuProfPCM_processing_units_dict(name=name)
-        context.db_session.add(processing_unit)
-        context.db_session.commit()
-        InMemoryTables.update_processing_units_dict(context.db_session)
-    return _load_metrics(context, 5, InMemoryTables.processing_units_dict[name])
+    return _load_metrics(context, 5, name)
 
 
 def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     name: str = "ccx"
-    if name not in InMemoryTables.processing_units_dict.keys():
-        processing_unit = AMDuProfPCM_processing_units_dict(name=name)
-        context.db_session.add(processing_unit)
-        context.db_session.commit()
-        InMemoryTables.update_processing_units_dict(context.db_session)
-    return _load_metrics(context, 4, InMemoryTables.processing_units_dict[name])
+    return _load_metrics(context, 4, name)
 
 
 def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
     InMemoryTables.update_metrics_dict(db_session)
-    InMemoryTables.update_processing_units_dict(db_session)
 
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),

@@ -51,9 +51,7 @@ class AMDuProfPCM_metrics_dict(DBBase):
     processing_unit: Mapped[str] = mapped_column(String(16))
     desc: Mapped[str | None] = mapped_column(String(1024))
 
-    __table_args__ = (
-        UniqueConstraint(name, processing_unit)
-    )
+    __table_args__ = (UniqueConstraint(name, processing_unit),)
 
 
 class AMDuProfPCM_metrics(DBBase):
