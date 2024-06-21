@@ -12,9 +12,26 @@ from db_models.amduprofpcm_models import AMDuProfPCM_metrics, AMDuProfPCM_metric
 from utils import create_db_engine
 
 
+class InMemoryTables:
+    task_sizes_dict: dict[str, int] = {}
+
+    @classmethod
+    def update_task_sizes_dict(cls, db_session: Session) -> None:
+        results_list = db_session.execute(
+            select(
+                TaskSizesDict.size,
+                TaskSizesDict.name,
+            )
+        ).all()
+        cls.task_sizes_dict = {row[1]: row[0] for row in results_list}
+
+
 def divide_dict_into_chunks(dict_to_splice, max_size):
     dict_items_iterator = iter(dict_to_splice.items())
-    return [dict(islice(dict_items_iterator, max_size)) for _ in range(0, len(dict_to_splice), max_size)]
+    return [
+        dict(islice(dict_items_iterator, max_size))
+        for _ in range(0, len(dict_to_splice), max_size)
+    ]
 
 
 def make_figures(
@@ -49,8 +66,8 @@ def make_figures(
         axes[i][0].set_ylabel("Native unit for the metric")
         axes[i][0].legend(loc="upper right", fontsize="8")
         # axes[i][0].yaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=False))
-        # axes[i][0].yaxis.get_major_formatter().
-        axes[i][0].yaxis.get_major_formatter().set_scientific(False)
+        # axes[i][0].yaxis.get_major_formatter()
+        axes[i][0].yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
 
         if i + 1 == len(metrics):
             axes[i][0].set_xticklabels(x_tick_labels, fontsize="8")
@@ -100,12 +117,12 @@ def select_repetitions(
 
 def main() -> None:
     metric_names: set[str] = set()
-    # metric_names: set[str] = {
-    #     "L2 Access (pti)",
-    #     "L2 Miss (pti)",
-    #     "L2 Hit (pti)",
-    #     "L3 Access",
-    # }
+    metric_names: set[str] = {
+        "L2 Access (pti)",
+        "L2 Miss (pti)",
+        # "L2 Hit (pti)",
+        # "L3 Access",
+    }
     num_of_cores: int = 128
 
     session_name_contains: str = "Session1"
@@ -134,6 +151,8 @@ def main() -> None:
             ).all()
             metric_names = {row[0] for row in metrics_data}
 
+        InMemoryTables.update_task_sizes_dict(db_session)
+
         for metric_name in metric_names:
             metrics[metric_name] = []
 
@@ -148,19 +167,10 @@ def main() -> None:
             )
             print(task_size_name, repetitions_ids)
 
-            # TODO Select all needed TaskSize rows once:
-            stmt = (
-                select(TaskSizesDict)
-                .where(TaskSizesDict.name == task_size_name)
+            x_range.append(
+                InMemoryTables.task_sizes_dict[task_size_name] / num_of_cores
             )
-            rows = db_session.execute(stmt).first()
-            if not rows:
-                return
-            task_sizes_dict: TaskSizesDict = rows[0]
-            if not task_sizes_dict.size:
-                raise KeyError(f"Task size for {task_size_name} not defined in DB")
-            x_range.append(task_sizes_dict.size / num_of_cores)
-            x_tick_labels.append(f'{x_range[-1]} \n("{task_sizes_dict.name}")')
+            x_tick_labels.append(f"{x_range[-1]} \n({task_size_name})")
 
             for metric_name in metric_names:
                 stmt = (
@@ -176,13 +186,10 @@ def main() -> None:
                     values = [row[0].value for row in rows]
                     metrics[metric_name].append(np.mean(values))
 
-    # for metric in metrics.items():
-    #     if np.all(metric) == 0:
-    #         del
     multi_metrics = divide_dict_into_chunks(metrics, 15)
     for i, chunked_metrics in enumerate(multi_metrics):
         png_filename = Path(f"./GRAPH{i}.png")
-        svg_filename = Path(f"./GRAPH{i}.svg")
+        # svg_filename = Path(f"./GRAPH{i}.svg")
         make_figures(x_range, x_tick_labels, chunked_metrics, png_filename=png_filename)
 
 
