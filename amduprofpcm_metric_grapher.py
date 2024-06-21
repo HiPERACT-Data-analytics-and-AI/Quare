@@ -38,6 +38,8 @@ def make_figures(
     x_range: list[float],
     x_tick_labels: list[str],
     metrics: dict[str, list[float | int]],
+    x_grid: bool = True,
+    y_grid: bool = False,
     png_filename: Path | None = None,
     svg_filename: Path | None = None,
 ) -> None:
@@ -68,6 +70,8 @@ def make_figures(
         # axes[i][0].yaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=False))
         # axes[i][0].yaxis.get_major_formatter()
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
+        axes[i][0].xaxis.grid(x_grid)
+        axes[i][0].yaxis.grid(y_grid)
 
         if i + 1 == len(metrics):
             axes[i][0].set_xticklabels(x_tick_labels, fontsize="8")
