@@ -1,18 +1,28 @@
+from itertools import islice
+from pathlib import Path
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import Machine, Repetition, TaskSizesDict, UseCase
+from db_models import Machine, ProfilingSession, Repetition, TaskSizesDict, UseCase
 from db_models.amduprofpcm_models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
 from utils import create_db_engine
+
+
+def divide_dict_into_chunks(dict_to_splice, max_size):
+    dict_items_iterator = iter(dict_to_splice.items())
+    return [dict(islice(dict_items_iterator, max_size)) for _ in range(0, len(dict_to_splice), max_size)]
 
 
 def make_figures(
     x_range: list[float],
     x_tick_labels: list[str],
     metrics: dict[str, list[float | int]],
+    png_filename: Path | None = None,
+    svg_filename: Path | None = None,
 ) -> None:
 
     num_of_figures: int = len(metrics)
@@ -48,11 +58,44 @@ def make_figures(
 
         i += 1
 
-    # fig.savefig("./GRAPH.png", dpi=300)
-    # fig.savefig("./GRAPH.svg")
+    if png_filename:
+        fig.savefig(png_filename, dpi=300)
+    if svg_filename:
+        fig.savefig(svg_filename)
     plt.close()
     plt.cla()
     plt.clf()
+
+
+def select_repetitions(
+    db_session: Session,
+    session_name_contains: str,
+    machine_name: str,
+    use_case_name: str,
+    task_size_name: str,
+    repetition_name_contains: str,
+) -> list[int]:
+    stmt = (
+        select(Repetition.id)
+        .join(ProfilingSession)
+        .join(Machine)
+        .join(UseCase)
+        .join(TaskSizesDict)
+        .where(
+            ProfilingSession.name.contains(session_name_contains),
+            Machine.name == machine_name,
+            UseCase.name == use_case_name,
+            TaskSizesDict.name == task_size_name,
+            Repetition.name.contains(repetition_name_contains),
+        )
+    )
+
+    rows = db_session.execute(stmt).all()
+    if rows:
+        ids: list[int] = [row.id for row in rows]
+    else:
+        ids: list[int] = []
+    return ids
 
 
 def main() -> None:
@@ -66,8 +109,8 @@ def main() -> None:
     num_of_cores: int = 128
 
     session_name_contains: str = "Session1"
-    use_case_id: int = 1
     machine_name: str = "ROME_128"
+    use_case_name: str = "motorBike"
     sizes_to_get: tuple[str, ...] = (
         "xsmall",
         "small",
@@ -78,6 +121,7 @@ def main() -> None:
         "uhigh",
         "xhigh",
     )
+    repetition_name_contains: str = "Session1"
 
     x_range: list[float] = []
     x_tick_labels: list[str] = []
@@ -93,45 +137,53 @@ def main() -> None:
         for metric_name in metric_names:
             metrics[metric_name] = []
 
-        for task_size in sizes_to_get:
-            stmt = (
-                select(Repetition, UseCase, TaskSizesDict)
-                .join(UseCase)
-                .join(TaskSizesDict)
-                .join(Machine)
-                .where(
-                    Repetition.name.contains(session_name_contains),
-                    UseCase.id == use_case_id,
-                    TaskSizesDict.name == task_size,
-                    Machine.name == machine_name,
-                )
+        for task_size_name in sizes_to_get:
+            repetitions_ids = select_repetitions(
+                db_session,
+                session_name_contains,
+                machine_name,
+                use_case_name,
+                task_size_name,
+                repetition_name_contains,
             )
+            print(task_size_name, repetitions_ids)
 
-            row = db_session.execute(stmt).first()
-            if row is None:
-                continue
-
-            profiling_session, use_case, task_sizes_dict = row
-            print(profiling_session.name, use_case.name, task_sizes_dict.name)
+            # TODO Select all needed TaskSize rows once:
+            stmt = (
+                select(TaskSizesDict)
+                .where(TaskSizesDict.name == task_size_name)
+            )
+            rows = db_session.execute(stmt).first()
+            if not rows:
+                return
+            task_sizes_dict: TaskSizesDict = rows[0]
+            if not task_sizes_dict.size:
+                raise KeyError(f"Task size for {task_size_name} not defined in DB")
             x_range.append(task_sizes_dict.size / num_of_cores)
             x_tick_labels.append(f'{x_range[-1]} \n("{task_sizes_dict.name}")')
 
             for metric_name in metric_names:
                 stmt = (
                     select(AMDuProfPCM_metrics)
-                    .where(AMDuProfPCM_metrics.repetition == profiling_session.id)
+                    .where(AMDuProfPCM_metrics.repetition.in_(repetitions_ids))
                     .join(AMDuProfPCM_metrics_dict)
                     .where(AMDuProfPCM_metrics_dict.name == metric_name)
                 )
                 rows = db_session.execute(stmt).all()
-                values = [row[0].value for row in rows]
-
                 if not rows:
-                    continue
+                    metrics[metric_name].append(0)  # temporary hotfix
+                else:
+                    values = [row[0].value for row in rows]
+                    metrics[metric_name].append(np.mean(values))
 
-                metrics[metric_name].append(np.mean(values))
-
-    make_figures(x_range, x_tick_labels, metrics)
+    # for metric in metrics.items():
+    #     if np.all(metric) == 0:
+    #         del
+    multi_metrics = divide_dict_into_chunks(metrics, 15)
+    for i, chunked_metrics in enumerate(multi_metrics):
+        png_filename = Path(f"./GRAPH{i}.png")
+        svg_filename = Path(f"./GRAPH{i}.svg")
+        make_figures(x_range, x_tick_labels, chunked_metrics, png_filename=png_filename)
 
 
 if __name__ == "__main__":
