@@ -15,6 +15,7 @@
         "dtlb",
         "enoa",
         "EPYC",
+        "facecolor",
         "figsize",
         "fontsize",
         "fvops",
@@ -51,6 +52,7 @@
         "xticks",
         "yaxis",
         "ylabel",
-        "ylim"
+        "ylim",
+        "yticks"
     ]
 }
