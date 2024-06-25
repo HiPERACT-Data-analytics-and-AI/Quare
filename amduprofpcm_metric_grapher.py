@@ -1,7 +1,9 @@
 from itertools import islice
 from pathlib import Path
+from typing import TypeVar
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from sqlalchemy import select
@@ -31,7 +33,13 @@ class InMemoryTables:
         cls.task_sizes_dict = {row[1]: row[0] for row in results_list}
 
 
-def divide_dict_into_chunks(dict_to_splice, max_size):
+T = TypeVar("T")
+U = TypeVar("U")
+
+
+def divide_dict_into_chunks(
+    dict_to_splice: dict[T, U], max_size: int
+) -> list[dict[T, U]]:
     dict_items_iterator = iter(dict_to_splice.items())
     return [
         dict(islice(dict_items_iterator, max_size))
@@ -39,7 +47,18 @@ def divide_dict_into_chunks(dict_to_splice, max_size):
     ]
 
 
-def make_figures(
+def make_csv(
+    x_range: list[float],
+    columns: list[str],
+    metrics: dict[str, list[float | int]],
+    filename: Path,
+) -> None:
+    data: dict[str, list[float]] = {"Cells per rank (size)": x_range}
+    data.update(metrics)
+    pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
+
+
+def make_figure(
     x_range: list[float],
     x_tick_labels: list[str],
     metrics: dict[str, list[float | int]],
@@ -86,10 +105,8 @@ def make_figures(
             linewidth=0.4,
         )
         axes[i][0].set_xticks(x_range)
-        # axes[i][0].set_ylabel("Native unit for the metric")
+        # axes[i][0].set_ylabel("Unit")
         axes[i][0].legend(loc="upper right", fontsize="8")
-        # axes[i][0].yaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=False))
-        # axes[i][0].yaxis.get_major_formatter()
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
         axes[i][0].xaxis.grid(x_grid)
         axes[i][0].yaxis.grid(y_grid)
@@ -195,7 +212,7 @@ def main() -> None:
     }
 
     session_name_contains: str = "Session1"
-    machine_name: str = "GENOA_192"
+    machine_name: str = "ROME_128"
     use_case_name: str = "motorBike"
     sizes_to_get: tuple[str, ...] = (
         "xsmall",
@@ -211,7 +228,7 @@ def main() -> None:
 
     x_range: list[float] = []
     x_tick_labels: list[str] = []
-    metrics: dict[str, list] = {}
+    metrics: dict[str, list[float | int]] = {}
     result_info: dict[str, str] = {}
 
     with Session(create_db_engine()) as db_session:
@@ -244,7 +261,7 @@ def main() -> None:
                 InMemoryTables.task_sizes_dict[task_size_name]
                 / int(result_info["# of cores"])
             )
-            x_tick_labels.append(f"{x_range[-1]} \n({task_size_name})")
+            x_tick_labels.append(f"{task_size_name}")
 
             for metric_name in metric_names:
                 stmt = (
@@ -258,21 +275,31 @@ def main() -> None:
                     metrics[metric_name].append(0)  # temporary hotfix
                 else:
                     values = [row[0].value for row in rows]
-                    metrics[metric_name].append(np.mean(values))
+                    metrics[metric_name].append(float(np.mean(values)))
 
     profiler_name: str = "AMDuProfPCM"
-    parent_dir_path = Path(
-        f"output/{result_info['Session']}/{result_info['Machine name']}/{result_info['Use case']}/{profiler_name}"
+    parent_dir_path = (
+        Path("output")
+        / result_info["Session"]
+        / result_info["Machine name"]
+        / result_info["Use case"]
+        / profiler_name
     )
     parent_dir_path.mkdir(parents=True, exist_ok=True)
 
+    make_csv(
+        x_range,
+        x_tick_labels,
+        metrics,
+        parent_dir_path / "results.csv",
+    )
     multi_metrics = divide_dict_into_chunks(metrics, 15)
     for i, chunked_metrics in enumerate(multi_metrics):
         png_filename: Path = parent_dir_path / f"GRAPH{i}.png"
         # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
-        make_figures(
+        make_figure(
             x_range,
-            x_tick_labels,
+            [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
             chunked_metrics,
             result_info,
             png_filename=png_filename,
