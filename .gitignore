@@ -5,6 +5,7 @@ venv
 raw_data/
 csvized_data/
 **/*.sqlite3
+**/output
+*.svg
 *.png
 !**/db_diagram.png
-*.svg

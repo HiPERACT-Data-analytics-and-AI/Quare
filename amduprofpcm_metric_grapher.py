@@ -101,9 +101,9 @@ def make_figures(
         i += 1
 
     if png_filename:
-        fig.savefig(png_filename, dpi=300)
+        fig.savefig(png_filename.as_posix(), dpi=300)
     if svg_filename:
-        fig.savefig(svg_filename)
+        fig.savefig(svg_filename.as_posix())
     plt.close()
     plt.cla()
     plt.clf()
@@ -195,7 +195,7 @@ def main() -> None:
     }
 
     session_name_contains: str = "Session1"
-    machine_name: str = "ROME_128"
+    machine_name: str = "GENOA_192"
     use_case_name: str = "motorBike"
     sizes_to_get: tuple[str, ...] = (
         "xsmall",
@@ -260,10 +260,16 @@ def main() -> None:
                     values = [row[0].value for row in rows]
                     metrics[metric_name].append(np.mean(values))
 
+    profiler_name: str = "AMDuProfPCM"
+    parent_dir_path = Path(
+        f"output/{result_info['Session']}/{result_info['Machine name']}/{result_info['Use case']}/{profiler_name}"
+    )
+    parent_dir_path.mkdir(parents=True, exist_ok=True)
+
     multi_metrics = divide_dict_into_chunks(metrics, 15)
     for i, chunked_metrics in enumerate(multi_metrics):
-        png_filename = Path(f"./GRAPH{i}.png")
-        # svg_filename = Path(f"./GRAPH{i}.svg")
+        png_filename: Path = parent_dir_path / f"GRAPH{i}.png"
+        # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
         make_figures(
             x_range,
             x_tick_labels,
