@@ -58,25 +58,15 @@ def make_csv(
     pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
 
 
-def make_figure(
-    x_range: list[float],
-    x_tick_labels: list[str],
-    metrics: dict[str, list[float | int]],
+def make_info_plot(
     result_info: dict[str, str],
-    x_grid: bool = True,
-    y_grid: bool = False,
     png_filename: Path | None = None,
     svg_filename: Path | None = None,
 ) -> None:
-
-    num_of_figures: int = len(metrics)
     axes: list[list[Axes]]
-    fig, axes = plt.subplots(
-        num_of_figures + 1, 1, figsize=(12, (num_of_figures + 1) * 5), squeeze=False
-    )
-
+    fig, axes = plt.subplots(1, 1, figsize=(12, 5), squeeze=False)
     fig.subplots_adjust(
-        left=0.15, bottom=0.05, right=0.95, top=0.95, wspace=0.4, hspace=0.0
+        left=0.01, bottom=0.01, right=0.99, top=0.99, wspace=0.0, hspace=0.0
     )
 
     axes[0][0].set_yticks([])
@@ -94,7 +84,36 @@ def make_figure(
         if not y % 2:
             cell.set_facecolor("lightblue")
 
-    i: int = 1
+    if png_filename:
+        fig.savefig(png_filename.as_posix(), dpi=300)
+    if svg_filename:
+        fig.savefig(svg_filename.as_posix())
+    plt.close()
+    plt.cla()
+    plt.clf()
+
+
+def make_data_plots(
+    x_range: list[float],
+    x_tick_labels: list[str],
+    metrics: dict[str, list[float | int]],
+    x_grid: bool = True,
+    y_grid: bool = True,
+    png_filename: Path | None = None,
+    svg_filename: Path | None = None,
+) -> None:
+
+    num_of_figures: int = len(metrics)
+    axes: list[list[Axes]]
+    fig, axes = plt.subplots(
+        num_of_figures, 1, figsize=(12, num_of_figures * 5), squeeze=False
+    )
+
+    fig.subplots_adjust(
+        left=0.12, bottom=0.115, right=0.98, top=0.97, wspace=0.0, hspace=0.0
+    )
+
+    i: int = 0
     for key, value_series in metrics.items():
         axes[i][0].semilogx(
             x_range,
@@ -111,7 +130,7 @@ def make_figure(
         axes[i][0].xaxis.grid(x_grid)
         axes[i][0].yaxis.grid(y_grid)
 
-        if i == len(metrics):
+        if i + 1 == len(metrics):
             axes[i][0].set_xticklabels(x_tick_labels, fontsize="8")
             axes[i][0].set_xlabel("Cells per rank (size name)")
 
@@ -293,15 +312,17 @@ def main() -> None:
         metrics,
         parent_dir_path / "results.csv",
     )
-    multi_metrics = divide_dict_into_chunks(metrics, 15)
-    for i, chunked_metrics in enumerate(multi_metrics):
-        png_filename: Path = parent_dir_path / f"GRAPH{i}.png"
+    make_info_plot(result_info, png_filename=parent_dir_path / "INFO.png")
+    multi_metrics = divide_dict_into_chunks(metrics, 1)
+    for chunked_metrics in multi_metrics:
+        png_filename: Path = (
+            parent_dir_path / f"Plot {[key for key in chunked_metrics.keys()][0]}.png"
+        )
         # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
-        make_figure(
+        make_data_plots(
             x_range,
             [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
             chunked_metrics,
-            result_info,
             png_filename=png_filename,
         )
 
