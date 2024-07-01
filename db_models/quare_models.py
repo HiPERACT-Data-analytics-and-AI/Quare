@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -52,3 +53,31 @@ class Repetition(DBBase):
     # Length set according to some default linux limits:
     file_dir: Mapped[str] = mapped_column(String(4096 - 255))
     data_consistent: Mapped[bool] = mapped_column(default=False)
+
+
+class MetricsDictBase(DBBase):
+    __abstract__ = True
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), name="name")
+    processing_unit: Mapped[str | None] = mapped_column(
+        String(16), name="processing_unit"
+    )
+    desc: Mapped[str | None] = mapped_column(String(1024))
+
+    __table_args__ = (UniqueConstraint(name, processing_unit),)
+
+
+class MetricsBase(DBBase):
+    __abstract__ = True
+    id: Mapped[int] = mapped_column(primary_key=True, sort_order=-10)
+    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id), sort_order=-9)
+    unit_idx: Mapped[int] = mapped_column(sort_order=-8)
+    # metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
+    value: Mapped[float] = mapped_column(sort_order=10)
+
+    def __init_subclass__(cls, **kw: Any) -> None:
+        if not hasattr(cls, "metric"):
+            raise NotImplementedError(
+                f"{cls.__name__} must have a 'metric' attribute as a foreign key to a MetricsDict model"
+            )
+        return super().__init_subclass__(**kw)

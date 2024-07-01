@@ -1,7 +1,7 @@
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .quare_models import DBBase, Repetition
+from .quare_models import DBBase, MetricsBase, MetricsDictBase, Repetition
 
 
 # machine_info refers to repetition
@@ -44,20 +44,10 @@ class AMDuProfPCM_further_machine_info(DBBase):
     version: Mapped[str | None] = mapped_column(String(16))
 
 
-class AMDuProfPCM_metrics_dict(DBBase):
+class AMDuProfPCM_metrics_dict(MetricsDictBase):
     __tablename__ = "AMDuProfPCM_metrics_dict"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(128))
-    processing_unit: Mapped[str] = mapped_column(String(16))
-    desc: Mapped[str | None] = mapped_column(String(1024))
-
-    __table_args__ = (UniqueConstraint(name, processing_unit),)
 
 
-class AMDuProfPCM_metrics(DBBase):
+class AMDuProfPCM_metrics(MetricsBase):
     __tablename__ = "AMDuProfPCM_metrics"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
-    unit_idx: Mapped[int]
     metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
-    value: Mapped[float]
