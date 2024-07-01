@@ -6,4 +6,6 @@ from .quare_models import (  # noqa: F401
     Repetition,
     TaskSizesDict,
     UseCase,
+    MetricsBase,
+    MetricsDictBase,
 )

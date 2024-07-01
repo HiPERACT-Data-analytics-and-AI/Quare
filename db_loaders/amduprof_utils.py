@@ -1,18 +1,22 @@
 from collections.abc import Callable
+from itertools import islice
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import TypeVar
 
+import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import Machine, ProfilingSession, Repetition, TaskSizesDict, UseCase
+from db_models import Machine, ProfilingSession, Repetition, TaskSizesDict, UseCase, MetricsBase, MetricsDictBase
 
 from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
 
 class InMemoryTables:
     task_sizes_dict: dict[str, int] = {}
+    metrics_dict: dict[str, int] = {}
 
     @classmethod
     def update_task_sizes_dict(cls, db_session: Session) -> None:
@@ -21,12 +25,57 @@ class InMemoryTables:
         ).all()
         cls.task_sizes_dict = {row[1]: row[0] for row in task_sizes_dict_list}
 
+    @classmethod
+    def update_metrics_dict(cls, db_session: Session, table: type[MetricsDictBase]) -> None:
+        metrics_dict_list = db_session.execute(
+            select(
+                table.id,
+                table.name,
+                table.processing_unit,
+            )
+        ).all()
+        cls.metrics_dict = {row[1] + row[2]: row[0] for row in metrics_dict_list}
+
+
 
 @dataclass
 class MetricContext:
     path: Path
     repetition_id: int
     db_session: Session
+
+
+MetricsBaseType = TypeVar("MetricsBaseType", bound=MetricsBase)
+
+
+def load_generic_metrics(
+context: MetricContext,
+metrics_csv: pd.DataFrame,
+index_trimmer: int,
+processing_unit: str,
+metrics_table: type[MetricsBaseType],
+metrics_dict_table: type[MetricsDictBase],
+) -> list[MetricsBaseType]:
+    InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
+    instances_to_add: list[MetricsBaseType] = list()
+    for _, row in metrics_csv.iterrows():
+        for name, value in islice(row.items(), 1, None):
+            if str(name) + processing_unit not in InMemoryTables.metrics_dict.keys():
+                metric = metrics_dict_table(
+                    name=name, processing_unit=processing_unit
+                )
+                context.db_session.add(metric)
+                context.db_session.commit()
+                InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
+
+            instance = metrics_table(
+                repetition=context.repetition_id,
+                unit_idx=int(row[0][index_trimmer:]),  # first row is a row with headers
+                metric=InMemoryTables.metrics_dict[str(name) + processing_unit],
+                value=value,
+            )
+            instances_to_add.append(instance)
+    return instances_to_add
 
 
 def walk_through_data(
