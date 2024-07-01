@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from itertools import islice
 from pathlib import Path
 
 import pandas as pd
@@ -104,20 +105,15 @@ def _load_further_machine_info(
     return [further_machine_uprof]
 
 
-def _load_metrics(
-    context: MetricContext, index_trimmer: int, processing_unit: str
+def load_metrics(
+    context: MetricContext,
+    metrics_csv: pd.DataFrame,
+    index_trimmer: int,
+    processing_unit: str,
 ) -> list[AMDuProfPCM_metrics]:
-    try:
-        metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
-    except FileNotFoundError:
-        return []
-
     instances_to_add: list[AMDuProfPCM_metrics] = list()
     for _, row in metrics_csv.iterrows():
-        for name, value in row.items():
-            if name == "Metric":
-                continue
-
+        for name, value in islice(row.items(), 1, None):
             if str(name) + processing_unit not in InMemoryTables.metrics_dict.keys():
                 metric = AMDuProfPCM_metrics_dict(
                     name=name, processing_unit=processing_unit
@@ -128,7 +124,7 @@ def _load_metrics(
 
             instance = AMDuProfPCM_metrics(
                 repetition=context.repetition_id,
-                unit_idx=int(row.get("Metric", default=-1)[index_trimmer:]),
+                unit_idx=int(row[0][index_trimmer:]),  # first row is a row with headers
                 metric=InMemoryTables.metrics_dict[str(name) + processing_unit],
                 value=value,
             )
@@ -137,13 +133,23 @@ def _load_metrics(
 
 
 def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+    try:
+        metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    except FileNotFoundError:
+        return []
+
     name: str = "core"
-    return _load_metrics(context, 5, name)
+    return load_metrics(context, metrics_csv, 5, name)
 
 
 def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+    try:
+        metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+    except FileNotFoundError:
+        return []
+
     name: str = "ccx"
-    return _load_metrics(context, 4, name)
+    return load_metrics(context, metrics_csv, 4, name)
 
 
 def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
