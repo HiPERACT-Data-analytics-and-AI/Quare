@@ -34,7 +34,7 @@ def create_if_not_exists(
     ).first()
 
     if not selected_row:
-        # It needs a commit after returning <- add to docs
+        # TODO It needs a commit after returning <- add to docs
         # (or change the function to context manager)
         db_session.add(to_create)
         return to_create

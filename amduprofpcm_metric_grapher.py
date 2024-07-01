@@ -291,7 +291,9 @@ def main() -> None:
                 )
                 rows = db_session.execute(stmt).all()
                 if not rows:
-                    metrics[metric_name].append(0)  # temporary hotfix
+                    metrics[metric_name].append(
+                        0
+                    )  # TODO: Temporary hotfix - better do not make data points at all
                 else:
                     values = [row[0].value for row in rows]
                     metrics[metric_name].append(float(np.mean(values)))
