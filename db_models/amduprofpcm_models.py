@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .quare_models import DBBase, MetricsBase, MetricsDictBase, Repetition
 
 
-# machine_info refers to repetition
+# machine_info refers to a repetition
 # as machine_info file is generated repetition-wise
 class AMDuProfPCM_machine_info(DBBase):
     __tablename__ = "AMDuProfPCM_machine_info"

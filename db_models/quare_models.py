@@ -71,7 +71,7 @@ class MetricsBase(DBBase):
     __abstract__ = True
     id: Mapped[int] = mapped_column(primary_key=True, sort_order=-10)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id), sort_order=-9)
-    unit_idx: Mapped[int] = mapped_column(sort_order=-8)
+    unit_idx: Mapped[int | None] = mapped_column(sort_order=-8)
     # metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
     value: Mapped[float] = mapped_column(sort_order=10)
 

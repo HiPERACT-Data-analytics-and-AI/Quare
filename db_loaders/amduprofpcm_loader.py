@@ -90,7 +90,7 @@ def _load_further_machine_info(
 
 def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     try:
-        metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+        metrics_csv = pd.read_csv(context.path, header=0, index_col=0).T
     except FileNotFoundError:
         return []
 
@@ -100,7 +100,7 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
 
 def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     try:
-        metrics_csv = pd.read_csv(context.path, header=None, index_col=0).T
+        metrics_csv = pd.read_csv(context.path, header=0, index_col=0).T
     except FileNotFoundError:
         return []
 
@@ -109,7 +109,6 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
 
 
 def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
-
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
