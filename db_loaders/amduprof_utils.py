@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from itertools import islice
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -9,7 +8,15 @@ import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import Machine, ProfilingSession, Repetition, TaskSizesDict, UseCase, MetricsBase, MetricsDictBase
+from db_models import (
+    Machine,
+    MetricsBase,
+    MetricsDictBase,
+    ProfilingSession,
+    Repetition,
+    TaskSizesDict,
+    UseCase,
+)
 
 from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
@@ -26,7 +33,9 @@ class InMemoryTables:
         cls.task_sizes_dict = {row[1]: row[0] for row in task_sizes_dict_list}
 
     @classmethod
-    def update_metrics_dict(cls, db_session: Session, table: type[MetricsDictBase]) -> None:
+    def update_metrics_dict(
+        cls, db_session: Session, table: type[MetricsDictBase]
+    ) -> None:
         metrics_dict_list = db_session.execute(
             select(
                 table.id,
@@ -57,9 +66,7 @@ def create_metric_instance(
     metrics_dict_table: type[MetricsDictBase],
 ) -> MetricsBaseType:
     if str(name) + processing_unit not in InMemoryTables.metrics_dict.keys():
-        metric = metrics_dict_table(
-            name=name, processing_unit=processing_unit
-        )
+        metric = metrics_dict_table(name=name, processing_unit=processing_unit)
         context.db_session.add(metric)
         context.db_session.commit()
         InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)

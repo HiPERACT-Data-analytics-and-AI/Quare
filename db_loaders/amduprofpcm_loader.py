@@ -12,7 +12,7 @@ from db_models.amduprofpcm_models import (
     AMDuProfPCM_metrics_dict,
 )
 
-from .amduprof_utils import MetricContext, walk_through_data, load_generic_metrics
+from .amduprof_utils import MetricContext, load_generic_metrics, walk_through_data
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:
@@ -95,7 +95,9 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
         return []
 
     name: str = "core"
-    return load_generic_metrics(context, metrics_csv, 5, name, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict)
+    return load_generic_metrics(
+        context, metrics_csv, 5, name, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
+    )
 
 
 def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
@@ -105,7 +107,9 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
         return []
 
     name: str = "ccx"
-    return load_generic_metrics(context, metrics_csv, 4, name, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict)
+    return load_generic_metrics(
+        context, metrics_csv, 4, name, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
+    )
 
 
 def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:

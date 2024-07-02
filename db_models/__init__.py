@@ -2,10 +2,10 @@
 from .quare_models import (  # noqa: F401
     DBBase,
     Machine,
+    MetricsBase,
+    MetricsDictBase,
     ProfilingSession,
     Repetition,
     TaskSizesDict,
     UseCase,
-    MetricsBase,
-    MetricsDictBase,
 )

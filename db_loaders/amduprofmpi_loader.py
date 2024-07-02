@@ -6,11 +6,17 @@ from sqlalchemy.orm import Session
 
 from db_models.amduprofmpi_models import (
     AMDuProfMPI_environment,
-    AMDuProfMPI_metrics_dict,
     AMDuProfMPI_metrics,
+    AMDuProfMPI_metrics_dict,
 )
 
-from .amduprof_utils import MetricContext, walk_through_data, load_generic_metrics, create_metric_instance, InMemoryTables
+from .amduprof_utils import (
+    InMemoryTables,
+    MetricContext,
+    create_metric_instance,
+    load_generic_metrics,
+    walk_through_data,
+)
 
 
 def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
@@ -60,7 +66,9 @@ def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
     except FileNotFoundError:
         return []
 
-    return load_generic_metrics(context, metrics_csv, 0, "rank", AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict)
+    return load_generic_metrics(
+        context, metrics_csv, 0, "rank", AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
+    )
 
 
 def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
