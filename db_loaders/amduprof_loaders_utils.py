@@ -21,6 +21,8 @@ from db_models import (
 from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
 
+# TODO Change InMemoryTables to context manager or to standard class
+# (there won't be a need to remember to call an update method for the first time to reload)
 class InMemoryTables:
     task_sizes_dict: dict[str, int] = {}
     metrics_dict: dict[str, int] = {}

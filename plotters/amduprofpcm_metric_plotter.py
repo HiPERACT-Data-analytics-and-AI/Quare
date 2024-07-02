@@ -300,7 +300,7 @@ def main() -> None:
 
     profiler_name: str = "AMDuProfPCM"
     parent_dir_path = (
-        Path("output")
+        Path("../output")
         / result_info["Session"]
         / result_info["Machine name"]
         / result_info["Use case"]

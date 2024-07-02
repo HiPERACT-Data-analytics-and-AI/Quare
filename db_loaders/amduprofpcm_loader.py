@@ -12,7 +12,7 @@ from db_models.amduprofpcm_models import (
     AMDuProfPCM_metrics_dict,
 )
 
-from .amduprof_utils import MetricContext, load_generic_metrics, walk_through_data
+from .amduprof_loaders_utils import MetricContext, load_generic_metrics, walk_through_data
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:

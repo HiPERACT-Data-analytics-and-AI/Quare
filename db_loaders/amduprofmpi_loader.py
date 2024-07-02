@@ -10,7 +10,7 @@ from db_models.amduprofmpi_models import (
     AMDuProfMPI_metrics_dict,
 )
 
-from .amduprof_utils import (
+from .amduprof_loaders_utils import (
     InMemoryTables,
     MetricContext,
     create_metric_instance,
