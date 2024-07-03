@@ -58,5 +58,6 @@
         "ylabel",
         "ylim",
         "yticks"
-    ]
+    ],
+    "autoDocstring.docstringFormat": "sphinx"
 }

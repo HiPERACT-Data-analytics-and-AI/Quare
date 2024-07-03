@@ -9,6 +9,19 @@ def _csvize_multi_block_csv(
     filename_pattern: str,
     file_blocks: dict[str, tuple[str, bool]],
 ) -> int:
+    """_summary_
+
+    :param raw_data_path: _description_
+    :type raw_data_path: Path
+    :param csvized_path: _description_
+    :type csvized_path: Path
+    :param filename_pattern: _description_
+    :type filename_pattern: str
+    :param file_blocks: _description_
+    :type file_blocks: dict[str, tuple[str, bool]]
+    :return: _description_
+    :rtype: int
+    """
     file_counter: int = 0
     for input_file_path in raw_data_path.glob(filename_pattern):
         file_counter += 1
@@ -86,6 +99,11 @@ def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
 
 
 def csvize() -> None:
+    """Changes output profile files named as CSVs, but not being
+    a proper CSVs (consist different blocks) to series of proper CSVs.
+
+    :raises FileNotFoundError: When provided source path does not exist.
+    """
     raw_data_path: Path = Path("../quare-test-db/raw_data")
     csvized_data_path: Path = Path("../quare-test-db/csvized_data")
 
