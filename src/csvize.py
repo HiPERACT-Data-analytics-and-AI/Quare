@@ -86,6 +86,15 @@ def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
 
 
 def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
+    """_summary_
+
+    :param raw_data_path: _description_
+    :type raw_data_path: Path
+    :param csvized_path: _description_
+    :type csvized_path: Path
+    :return: _description_
+    :rtype: int
+    """
     counter: int = 0
     for input_file_path in raw_data_path.glob("**/app_logs"):
         # print(input_file_path)

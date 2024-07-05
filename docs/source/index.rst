@@ -7,8 +7,10 @@ Welcome to Quare's documentation!
 =================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 0
    :caption: Contents:
+
+   api
 
 
 

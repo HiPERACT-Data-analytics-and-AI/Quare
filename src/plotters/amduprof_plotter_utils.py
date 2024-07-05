@@ -69,7 +69,7 @@ def make_info_plot(
     png_filename: Path | None = None,
     svg_filename: Path | None = None,
 ) -> None:
-    axes: list[list[Axes]]
+    # axes: list[list[Axes]]
     fig, axes = plt.subplots(1, 1, figsize=(12, 5), squeeze=False)
     fig.subplots_adjust(
         left=0.01, bottom=0.01, right=0.99, top=0.99, wspace=0.0, hspace=0.0
@@ -110,7 +110,7 @@ def make_data_plots(
 ) -> None:
 
     num_of_figures: int = len(metrics)
-    axes: list[list[Axes]]
+    # axes: list[list[Axes]]
     fig, axes = plt.subplots(
         num_of_figures, 1, figsize=(12, num_of_figures * 5), squeeze=False
     )

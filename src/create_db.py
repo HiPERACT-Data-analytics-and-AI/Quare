@@ -9,6 +9,8 @@ from utils import create_db_engine
 
 
 def main():
+    """Creates Quare's DB using custom loaders
+    """
     db_engine = create_db_engine()
     DBBase.metadata.create_all(db_engine)
     data_dir_path = Path("../quare-test-db/csvized_data")
