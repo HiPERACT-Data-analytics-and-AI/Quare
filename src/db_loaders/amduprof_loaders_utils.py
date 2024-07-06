@@ -90,22 +90,6 @@ def load_generic_metrics(
     metrics_table: type[MetricsBaseType],
     metrics_dict_table: type[MetricsDictBase],
 ) -> list[MetricsBaseType]:
-    """_summary_
-
-    :param context: _description_
-    :param metrics_csv: _description_
-    :type metrics_csv: pd.DataFrame
-    :param index_trimmer: _description_
-    :type index_trimmer: int
-    :param processing_unit: _description_
-    :type processing_unit: str
-    :param metrics_table: _description_
-    :type metrics_table: type[MetricsBaseType]
-    :param metrics_dict_table: _description_
-    :type metrics_dict_table: type[MetricsDictBase]
-    :return: _description_
-    :rtype: list[MetricsBaseType]
-    """
     InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
     instances_to_add: list[MetricsBaseType] = list()
     for _, row in metrics_csv.iterrows():
@@ -129,7 +113,8 @@ def walk_through_data(
     dir_name_pattern: str,
     file_suffixes: list[tuple[str, Callable[[MetricContext], list]]],
 ) -> None:
-    """Walks through files from input directory and adds data to a DB,
+    """
+    Walks through files from input directory and adds data to a DB,
     based on provided function for directory name pattern.
 
     :param data_dir_path: Path to a source directory with csvized data.

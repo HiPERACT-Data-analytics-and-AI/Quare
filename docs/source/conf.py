@@ -8,6 +8,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 
 project = 'Quare'
@@ -47,11 +48,11 @@ typehints_document_rtype = True
 
 
 # Hook to add headers to each module
-def autodoc_process_docstring(app, what, name, obj, options, lines):
-    if what == "module":
-        lines.insert(0, name)
-        lines.insert(1, "=========================================")
+# def autodoc_process_docstring(app, what, name, obj, options, lines):
+#     if what == "module":
+#         lines.insert(0, "===================================================")
+#         lines.insert(0, name)
 
 
-def setup(app):
-    app.connect("autodoc-process-docstring", autodoc_process_docstring)
+# def setup(app):
+#     app.connect("autodoc-process-docstring", autodoc_process_docstring)

@@ -3,6 +3,7 @@
 venv
 .venv
 docs/build
+docs/source/build
 raw_data/
 csvized_data/
 **/*.sqlite3

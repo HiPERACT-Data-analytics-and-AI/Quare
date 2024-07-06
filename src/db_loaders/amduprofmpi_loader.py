@@ -72,11 +72,6 @@ def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
 
 
 def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
-    """_summary_
-
-    :param db_session: _description_
-    :param data_dir_path: _description_
-    """
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("environment.csv", _load_environment),
         ("functions_summary.csv", _load_functions_summary),

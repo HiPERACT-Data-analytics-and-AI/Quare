@@ -4,3 +4,5 @@ QUality AnalyzeR of application Efficiency
 In Latin, "quare" means therefore, because of this, why, in connection with this.
 
 The purpose of the application is to answer the question, based on data from profilers, why a given application is characterized by a specific performance.
+
+To properly generate docs use `generate_docs.sh` script from, run from the top project lvl.

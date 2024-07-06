@@ -3,11 +3,12 @@ from sqlalchemy import create_engine as _create_engine
 
 
 def create_db_engine() -> Engine:
-    """Creates DB engine from SQLAlchemy, to have a consistent engine generation
+    """
+    Creates DB engine from SQLAlchemy, to have a consistent engine generation
     throughout the whole projects, for all modules
 
-    :return: Automatically created engine
-    :rtype: sqlalchemy.Engine
+
+    :return: _description_
     """
     db_engine: Engine = _create_engine("sqlite:///src/quare.sqlite3", echo=False)
     return db_engine
