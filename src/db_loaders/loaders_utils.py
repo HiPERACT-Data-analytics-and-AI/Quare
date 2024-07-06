@@ -8,6 +8,14 @@ from db_models import DBBase
 
 
 def extract_from_path(key: str, data_dir_path: Path, file_path: Path) -> str:
+    """
+    _summary_
+
+    :param key: _description_
+    :param data_dir_path: _description_
+    :param file_path: _description_
+    :return: _description_
+    """
     path_struct: dict[str, tuple[int, ...]] = {
         "session": (0,),
         "machine": (1,),
@@ -29,6 +37,15 @@ def create_if_not_exists(
     where_column: InstrumentedAttribute[T],
     equal_to: T,
 ) -> DBBaseModel:
+    """
+    _summary_
+
+    :param db_session: _description_
+    :param to_create: _description_
+    :param where_column: _description_
+    :param equal_to: _description_
+    :return: _description_
+    """
     selected_row = db_session.execute(
         select(where_column.parent).where(where_column == equal_to)
     ).first()
@@ -46,4 +63,12 @@ def record_exists(
     where_column: InstrumentedAttribute[T],
     equal_to: T,
 ) -> bool:
+    """
+    _summary_
+
+    :param db_session: _description_
+    :param where_column: _description_
+    :param equal_to: _description_
+    :return: _description_
+    """
     return bool(db_session.query(exists().where(where_column == equal_to)).scalar())

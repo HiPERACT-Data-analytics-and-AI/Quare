@@ -12,10 +12,20 @@ from db_models.amduprofpcm_models import (
     AMDuProfPCM_metrics_dict,
 )
 
-from .amduprof_loaders_utils import MetricContext, load_generic_metrics, walk_through_data
+from .amduprof_loaders_utils import (
+    MetricContext,
+    load_generic_metrics,
+    walk_through_data,
+)
 
 
 def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
@@ -42,6 +52,12 @@ def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]
 def _load_machine_cpu_topology(
     context: MetricContext,
 ) -> list[AMDuProfPCM_machine_cpu_topology]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         cpu_csv = pd.read_csv(context.path)
     except FileNotFoundError:
@@ -63,6 +79,12 @@ def _load_machine_cpu_topology(
 def _load_further_machine_info(
     context: MetricContext,
 ) -> list[AMDuProfPCM_further_machine_info]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         further_machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
@@ -89,6 +111,12 @@ def _load_further_machine_info(
 
 
 def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         metrics_csv = pd.read_csv(context.path, header=0, index_col=0).T
     except FileNotFoundError:
@@ -101,6 +129,12 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
 
 
 def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         metrics_csv = pd.read_csv(context.path, header=0, index_col=0).T
     except FileNotFoundError:
@@ -113,6 +147,12 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
 
 
 def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
+    """
+    _summary_
+
+    :param db_session: _description_
+    :param data_dir_path: _description_
+    """
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),

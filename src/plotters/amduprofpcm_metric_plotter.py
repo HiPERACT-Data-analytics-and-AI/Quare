@@ -4,6 +4,9 @@ from .amduprof_plotter_utils import make_all
 
 
 def main() -> None:
+    """
+    _summary_
+    """
     metric_names: set[str] = set()
     metric_names: set[str] = {
         "L2 Access (pti)",

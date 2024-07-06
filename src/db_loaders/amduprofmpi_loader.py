@@ -20,6 +20,12 @@ from .amduprof_loaders_utils import (
 
 
 def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         environment_csv = pd.read_csv(context.path, header=None, index_col=0).T
     except FileNotFoundError:
@@ -38,6 +44,12 @@ def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
 def _load_functions_summary(
     context: MetricContext,
 ) -> list[AMDuProfMPI_metrics]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         metrics_csv = pd.read_csv(context.path, header=0, index_col=0)
     except FileNotFoundError:
@@ -61,6 +73,12 @@ def _load_functions_summary(
 
 
 def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
+    """
+    _summary_
+
+    :param context: _description_
+    :return: _description_
+    """
     try:
         metrics_csv = pd.read_csv(context.path, header=0, index_col=0)
     except FileNotFoundError:
@@ -72,6 +90,12 @@ def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
 
 
 def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
+    """
+    _summary_
+
+    :param db_session: _description_
+    :param data_dir_path: _description_
+    """
     FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
         ("environment.csv", _load_environment),
         ("functions_summary.csv", _load_functions_summary),

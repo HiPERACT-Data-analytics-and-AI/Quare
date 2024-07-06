@@ -22,8 +22,10 @@ from .loaders_utils import create_if_not_exists, extract_from_path, record_exist
 
 
 # TODO Change InMemoryTables to context manager or to standard class
-# (there won't be a need to remember to call an update method for the first time to reload)
+# (there won't be a need to remember to call an update method for the first time)
 class InMemoryTables:
+    """Temporary class to change"""
+
     task_sizes_dict: dict[str, int] = {}
     metrics_dict: dict[str, int] = {}
 
@@ -50,9 +52,14 @@ class InMemoryTables:
 
 @dataclass
 class MetricContext:
+    """_summary_"""
+
     path: Path
+    """member description"""
     repetition_id: int
+    """member description"""
     db_session: Session
+    """member description"""
 
 
 MetricsBaseType = TypeVar("MetricsBaseType", bound=MetricsBase)
@@ -67,6 +74,18 @@ def create_metric_instance(
     metrics_table: type[MetricsBaseType],
     metrics_dict_table: type[MetricsDictBase],
 ) -> MetricsBaseType:
+    """
+    _summary_
+
+    :param context: _description_
+    :param name: _description_
+    :param value: _description_
+    :param unit_idx: _description_
+    :param processing_unit: _description_
+    :param metrics_table: _description_
+    :param metrics_dict_table: _description_
+    :return: _description_
+    """
     if str(name) + processing_unit not in InMemoryTables.metrics_dict.keys():
         metric = metrics_dict_table(name=name, processing_unit=processing_unit)
         context.db_session.add(metric)
@@ -90,6 +109,17 @@ def load_generic_metrics(
     metrics_table: type[MetricsBaseType],
     metrics_dict_table: type[MetricsDictBase],
 ) -> list[MetricsBaseType]:
+    """
+    _summary_
+
+    :param context: _description_
+    :param metrics_csv: _description_
+    :param index_trimmer: _description_
+    :param processing_unit: _description_
+    :param metrics_table: _description_
+    :param metrics_dict_table: _description_
+    :return: _description_
+    """
     InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
     instances_to_add: list[MetricsBaseType] = list()
     for _, row in metrics_csv.iterrows():
@@ -117,14 +147,10 @@ def walk_through_data(
     Walks through files from input directory and adds data to a DB,
     based on provided function for directory name pattern.
 
-    :param data_dir_path: Path to a source directory with csvized data.
-    :type data_dir_path: pathlib.Path
+    :param data_dir_path: _description_
     :param db_session: _description_
-    :type db_session: Session
     :param dir_name_pattern: _description_
-    :type dir_name_pattern: str
     :param file_suffixes: _description_
-    :type file_suffixes: list[tuple[str, Callable[[MetricContext], list]]]
     """
     InMemoryTables.update_task_sizes_dict(db_session)
 

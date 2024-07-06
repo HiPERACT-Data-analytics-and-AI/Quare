@@ -9,6 +9,15 @@ def _csvize_multi_block_csv(
     filename_pattern: str,
     file_blocks: dict[str, tuple[str, bool]],
 ) -> int:
+    """
+    _summary_
+
+    :param raw_data_path: _description_
+    :param csvized_path: _description_
+    :param filename_pattern: _description_
+    :param file_blocks: _description_
+    :return: _description_
+    """
     file_counter: int = 0
     for input_file_path in raw_data_path.glob(filename_pattern):
         file_counter += 1
@@ -51,6 +60,11 @@ def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
         "core_metrics": ("CORE METRICS", False),
         "l3_metrics": ("L3 METRICS", False),
     }
+    """
+    _summary_
+
+    :return: _description_
+    """
     # False means that string is not included in the first line of data
     # True means that specified string is already a part of data
     # Order of entries must be preserved
@@ -61,6 +75,13 @@ def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
 
 
 def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
+    """
+    _summary_
+
+    :param raw_data_path: _description_
+    :param csvized_path: _description_
+    :return: _description_
+    """
     FILE_BLOCKS: dict[str, tuple[str, bool]] = {
         "environment": ("ENVIRONMENT", False),
         "functions_summary": ("MPI FUNCTIONS SUMMARY", False),
@@ -73,6 +94,13 @@ def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
 
 
 def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
+    """
+    _summary_
+
+    :param raw_data_path: _description_
+    :param csvized_path: _description_
+    :return: _description_
+    """
     counter: int = 0
     for input_file_path in raw_data_path.glob("**/app_logs"):
         # print(input_file_path)
@@ -87,8 +115,9 @@ def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
 
 def csvize() -> None:
     """
-    Changes output profile files named as CSVs, but not being
-    a proper CSVs (consisting different blocks) to series of proper CSVs.
+    Sometimes profilers does not produce proper files. The files are hard to consume
+    by the DB loaders. The function preprocess the files (if necessary) and copy them
+    to a location for preprocessed files.
 
     :raises FileNotFoundError: When provided source path does not exist.
     """

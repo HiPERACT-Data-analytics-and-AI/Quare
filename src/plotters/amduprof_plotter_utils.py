@@ -5,7 +5,6 @@ from typing import TypeVar
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -25,7 +24,10 @@ from db_models.amduprofpcm_models import (
 from utils import create_db_engine
 
 
+# TODO Change to a class as other "InMemoryTables"
 class InMemoryTables:
+    """Temporary class to change"""
+
     task_sizes_dict: dict[str, int] = {}
 
     @classmethod
@@ -46,6 +48,13 @@ U = TypeVar("U")
 def divide_dict_into_chunks(
     dict_to_splice: dict[T, U], max_size: int
 ) -> list[dict[T, U]]:
+    """
+    _summary_
+
+    :param dict_to_splice: _description_
+    :param max_size: _description_
+    :return: _description_
+    """
     dict_items_iterator = iter(dict_to_splice.items())
     return [
         dict(islice(dict_items_iterator, max_size))
@@ -59,6 +68,14 @@ def make_csv(
     metrics: dict[str, list[float | int]],
     filename: Path,
 ) -> None:
+    """
+    _summary_
+
+    :param x_range: _description_
+    :param columns: _description_
+    :param metrics: _description_
+    :param filename: _description_
+    """
     data: dict[str, list[float]] = {"Cells per rank (size)": x_range}
     data.update(metrics)
     pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
@@ -69,6 +86,13 @@ def make_info_plot(
     png_filename: Path | None = None,
     svg_filename: Path | None = None,
 ) -> None:
+    """
+    _summary_
+
+    :param result_info: _description_
+    :param png_filename: _description_, defaults to None
+    :param svg_filename: _description_, defaults to None
+    """
     # axes: list[list[Axes]]
     fig, axes = plt.subplots(1, 1, figsize=(12, 5), squeeze=False)
     fig.subplots_adjust(
@@ -108,7 +132,17 @@ def make_data_plots(
     png_filename: Path | None = None,
     svg_filename: Path | None = None,
 ) -> None:
+    """
+    _summary_
 
+    :param x_range: _description_
+    :param x_tick_labels: _description_
+    :param metrics: _description_
+    :param x_grid: _description_, defaults to True
+    :param y_grid: _description_, defaults to True
+    :param png_filename: _description_, defaults to None
+    :param svg_filename: _description_, defaults to None
+    """
     num_of_figures: int = len(metrics)
     # axes: list[list[Axes]]
     fig, axes = plt.subplots(
@@ -159,6 +193,17 @@ def select_repetitions(
     task_size_name: str,
     repetition_name_contains: str,
 ) -> list[int]:
+    """
+    _summary_
+
+    :param db_session: _description_
+    :param session_name_contains: _description_
+    :param machine_name: _description_
+    :param use_case_name: _description_
+    :param task_size_name: _description_
+    :param repetition_name_contains: _description_
+    :return: _description_
+    """
     stmt = (
         select(Repetition.id)
         .join(ProfilingSession)
@@ -183,6 +228,13 @@ def select_repetitions(
 
 
 def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, str]:
+    """
+    _summary_
+
+    :param db_session: _description_
+    :param repetition_id: _description_
+    :return: _description_
+    """
     stmt = (
         select(
             AMDuProfPCM_machine_info,
@@ -238,6 +290,19 @@ def make_all(
     repetition_name_contains: str,
     profiler_name: str,
 ) -> None:
+    """
+    _summary_
+
+    :param metrics_table: _description_
+    :param metrics_dict_table: _description_
+    :param metric_names: _description_
+    :param session_name_contains: _description_
+    :param machine_name: _description_
+    :param use_case_name: _description_
+    :param sizes_to_get: _description_
+    :param repetition_name_contains: _description_
+    :param profiler_name: _description_
+    """
     x_range: list[float] = []
     x_tick_labels: list[str] = []
     metrics: dict[str, list[float | int]] = {}
