@@ -95,6 +95,8 @@ class MetricsDictBase(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128), name="name")
     """column description"""
+    unit: Mapped[str | None] = mapped_column(String(16), name="unit")
+    """column description"""
     processing_unit: Mapped[str | None] = mapped_column(
         String(16), name="processing_unit"
     )
@@ -102,7 +104,7 @@ class MetricsDictBase(DBBase):
     desc: Mapped[str | None] = mapped_column(String(1024))
     """column description"""
 
-    __table_args__ = (UniqueConstraint(name, processing_unit),)
+    __table_args__ = (UniqueConstraint(name, unit, processing_unit),)
 
 
 def _raise_error(name):
@@ -118,7 +120,7 @@ class MetricsBase(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True, sort_order=-10)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id), sort_order=-9)
     """column description"""
-    unit_idx: Mapped[int | None] = mapped_column(sort_order=-8)
+    processing_unit_idx: Mapped[int | None] = mapped_column(sort_order=-8)
     """column description"""
     metric: None = None
     """column description"""

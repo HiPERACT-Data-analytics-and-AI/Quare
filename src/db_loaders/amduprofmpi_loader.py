@@ -61,8 +61,9 @@ def _load_functions_summary(
         for name, value in row.items():
             instance = create_metric_instance(
                 context,
-                str(f"{row.name} | {name}"),
+                str(row.name),
                 value,
+                str(name),
                 None,
                 "function",
                 AMDuProfMPI_metrics,

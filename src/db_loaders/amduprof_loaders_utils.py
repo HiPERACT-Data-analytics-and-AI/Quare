@@ -44,10 +44,11 @@ class InMemoryTables:
             select(
                 table.id,
                 table.name,
+                table.unit,
                 table.processing_unit,
             )
         ).all()
-        cls.metrics_dict = {row[1] + row[2]: row[0] for row in metrics_dict_list}
+        cls.metrics_dict = {str(row[1]) + str(row[2]) + row[3]: row[0] for row in metrics_dict_list}
 
 
 @dataclass
@@ -69,7 +70,8 @@ def create_metric_instance(
     context: MetricContext,
     name: str,
     value: float,
-    unit_idx: int | None,
+    unit: str | None,
+    processing_unit_idx: int | None,
     processing_unit: str,
     metrics_table: type[MetricsBaseType],
     metrics_dict_table: type[MetricsDictBase],
@@ -80,22 +82,23 @@ def create_metric_instance(
     :param context: _description_
     :param name: _description_
     :param value: _description_
-    :param unit_idx: _description_
+    :param unit: _description_
+    :param processing_unit_idx: _description_
     :param processing_unit: _description_
     :param metrics_table: _description_
     :param metrics_dict_table: _description_
     :return: _description_
     """
-    if str(name) + processing_unit not in InMemoryTables.metrics_dict.keys():
-        metric = metrics_dict_table(name=name, processing_unit=processing_unit)
+    if name + str(unit) + processing_unit not in InMemoryTables.metrics_dict.keys():
+        metric = metrics_dict_table(name=name, unit=unit, processing_unit=processing_unit)
         context.db_session.add(metric)
         context.db_session.commit()
         InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
 
     instance = metrics_table(
         repetition=context.repetition_id,
-        unit_idx=unit_idx,
-        metric=InMemoryTables.metrics_dict[str(name) + processing_unit],
+        processing_unit_idx=processing_unit_idx,
+        metric=InMemoryTables.metrics_dict[str(name) + str(unit) + processing_unit],
         value=value,
     )
     return instance
@@ -128,6 +131,7 @@ def load_generic_metrics(
                 context,
                 str(name),
                 value,
+                None,
                 int(str(row.name)[index_trimmer:]),
                 processing_unit,
                 metrics_table,
