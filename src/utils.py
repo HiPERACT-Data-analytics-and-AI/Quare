@@ -10,5 +10,5 @@ def create_db_engine() -> Engine:
 
     :return: _description_
     """
-    db_engine: Engine = _create_engine("sqlite:///src/quare.sqlite3", echo=False)
+    db_engine: Engine = _create_engine("sqlite:///quare.sqlite3", echo=False)
     return db_engine

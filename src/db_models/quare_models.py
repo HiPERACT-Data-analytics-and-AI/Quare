@@ -95,9 +95,9 @@ class MetricsDictBase(DBBase):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128), name="name")
     """column description"""
-    unit: Mapped[str | None] = mapped_column(String(16), name="unit")
+    unit: Mapped[str] = mapped_column(String(16), name="unit")
     """column description"""
-    processing_unit: Mapped[str | None] = mapped_column(
+    processing_unit: Mapped[str] = mapped_column(
         String(16), name="processing_unit"
     )
     """column description"""

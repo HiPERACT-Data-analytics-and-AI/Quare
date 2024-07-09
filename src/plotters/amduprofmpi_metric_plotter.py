@@ -7,7 +7,7 @@ def main() -> None:
     """
     _summary_
     """
-    metric_names: set[str] = set()
+    metric_names: list[str] = list()
     # metric_names: set[str] = {}
 
     session_name_contains: str = "Session1"

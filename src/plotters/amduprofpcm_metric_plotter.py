@@ -7,13 +7,13 @@ def main() -> None:
     """
     _summary_
     """
-    metric_names: set[str] = set()
-    metric_names: set[str] = {
+    metric_names: list[str] = list()
+    metric_names: list[str] = [
         "L2 Access (pti)",
         "L2 Miss (pti)",
         "L2 Hit (pti)",
         "L3 Access",
-    }
+    ]
 
     session_name_contains: str = "Session1"
     machine_name: str = "ROME_128"

@@ -65,7 +65,7 @@ def divide_dict_into_chunks(
 def make_csv(
     x_range: list[float],
     columns: list[str],
-    metrics: dict[str, list[float | int]],
+    metrics: dict[tuple[str, str, str], list[float | int]],
     filename: Path,
 ) -> None:
     """
@@ -76,7 +76,7 @@ def make_csv(
     :param metrics: _description_
     :param filename: _description_
     """
-    data: dict[str, list[float]] = {"Cells per rank (size)": x_range}
+    data: dict[tuple[str, str, str], list[float]] = {("Cells per rank (size)", "", ""): x_range}
     data.update(metrics)
     pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
 
@@ -123,10 +123,11 @@ def make_info_plot(
     plt.clf()
 
 
+# TODO: Transform tuple[str, str, str] into a dataclass:
 def make_data_plots(
     x_range: list[float],
     x_tick_labels: list[str],
-    metrics: dict[str, list[float | int]],
+    metrics: dict[tuple[str, str, str], list[float | int]],
     x_grid: bool = True,
     y_grid: bool = True,
     png_filename: Path | None = None,
@@ -150,7 +151,7 @@ def make_data_plots(
     )
 
     fig.subplots_adjust(
-        left=0.12, bottom=0.115, right=0.98, top=0.97, wspace=0.0, hspace=0.0
+        left=0.12, bottom=0.115, right=0.98, top=0.95, wspace=0.0, hspace=0.0
     )
 
     i: int = 0
@@ -159,13 +160,16 @@ def make_data_plots(
             x_range,
             value_series,
             "bo",
-            label=key,
+            # label=key,
             linestyle="dashed",
             linewidth=0.4,
         )
+        unit = key[1] if key[1] else "unknown unit"
+        # axes[i][0].set_title(f"{key[0]} ({key[2]}): task size vs. {unit}")
+        axes[i][0].set_title(f"task size vs. {key[0]} ({unit}) [{key[2]}]")
         axes[i][0].set_xticks(x_range)
-        # axes[i][0].set_ylabel("Unit")
-        axes[i][0].legend(loc="upper right", fontsize="8")
+        axes[i][0].set_ylabel(unit)
+        # axes[i][0].legend(loc="upper right", fontsize="8")
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
         axes[i][0].xaxis.grid(x_grid)
         axes[i][0].yaxis.grid(y_grid)
@@ -282,7 +286,7 @@ def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, s
 def make_all(
     metrics_table: type[MetricsBase],
     metrics_dict_table: type[MetricsDictBase],
-    metric_names: set[str],
+    metric_names: list[str],
     session_name_contains: str,
     machine_name: str,
     use_case_name: str,
@@ -305,18 +309,28 @@ def make_all(
     """
     x_range: list[float] = []
     x_tick_labels: list[str] = []
-    metrics: dict[str, list[float | int]] = {}
+    metrics: dict[tuple[str, str, str], list[float | int]] = {}
     result_info: dict[str, str] = {}
 
     with Session(create_db_engine()) as db_session:
         if not metric_names:
-            metrics_data = db_session.execute(select(metrics_dict_table.name)).all()
-            metric_names = {row[0] for row in metrics_data}
+            stmt = select(metrics_dict_table.name, metrics_dict_table.unit, metrics_dict_table.processing_unit)
+        else:
+            stmt = (
+                select(metrics_dict_table.name, metrics_dict_table.unit, metrics_dict_table.processing_unit)
+                .where(metrics_dict_table.name.in_(metric_names))
+            )
+        metrics_data: list = list(db_session.execute(stmt).all())
+
+        if not metric_names:
+            metric_names = [row[0] for row in metrics_data]
+        metric_units: list[str] = [row[1] for row in metrics_data]
+        metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
         InMemoryTables.update_task_sizes_dict(db_session)
 
-        for metric_name in metric_names:
-            metrics[metric_name] = []
+        for metric_data in zip(metric_names, metric_units, metric_processing_units):
+            metrics[metric_data] = []
 
         for task_size_name in sizes_to_get:
             repetitions_ids = select_repetitions(
@@ -332,27 +346,32 @@ def make_all(
 
             print(task_size_name, repetitions_ids)
 
+            # TODO What if there is no PCM record with machine info and number of cores?
             x_range.append(
                 InMemoryTables.task_sizes_dict[task_size_name]
                 / int(result_info["# of cores"])
             )
             x_tick_labels.append(f"{task_size_name}")
 
-            for metric_name in metric_names:
+            for metric_data in zip(metric_names, metric_units, metric_processing_units):
                 stmt = (
                     select(metrics_table)
                     .where(metrics_table.repetition.in_(repetitions_ids))
                     .join(metrics_dict_table)
-                    .where(metrics_dict_table.name == metric_name)
+                    .where(
+                        metrics_dict_table.name == metric_data[0],
+                        metrics_dict_table.unit == metric_data[1],
+                        metrics_dict_table.processing_unit == metric_data[2],
+                    )
                 )
                 rows = db_session.execute(stmt).all()
                 if not rows:
-                    metrics[metric_name].append(
+                    metrics[metric_data].append(
                         0
                     )  # TODO: Temporary hotfix - better do not make data points at all
                 else:
                     values = [row[0].value for row in rows]
-                    metrics[metric_name].append(float(np.mean(values)))
+                    metrics[metric_data].append(float(np.mean(values)))
 
     parent_dir_path = (
         Path("output")
@@ -373,7 +392,7 @@ def make_all(
     multi_metrics = divide_dict_into_chunks(metrics, 1)
     for chunked_metrics in multi_metrics:
         png_filename: Path = (
-            parent_dir_path / f"Plot {[key for key in chunked_metrics.keys()][0]}.png"
+            parent_dir_path / f"Plot {[f'{key[0]} | {key[1]} | {key[2]}' for key in chunked_metrics.keys()][0]}.png"
         )
         # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
         make_data_plots(
