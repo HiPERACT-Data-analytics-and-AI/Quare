@@ -48,7 +48,9 @@ class InMemoryTables:
                 table.processing_unit,
             )
         ).all()
-        cls.metrics_dict = {str(row[1]) + str(row[2]) + row[3]: row[0] for row in metrics_dict_list}
+        cls.metrics_dict = {
+            str(row[1]) + str(row[2]) + row[3]: row[0] for row in metrics_dict_list
+        }
 
 
 @dataclass
@@ -90,7 +92,9 @@ def create_metric_instance(
     :return: _description_
     """
     if name + str(unit) + processing_unit not in InMemoryTables.metrics_dict.keys():
-        metric = metrics_dict_table(name=name, unit=unit, processing_unit=processing_unit)
+        metric = metrics_dict_table(
+            name=name, unit=unit, processing_unit=processing_unit
+        )
         context.db_session.add(metric)
         context.db_session.commit()
         InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)

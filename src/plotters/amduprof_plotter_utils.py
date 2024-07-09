@@ -76,7 +76,9 @@ def make_csv(
     :param metrics: _description_
     :param filename: _description_
     """
-    data: dict[tuple[str, str, str], list[float]] = {("Cells per rank (size)", "", ""): x_range}
+    data: dict[tuple[str, str, str], list[float]] = {
+        ("Cells per rank (size)", "", ""): x_range
+    }
     data.update(metrics)
     pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
 
@@ -166,7 +168,7 @@ def make_data_plots(
         )
         unit = key[1] if key[1] else "unknown unit"
         # axes[i][0].set_title(f"{key[0]} ({key[2]}): task size vs. {unit}")
-        axes[i][0].set_title(f"task size vs. {key[0]} ({unit}) [{key[2]}]")
+        axes[i][0].set_title(f"{key[0]} ({unit}) [{key[2]}] vs. task size")
         axes[i][0].set_xticks(x_range)
         axes[i][0].set_ylabel(unit)
         # axes[i][0].legend(loc="upper right", fontsize="8")
@@ -314,12 +316,17 @@ def make_all(
 
     with Session(create_db_engine()) as db_session:
         if not metric_names:
-            stmt = select(metrics_dict_table.name, metrics_dict_table.unit, metrics_dict_table.processing_unit)
-        else:
-            stmt = (
-                select(metrics_dict_table.name, metrics_dict_table.unit, metrics_dict_table.processing_unit)
-                .where(metrics_dict_table.name.in_(metric_names))
+            stmt = select(
+                metrics_dict_table.name,
+                metrics_dict_table.unit,
+                metrics_dict_table.processing_unit,
             )
+        else:
+            stmt = select(
+                metrics_dict_table.name,
+                metrics_dict_table.unit,
+                metrics_dict_table.processing_unit,
+            ).where(metrics_dict_table.name.in_(metric_names))
         metrics_data: list = list(db_session.execute(stmt).all())
 
         if not metric_names:
@@ -391,8 +398,9 @@ def make_all(
     make_info_plot(result_info, png_filename=parent_dir_path / "INFO.png")
     multi_metrics = divide_dict_into_chunks(metrics, 1)
     for chunked_metrics in multi_metrics:
+        one_key = list(chunked_metrics.keys())[0]
         png_filename: Path = (
-            parent_dir_path / f"Plot {[f'{key[0]} | {key[1]} | {key[2]}' for key in chunked_metrics.keys()][0]}.png"
+            parent_dir_path / f"Plot {one_key[0]} | {one_key[1]} | {one_key[2]}.png"
         )
         # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
         make_data_plots(
