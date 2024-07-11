@@ -1,3 +1,4 @@
+from argparse import Namespace
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -5,16 +6,17 @@ from sqlalchemy.orm import Session
 from db_loaders.amduprofmpi_loader import load_mpiuprof
 from db_loaders.amduprofpcm_loader import load_amduprofpcm
 from db_models import DBBase
-from utils import create_db_engine
+from utils import create_db_engine, load_settings
 
 
-def main():
+def create_db(_: Namespace):
     """
     Creates Quare's DB using custom loaders for different profilers.
     """
     db_engine = create_db_engine()
     DBBase.metadata.create_all(db_engine)
-    data_dir_path = Path("../quare-test-db/csvized_data")
+    settings = load_settings()
+    data_dir_path = Path(settings["csvized_data_directory_path"])
 
     with Session(db_engine) as db_session:
         load_amduprofpcm(db_session, data_dir_path)
@@ -24,4 +26,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    create_db(Namespace())

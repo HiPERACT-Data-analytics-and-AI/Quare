@@ -1,6 +1,9 @@
+from argparse import Namespace
 from collections.abc import Callable
 from pathlib import Path
 from shutil import copytree
+
+from utils import load_settings
 
 
 def _csvize_multi_block_csv(
@@ -108,12 +111,16 @@ def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
             raw_data_path
         )
         # print(output_file_path)
-        copytree(input_file_path, output_file_path)
+        try:
+            copytree(input_file_path, output_file_path)
+        except FileExistsError as e:
+            print(e)
+            continue
         counter += 1
     return counter
 
 
-def csvize() -> None:
+def csvize(__: Namespace) -> None:
     """
     Sometimes profilers does not produce proper files. The files are hard to consume
     by the DB loaders. The function preprocess the files (if necessary) and copy them
@@ -121,8 +128,9 @@ def csvize() -> None:
 
     :raises FileNotFoundError: When provided source path does not exist.
     """
-    raw_data_path: Path = Path("../quare-test-db/raw_data")
-    csvized_data_path: Path = Path("../quare-test-db/csvized_data")
+    settings = load_settings()
+    raw_data_path: Path = Path(settings["raw_data_directory_path"])
+    csvized_data_path: Path = Path(settings["csvized_data_directory_path"])
 
     CSVIZERS: dict[str, Callable[[Path, Path], int]] = {
         "AMDuProfPCM": _csvize_uprof_pcm,
@@ -143,4 +151,4 @@ def csvize() -> None:
 
 
 if __name__ == "__main__":
-    csvize()
+    csvize(Namespace())

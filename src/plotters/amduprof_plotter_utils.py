@@ -21,7 +21,7 @@ from db_models.amduprofpcm_models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
 )
-from utils import create_db_engine
+from utils import create_db_engine, load_settings
 
 
 # TODO Change to a class as other "InMemoryTables"
@@ -288,12 +288,6 @@ def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, s
 def make_all(
     metrics_table: type[MetricsBase],
     metrics_dict_table: type[MetricsDictBase],
-    metric_names: list[str],
-    session_name_contains: str,
-    machine_name: str,
-    use_case_name: str,
-    sizes_to_get: tuple[str, ...],
-    repetition_name_contains: str,
     profiler_name: str,
 ) -> None:
     """
@@ -301,18 +295,20 @@ def make_all(
 
     :param metrics_table: _description_
     :param metrics_dict_table: _description_
-    :param metric_names: _description_
-    :param session_name_contains: _description_
-    :param machine_name: _description_
-    :param use_case_name: _description_
-    :param sizes_to_get: _description_
-    :param repetition_name_contains: _description_
     :param profiler_name: _description_
     """
     x_range: list[float] = []
     x_tick_labels: list[str] = []
     metrics: dict[tuple[str, str, str], list[float | int]] = {}
     result_info: dict[str, str] = {}
+
+    settings = load_settings()
+    metric_names: list[str] = settings["metric_names"]
+    session_name_contains: str = settings["session_name_contains"]
+    machine_name: str = settings["machine_name"]
+    use_case_name: str = settings["use_case_name"]
+    sizes_to_get: list[str] = settings["sizes_to_get"]
+    repetition_name_contains: str = settings["repetition_name_contains"]
 
     with Session(create_db_engine()) as db_session:
         if not metric_names:
@@ -329,8 +325,7 @@ def make_all(
             ).where(metrics_dict_table.name.in_(metric_names))
         metrics_data: list = list(db_session.execute(stmt).all())
 
-        if not metric_names:
-            metric_names = [row[0] for row in metrics_data]
+        metric_names: list[str] = [row[0] for row in metrics_data]
         metric_units: list[str] = [row[1] for row in metrics_data]
         metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
@@ -381,7 +376,7 @@ def make_all(
                     metrics[metric_data].append(float(np.mean(values)))
 
     parent_dir_path = (
-        Path("output")
+        Path(settings["output_directory_path"])
         / result_info["Session"]
         / result_info["Machine name"]
         / result_info["Use case"]
