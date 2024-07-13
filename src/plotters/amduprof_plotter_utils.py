@@ -168,7 +168,11 @@ def make_data_plots(
         )
         unit = key[1] if key[1] else "unknown unit"
         # axes[i][0].set_title(f"{key[0]} ({key[2]}): task size vs. {unit}")
-        axes[i][0].set_title(f"{key[0]} ({unit}) [{key[2]}] vs. task size")
+        axes[i][0].set_title(
+            key[0]
+            + (" (" + key[1] + ") " if key[1] else " ")
+            + f"[{key[2]}] vs. task size"
+        )
         axes[i][0].set_xticks(x_range)
         axes[i][0].set_ylabel(unit)
         # axes[i][0].legend(loc="upper right", fontsize="8")
