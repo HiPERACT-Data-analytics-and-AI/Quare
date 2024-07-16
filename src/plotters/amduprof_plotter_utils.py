@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from itertools import islice
 from pathlib import Path
 from typing import TypeVar
@@ -65,7 +66,7 @@ def divide_dict_into_chunks(
 def make_csv(
     x_range: list[float],
     columns: list[str],
-    metrics: dict[tuple[str, str, str], list[float | int]],
+    metrics: dict[tuple[str, str, str], list[float | int | None]],
     filename: Path,
 ) -> None:
     """
@@ -76,7 +77,7 @@ def make_csv(
     :param metrics: _description_
     :param filename: _description_
     """
-    data: dict[tuple[str, str, str], list[float]] = {
+    data: dict[tuple[str, str, str], Sequence[float | None]] = {
         ("Cells per rank (size)", "", ""): x_range
     }
     data.update(metrics)
@@ -129,7 +130,7 @@ def make_info_plot(
 def make_data_plots(
     x_range: list[float],
     x_tick_labels: list[str],
-    metrics: dict[tuple[str, str, str], list[float | int]],
+    metrics: dict[tuple[str, str, str], list[float | int | None]],
     x_grid: bool = True,
     y_grid: bool = True,
     png_filename: Path | None = None,
@@ -166,7 +167,6 @@ def make_data_plots(
             linestyle="dashed",
             linewidth=0.4,
         )
-        unit = key[1] if key[1] else "unknown unit"
         # axes[i][0].set_title(f"{key[0]} ({key[2]}): task size vs. {unit}")
         axes[i][0].set_title(
             key[0]
@@ -174,7 +174,7 @@ def make_data_plots(
             + f"[{key[2]}] vs. task size"
         )
         axes[i][0].set_xticks(x_range)
-        axes[i][0].set_ylabel(unit)
+        axes[i][0].set_ylabel(key[1] if key[1] else "unknown unit")
         # axes[i][0].legend(loc="upper right", fontsize="8")
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
         axes[i][0].xaxis.grid(x_grid)
@@ -303,7 +303,7 @@ def make_all(
     """
     x_range: list[float] = []
     x_tick_labels: list[str] = []
-    metrics: dict[tuple[str, str, str], list[float | int]] = {}
+    metrics: dict[tuple[str, str, str], list[float | int | None]] = {}
     result_info: dict[str, str] = {}
 
     settings = load_settings()
@@ -371,9 +371,11 @@ def make_all(
                     )
                 )
                 rows = db_session.execute(stmt).all()
+                print(len(rows))
                 if not rows:
+                    print("None")
                     metrics[metric_data].append(
-                        0
+                        None
                     )  # TODO: Temporary hotfix - better do not make data points at all
                 else:
                     values = [row[0].value for row in rows]
