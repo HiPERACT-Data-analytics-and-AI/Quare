@@ -3,7 +3,7 @@ from collections.abc import Callable
 from pathlib import Path
 from shutil import copytree
 
-from utils import load_settings
+from .utils import load_settings
 
 
 def _csvize_multi_block_csv(

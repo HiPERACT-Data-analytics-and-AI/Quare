@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from plotters import amduprofmpi_metric_plotter, amduprofpcm_metric_plotter
+from .plotters import amduprofmpi_metric_plotter, amduprofpcm_metric_plotter
 
 
 def plot(_: Namespace) -> None:

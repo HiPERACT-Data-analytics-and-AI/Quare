@@ -1,9 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from collections.abc import Callable
 
-from create_db import create_db
-from csvize import csvize
-from plot import plot
+from .create_db import create_db
+from .csvize import csvize
+from .plot import plot
 
 
 def main() -> None:

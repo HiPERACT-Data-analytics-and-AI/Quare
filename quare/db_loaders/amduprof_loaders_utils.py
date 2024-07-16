@@ -8,7 +8,7 @@ import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from db_models import (
+from ..db_models import (
     Machine,
     MetricsBase,
     MetricsDictBase,
@@ -17,7 +17,6 @@ from db_models import (
     TaskSizesDict,
     UseCase,
 )
-
 from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
 

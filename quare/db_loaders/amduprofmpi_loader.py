@@ -4,12 +4,11 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from db_models.amduprofmpi_models import (
+from ..db_models.amduprofmpi_models import (
     AMDuProfMPI_environment,
     AMDuProfMPI_metrics,
     AMDuProfMPI_metrics_dict,
 )
-
 from .amduprof_loaders_utils import (
     InMemoryTables,
     MetricContext,

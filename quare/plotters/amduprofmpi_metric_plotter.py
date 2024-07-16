@@ -1,5 +1,4 @@
-from db_models.amduprofmpi_models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
-
+from ..db_models.amduprofmpi_models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
 from .amduprof_plotter_utils import make_all
 
 
