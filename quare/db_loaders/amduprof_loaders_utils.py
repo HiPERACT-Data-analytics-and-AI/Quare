@@ -17,6 +17,7 @@ from ..db_models import (
     TaskSizesDict,
     UseCase,
 )
+from ..utils import load_settings
 from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
 
@@ -160,6 +161,7 @@ def walk_through_data(
     :param file_suffixes: _description_
     """
     InMemoryTables.update_task_sizes_dict(db_session)
+    settings = load_settings()
 
     for input_path in Path(data_dir_path).glob(
         f"**/{dir_name_pattern}/**/*.{file_suffixes[0][0]}"
@@ -206,10 +208,11 @@ def walk_through_data(
         )
 
         task_size_name = extract_from_path("task_size", data_dir_path, input_path)
+        task_size_size = settings["task_sizes"].get(task_size_name, None)
         try:
             task_size_size = int(task_size_name)
         except ValueError:
-            task_size_size = None
+            pass
         if task_size_name not in InMemoryTables.task_sizes_dict.keys():
             task_size = TaskSizesDict(name=task_size_name, size=task_size_size)
             db_session.add(task_size)

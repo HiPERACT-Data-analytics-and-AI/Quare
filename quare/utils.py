@@ -19,6 +19,8 @@ def load_settings() -> dict:
         "output_directory_path",
     )
 
+    # TODO Load settings once from provided path or from here if the path is None.
+    # Make it singleton-like pattern
     settings_path: Path = Path(__file__).parent / "settings.json"
     with open(settings_path) as settings_file:
         settings = load(settings_file)
