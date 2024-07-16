@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import dataclass
 from itertools import islice
 from pathlib import Path
 from typing import TypeVar
@@ -26,20 +27,22 @@ from ..utils import create_db_engine, load_settings
 
 
 # TODO Change to a class as other "InMemoryTables"
-class InMemoryTables:
+class InMemoryTaskSizesDict:
     """Temporary class to change"""
 
-    task_sizes_dict: dict[str, int] = {}
+    def __init__(self, db_session: Session) -> None:
+        self._db_session: Session = db_session
+        self.dict_: dict[str, int]
+        self.update()
 
-    @classmethod
-    def update_task_sizes_dict(cls, db_session: Session) -> None:
-        results_list = db_session.execute(
+    def update(self) -> None:
+        results_list = self._db_session.execute(
             select(
                 TaskSizesDict.size,
                 TaskSizesDict.name,
             )
         ).all()
-        cls.task_sizes_dict = {row[1]: row[0] for row in results_list}
+        self.dict_ = {row[1]: row[0] for row in results_list}
 
 
 T = TypeVar("T")
@@ -333,7 +336,7 @@ def make_all(
         metric_units: list[str] = [row[1] for row in metrics_data]
         metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
-        InMemoryTables.update_task_sizes_dict(db_session)
+        task_sizes_dict = InMemoryTaskSizesDict(db_session)
 
         for metric_data in zip(metric_names, metric_units, metric_processing_units):
             metrics[metric_data] = []
@@ -354,7 +357,7 @@ def make_all(
 
             # TODO What if there is no PCM record with machine info and number of cores?
             x_range.append(
-                InMemoryTables.task_sizes_dict[task_size_name]
+                task_sizes_dict.dict_[task_size_name]
                 / int(result_info["# of cores"])
             )
             x_tick_labels.append(f"{task_size_name}")
