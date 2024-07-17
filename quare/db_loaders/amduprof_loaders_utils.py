@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import TypeVar
 
 import pandas as pd
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db_models import (
@@ -17,40 +16,8 @@ from ..db_models import (
     TaskSizesDict,
     UseCase,
 )
-from ..utils import load_settings
+from ..utils import InMemoryMetricsDict, InMemoryTaskSizesDict, load_settings
 from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
-
-
-# TODO Change InMemoryTables to context manager or to standard class
-# (there won't be a need to remember to call an update method for the first time)
-class InMemoryTables:
-    """Temporary class to change"""
-
-    task_sizes_dict: dict[str, int] = {}
-    metrics_dict: dict[str, int] = {}
-
-    @classmethod
-    def update_task_sizes_dict(cls, db_session: Session) -> None:
-        task_sizes_dict_list = db_session.execute(
-            select(TaskSizesDict.id, TaskSizesDict.name)
-        ).all()
-        cls.task_sizes_dict = {row[1]: row[0] for row in task_sizes_dict_list}
-
-    @classmethod
-    def update_metrics_dict(
-        cls, db_session: Session, table: type[MetricsDictBase]
-    ) -> None:
-        metrics_dict_list = db_session.execute(
-            select(
-                table.id,
-                table.name,
-                table.unit,
-                table.processing_unit,
-            )
-        ).all()
-        cls.metrics_dict = {
-            str(row[1]) + str(row[2]) + row[3]: row[0] for row in metrics_dict_list
-        }
 
 
 @dataclass
@@ -91,18 +58,19 @@ def create_metric_instance(
     :param metrics_dict_table: _description_
     :return: _description_
     """
-    if name + str(unit) + processing_unit not in InMemoryTables.metrics_dict.keys():
+
+    if name + str(unit) + processing_unit not in InMemoryMetricsDict.rows.keys():
         metric = metrics_dict_table(
             name=name, unit=unit, processing_unit=processing_unit
         )
         context.db_session.add(metric)
         context.db_session.commit()
-        InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
+        InMemoryMetricsDict.update()
 
     instance = metrics_table(
         repetition=context.repetition_id,
         processing_unit_idx=processing_unit_idx,
-        metric=InMemoryTables.metrics_dict[str(name) + str(unit) + processing_unit],
+        metric=InMemoryMetricsDict.rows[str(name) + str(unit) + processing_unit],
         value=value,
     )
     return instance
@@ -127,7 +95,8 @@ def load_generic_metrics(
     :param metrics_dict_table: _description_
     :return: _description_
     """
-    InMemoryTables.update_metrics_dict(context.db_session, metrics_dict_table)
+
+    InMemoryMetricsDict.initialize(context.db_session, metrics_dict_table)
     instances_to_add: list[MetricsBaseType] = list()
     for _, row in metrics_csv.iterrows():
         for name, value in row.items():
@@ -160,7 +129,8 @@ def walk_through_data(
     :param dir_name_pattern: _description_
     :param file_suffixes: _description_
     """
-    InMemoryTables.update_task_sizes_dict(db_session)
+
+    InMemoryTaskSizesDict.initialize(db_session)
     settings = load_settings()
 
     for input_path in Path(data_dir_path).glob(
@@ -213,11 +183,11 @@ def walk_through_data(
             task_size_size = int(task_size_name)
         except ValueError:
             pass
-        if task_size_name not in InMemoryTables.task_sizes_dict.keys():
+        if task_size_name not in InMemoryTaskSizesDict.rows.keys():
             task_size = TaskSizesDict(name=task_size_name, size=task_size_size)
             db_session.add(task_size)
             db_session.commit()
-            InMemoryTables.update_task_sizes_dict(db_session)
+            InMemoryTaskSizesDict.update()
 
         db_session.commit()  # the commit needed to obtain the ids of the added objects
 
@@ -227,7 +197,7 @@ def walk_through_data(
             profiling_session=profiling_session.id,
             machine=machine.id,
             use_case=use_case.id,
-            task_size=InMemoryTables.task_sizes_dict[task_size_name],
+            task_size=InMemoryTaskSizesDict.rows[task_size_name],
             date=datetime.strptime(repetition_date, "%Y%m%d_%H%M%S"),
             file_dir=input_path.parent.as_posix(),
         )

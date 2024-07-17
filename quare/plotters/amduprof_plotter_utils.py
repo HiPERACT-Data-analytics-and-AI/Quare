@@ -22,32 +22,7 @@ from ..db_models.amduprofpcm_models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
 )
-from ..utils import create_db_engine, load_settings
-
-
-class InMemoryTaskSizes:
-    """_summary_"""
-
-    _db_session: Session | None = None
-    rows: dict[str, int] = {}
-
-    @classmethod
-    def initialize(cls, db_session: Session) -> None:
-        cls._db_session = db_session
-        cls.update()
-
-    @classmethod
-    def update(cls) -> None:
-        if not cls._db_session:
-            raise Exception("Class not initialized")
-        results_list = cls._db_session.execute(
-            select(
-                TaskSizesDict.size,
-                TaskSizesDict.name,
-            )
-        ).all()
-        cls.rows = {row[1]: row[0] for row in results_list}
-
+from ..utils import InMemoryTaskSizesDict, create_db_engine, load_settings
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -340,7 +315,7 @@ def make_all(
         metric_units: list[str] = [row[1] for row in metrics_data]
         metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
-        InMemoryTaskSizes.initialize(db_session)
+        InMemoryTaskSizesDict.initialize(db_session)
 
         for metric_data in zip(metric_names, metric_units, metric_processing_units):
             metrics[metric_data] = []
@@ -361,7 +336,8 @@ def make_all(
 
             # TODO What if there is no PCM record with machine info and number of cores?
             x_range.append(
-                InMemoryTaskSizes.rows[task_size_name] / int(result_info["# of cores"])
+                InMemoryTaskSizesDict.rows[task_size_name]
+                / int(result_info["# of cores"])
             )
             x_tick_labels.append(f"{task_size_name}")
 
