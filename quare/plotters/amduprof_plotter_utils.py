@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from dataclasses import dataclass
 from itertools import islice
 from pathlib import Path
 from typing import TypeVar
@@ -26,23 +25,28 @@ from ..db_models.amduprofpcm_models import (
 from ..utils import create_db_engine, load_settings
 
 
-# TODO Change to a class as other "InMemoryTables"
-class InMemoryTaskSizesDict:
-    """Temporary class to change"""
+class InMemoryTaskSizes:
+    """_summary_"""
 
-    def __init__(self, db_session: Session) -> None:
-        self._db_session: Session = db_session
-        self.dict_: dict[str, int]
-        self.update()
+    _db_session: Session | None = None
+    rows: dict[str, int] = {}
 
-    def update(self) -> None:
-        results_list = self._db_session.execute(
+    @classmethod
+    def initialize(cls, db_session: Session) -> None:
+        cls._db_session = db_session
+        cls.update()
+
+    @classmethod
+    def update(cls) -> None:
+        if not cls._db_session:
+            raise Exception("Class not initialized")
+        results_list = cls._db_session.execute(
             select(
                 TaskSizesDict.size,
                 TaskSizesDict.name,
             )
         ).all()
-        self.dict_ = {row[1]: row[0] for row in results_list}
+        cls.rows = {row[1]: row[0] for row in results_list}
 
 
 T = TypeVar("T")
@@ -336,7 +340,7 @@ def make_all(
         metric_units: list[str] = [row[1] for row in metrics_data]
         metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
-        task_sizes_dict = InMemoryTaskSizesDict(db_session)
+        InMemoryTaskSizes.initialize(db_session)
 
         for metric_data in zip(metric_names, metric_units, metric_processing_units):
             metrics[metric_data] = []
@@ -357,8 +361,7 @@ def make_all(
 
             # TODO What if there is no PCM record with machine info and number of cores?
             x_range.append(
-                task_sizes_dict.dict_[task_size_name]
-                / int(result_info["# of cores"])
+                InMemoryTaskSizes.rows[task_size_name] / int(result_info["# of cores"])
             )
             x_tick_labels.append(f"{task_size_name}")
 
@@ -374,12 +377,8 @@ def make_all(
                     )
                 )
                 rows = db_session.execute(stmt).all()
-                print(len(rows))
                 if not rows:
-                    print("None")
-                    metrics[metric_data].append(
-                        None
-                    )  # TODO: Temporary hotfix - better do not make data points at all
+                    metrics[metric_data].append(None)
                 else:
                     values = [row[0].value for row in rows]
                     metrics[metric_data].append(float(np.mean(values)))
