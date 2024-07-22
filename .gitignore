@@ -2,6 +2,13 @@
 *.pyc
 venv
 .venv
+docs/build
+docs/source/build
 raw_data/
 csvized_data/
 **/*.sqlite3
+**/*.sqlite3-journal
+**/output
+*.svg
+*.png
+!**/db_diagram.png

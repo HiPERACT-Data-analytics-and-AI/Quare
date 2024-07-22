@@ -18,6 +18,9 @@ SQLAlchemy = "^2.0.28"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
+sphinx = "^7.3.7"
+sphinx-rtd-theme = "^2.0.0"
+sphinx-autodoc-typehints = "^2.2.2"
 
 [build-system]
 requires = ["poetry-core"]
