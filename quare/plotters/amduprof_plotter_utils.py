@@ -168,12 +168,12 @@ def make_data_plots(
         )
         # axes[i][0].set_title(f"{key[0]} ({key[2]}): task size vs. {unit}")
         axes[i][0].set_title(
-            key[0]
-            + (" (" + key[1] + ") " if key[1] else " ")
-            + f"[{key[2]}] vs. task size"
+            key.name
+            + (" (" + key.unit + ") " if key.unit else " ")
+            + f"[{key.processing_unit}] vs. task size"
         )
         axes[i][0].set_xticks(x_range)
-        axes[i][0].set_ylabel(key[1] if key[1] else "unknown unit")
+        axes[i][0].set_ylabel(key.unit if key.unit else "unknown unit")
         # axes[i][0].legend(loc="upper right", fontsize="8")
         axes[i][0].yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
         axes[i][0].xaxis.grid(x_grid)
@@ -335,7 +335,7 @@ def make_all(
         InMemoryTaskSizesDict.initialize(db_session)
 
         for metric_data in zip(metric_names, metric_units, metric_processing_units):
-            metrics[metric_data] = []
+            metrics[UniqueMetricKey(*metric_data)] = []
 
         for task_size_name in sizes_to_get:
             repetitions_ids = select_repetitions(
@@ -371,10 +371,12 @@ def make_all(
                 )
                 rows = db_session.execute(stmt).all()
                 if not rows:
-                    metrics[metric_data].append(None)
+                    metrics[UniqueMetricKey(*metric_data)].append(None)
                 else:
                     values = [row[0].value for row in rows]
-                    metrics[metric_data].append(float(np.mean(values)))
+                    metrics[UniqueMetricKey(*metric_data)].append(
+                        float(np.mean(values))
+                    )
 
     parent_dir_path = (
         Path(settings["output_directory_path"])
@@ -396,7 +398,8 @@ def make_all(
     for chunked_metrics in multi_metrics:
         one_key = list(chunked_metrics.keys())[0]
         png_filename: Path = (
-            parent_dir_path / f"Plot {one_key[0]} | {one_key[1]} | {one_key[2]}.png"
+            parent_dir_path
+            / f"Plot {one_key.name} | {one_key.unit} | {one_key.processing_unit}.png"
         )
         # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
         make_data_plots(
