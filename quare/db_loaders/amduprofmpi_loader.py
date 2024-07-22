@@ -9,8 +9,8 @@ from ..db_models.amduprofmpi_models import (
     AMDuProfMPI_metrics,
     AMDuProfMPI_metrics_dict,
 )
+from ..utils import InMemoryMetricsDict
 from .amduprof_loaders_utils import (
-    InMemoryTables,
     MetricContext,
     create_metric_instance,
     load_generic_metrics,
@@ -54,7 +54,7 @@ def _load_functions_summary(
     except FileNotFoundError:
         return []
 
-    InMemoryTables.update_metrics_dict(context.db_session, AMDuProfMPI_metrics_dict)
+    InMemoryMetricsDict.initialize(context.db_session, AMDuProfMPI_metrics_dict)
     instances_to_add: list[AMDuProfMPI_metrics] = list()
     for _, row in metrics_csv.iterrows():
         for name, value in row.items():

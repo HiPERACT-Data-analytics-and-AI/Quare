@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import dataclass
 from itertools import islice
 from pathlib import Path
 from typing import TypeVar
@@ -24,6 +25,22 @@ from ..db_models.amduprofpcm_models import (
 )
 from ..utils import InMemoryTaskSizesDict, create_db_engine, load_settings
 
+
+@dataclass
+class UniqueMetricKey:
+    """_summary_"""
+
+    name: str
+    """member description"""
+    unit: str
+    """member description"""
+    processing_unit: str
+    """member description"""
+
+    def __hash__(self) -> int:
+        return hash(self.name + self.unit + self.processing_unit)
+
+
 T = TypeVar("T")
 U = TypeVar("U")
 
@@ -48,7 +65,7 @@ def divide_dict_into_chunks(
 def make_csv(
     x_range: list[float],
     columns: list[str],
-    metrics: dict[tuple[str, str, str], list[float | int | None]],
+    metrics: dict[UniqueMetricKey, list[float | int | None]],
     filename: Path,
 ) -> None:
     """
@@ -59,8 +76,8 @@ def make_csv(
     :param metrics: _description_
     :param filename: _description_
     """
-    data: dict[tuple[str, str, str], Sequence[float | None]] = {
-        ("Cells per rank (size)", "", ""): x_range
+    data: dict[UniqueMetricKey, Sequence[float | None]] = {
+        UniqueMetricKey("Cells per rank (size)", "", ""): x_range
     }
     data.update(metrics)
     pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
@@ -112,7 +129,7 @@ def make_info_plot(
 def make_data_plots(
     x_range: list[float],
     x_tick_labels: list[str],
-    metrics: dict[tuple[str, str, str], list[float | int | None]],
+    metrics: dict[UniqueMetricKey, list[float | int | None]],
     x_grid: bool = True,
     y_grid: bool = True,
     png_filename: Path | None = None,
@@ -285,7 +302,7 @@ def make_all(
     """
     x_range: list[float] = []
     x_tick_labels: list[str] = []
-    metrics: dict[tuple[str, str, str], list[float | int | None]] = {}
+    metrics: dict[UniqueMetricKey, list[float | int | None]] = {}
     result_info: dict[str, str] = {}
 
     settings = load_settings()

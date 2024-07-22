@@ -13,15 +13,25 @@ class InMemoryTaskSizesDict:
     """_summary_"""
 
     _db_session: Session | None = None
+    """member description"""
     rows: dict[str, int] = {}
+    """member description"""
 
     @classmethod
     def initialize(cls, db_session: Session) -> None:
+        """_summary_
+
+        :param db_session: _description_
+        """
         cls._db_session = db_session
         cls.update()
 
     @classmethod
     def update(cls) -> None:
+        """_summary_
+
+        :raises Exception: _description_
+        """
         if not cls._db_session:
             raise Exception("Class not initialized")
         results_list = cls._db_session.execute(
@@ -38,17 +48,29 @@ class InMemoryMetricsDict:
 
     # A little wet code in this class but not overly complicated
     _table: type[MetricsDictBase]
+    """member description"""
     _db_session: Session | None = None
+    """member description"""
     rows: dict[str, int] = {}
+    """member description"""
 
     @classmethod
     def initialize(cls, db_session: Session, table: type[MetricsDictBase]) -> None:
+        """_summary_
+
+        :param db_session: _description_
+        :param table: _description_
+        """
         cls._db_session = db_session
         cls._table = table
         cls.update()
 
     @classmethod
     def update(cls) -> None:
+        """_summary_
+
+        :raises Exception: _description_
+        """
         if not cls._db_session:
             raise Exception("Class not initialized")
         results_list = cls._db_session.execute(
@@ -97,7 +119,6 @@ def create_db_engine() -> Engine:
 
     :return: _description_
     """
-
     settings = load_settings()
     db_engine: Engine = _create_engine(f"sqlite:///{settings['db_path']}", echo=False)
     return db_engine
