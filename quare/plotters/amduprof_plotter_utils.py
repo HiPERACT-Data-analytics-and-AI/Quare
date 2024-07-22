@@ -40,6 +40,9 @@ class UniqueMetricKey:
     def __hash__(self) -> int:
         return hash(self.name + self.unit + self.processing_unit)
 
+    def __repr__(self) -> str:
+        return f"{self.name} | {self.unit} | {self.processing_unit}"
+
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -397,10 +400,9 @@ def make_all(
     multi_metrics = divide_dict_into_chunks(metrics, 1)
     for chunked_metrics in multi_metrics:
         one_key = list(chunked_metrics.keys())[0]
-        png_filename: Path = (
-            parent_dir_path
-            / f"Plot {one_key.name} | {one_key.unit} | {one_key.processing_unit}.png"
-        )
+        if all(val is None for val in chunked_metrics[one_key]):
+            continue
+        png_filename: Path = parent_dir_path / f"Plot {one_key}.png"
         # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
         make_data_plots(
             x_range,
