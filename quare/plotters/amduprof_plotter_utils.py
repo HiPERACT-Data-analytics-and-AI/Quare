@@ -353,10 +353,10 @@ def make_all(
 
             # TODO What if there is no PCM record with machine info and number of cores?
             x_range.append(
-                InMemoryTaskSizesDict.rows[task_size_name]
+                InMemoryTaskSizesDict.rows[task_size_name][1]
                 / int(result_info["# of cores"])
             )
-            x_tick_labels.append(f"{task_size_name}")
+            x_tick_labels.append(str(task_size_name))
 
             for metric_data in zip(metric_names, metric_units, metric_processing_units):
                 stmt = (

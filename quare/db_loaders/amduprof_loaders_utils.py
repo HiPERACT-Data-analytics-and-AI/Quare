@@ -197,9 +197,9 @@ def walk_through_data(
             profiling_session=profiling_session.id,
             machine=machine.id,
             use_case=use_case.id,
-            task_size=InMemoryTaskSizesDict.rows[task_size_name],
+            task_size=InMemoryTaskSizesDict.rows[task_size_name][0],
             date=datetime.strptime(repetition_date, "%Y%m%d_%H%M%S"),
-            file_dir=input_path.parent.as_posix(),
+            file_dir=input_path.parent.resolve().as_posix(),
         )
         repetition = create_if_not_exists(
             db_session=db_session,

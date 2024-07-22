@@ -14,7 +14,7 @@ class InMemoryTaskSizesDict:
 
     _db_session: Session | None = None
     """member description"""
-    rows: dict[str, int] = {}
+    rows: dict[str, tuple[int, int]] = {}
     """member description"""
 
     @classmethod
@@ -36,11 +36,12 @@ class InMemoryTaskSizesDict:
             raise Exception("Class not initialized")
         results_list = cls._db_session.execute(
             select(
-                TaskSizesDict.size,
+                TaskSizesDict.id,
                 TaskSizesDict.name,
+                TaskSizesDict.size,
             )
         ).all()
-        cls.rows = {row[1]: row[0] for row in results_list}
+        cls.rows = {row[1]: (row[0], row[2]) for row in results_list}
 
 
 class InMemoryMetricsDict:
