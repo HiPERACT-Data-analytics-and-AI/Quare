@@ -1,12 +1,12 @@
 from argparse import Namespace
 
-from .extensions.AMDuProfMPI import plotter
-from .extensions.AMDuProfPCM import plotter
+from .extensions.AMDuProfMPI import plotter as plotterMPI
+from .extensions.AMDuProfPCM import plotter as plotterPCM
 
 
 def plot(_: Namespace) -> None:
-    plotter.main()
-    plotter.main()
+    plotterMPI.main()
+    plotterPCM.main()
 
 
 if __name__ == "__main__":
