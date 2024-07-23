@@ -4,7 +4,7 @@ from typing import TypeVar
 from sqlalchemy import exists, select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
-from ..db_models import DBBase
+from .models import DBBase
 
 
 def extract_from_path(key: str, data_dir_path: Path, file_path: Path) -> str:

@@ -1,11 +1,12 @@
 from argparse import Namespace
 
-from .plotters import amduprofmpi_metric_plotter, amduprofpcm_metric_plotter
+from .extensions.AMDuProfMPI import plotter
+from .extensions.AMDuProfPCM import plotter
 
 
 def plot(_: Namespace) -> None:
-    amduprofmpi_metric_plotter.main()
-    amduprofpcm_metric_plotter.main()
+    plotter.main()
+    plotter.main()
 
 
 if __name__ == "__main__":

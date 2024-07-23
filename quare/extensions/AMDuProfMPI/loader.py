@@ -4,17 +4,17 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from ..db_models.amduprofmpi_models import (
-    AMDuProfMPI_environment,
-    AMDuProfMPI_metrics,
-    AMDuProfMPI_metrics_dict,
-)
-from ..utils import InMemoryMetricsDict
-from .amduprof_loaders_utils import (
+from ...utils import InMemoryMetricsDict
+from ..amduprof_loader_utils import (
     MetricContext,
     create_metric_instance,
     load_generic_metrics,
     walk_through_data,
+)
+from .models import (
+    AMDuProfMPI_environment,
+    AMDuProfMPI_metrics,
+    AMDuProfMPI_metrics_dict,
 )
 
 

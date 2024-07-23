@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..db_models import (
+from ..models import (
     Machine,
     MetricsBase,
     MetricsDictBase,
@@ -19,11 +19,11 @@ from ..db_models import (
     TaskSizesDict,
     UseCase,
 )
-from ..db_models.amduprofpcm_models import (
+from ..utils import InMemoryTaskSizesDict, create_db_engine, load_settings
+from .AMDuProfPCM.models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
 )
-from ..utils import InMemoryTaskSizesDict, create_db_engine, load_settings
 
 
 @dataclass

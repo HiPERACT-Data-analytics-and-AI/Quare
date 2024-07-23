@@ -4,17 +4,17 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from ..db_models.amduprofpcm_models import (
+from ..amduprof_loader_utils import (
+    MetricContext,
+    load_generic_metrics,
+    walk_through_data,
+)
+from .models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_cpu_topology,
     AMDuProfPCM_machine_info,
     AMDuProfPCM_metrics,
     AMDuProfPCM_metrics_dict,
-)
-from .amduprof_loaders_utils import (
-    MetricContext,
-    load_generic_metrics,
-    walk_through_data,
 )
 
 

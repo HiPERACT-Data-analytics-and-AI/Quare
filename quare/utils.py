@@ -6,7 +6,7 @@ from sqlalchemy import create_engine as _create_engine
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .db_models import MetricsDictBase, TaskSizesDict
+from .models import MetricsDictBase, TaskSizesDict
 
 
 class InMemoryTaskSizesDict:
@@ -122,4 +122,7 @@ def create_db_engine() -> Engine:
     """
     settings = load_settings()
     db_engine: Engine = _create_engine(f"sqlite:///{settings['db_path']}", echo=False)
+
+    # TODO Check for inconsistent repetitions and warn the user if exist
+
     return db_engine

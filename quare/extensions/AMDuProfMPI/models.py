@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .quare_models import DBBase, MetricsBase, MetricsDictBase, Repetition
+from ...models import DBBase, MetricsBase, MetricsDictBase, Repetition
 
 
 class AMDuProfMPI_environment(DBBase):

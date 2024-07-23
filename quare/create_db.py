@@ -3,9 +3,9 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
-from .db_loaders.amduprofmpi_loader import load_mpiuprof
-from .db_loaders.amduprofpcm_loader import load_amduprofpcm
-from .db_models import DBBase
+from .extensions.AMDuProfMPI.loader import load_mpiuprof
+from .extensions.AMDuProfPCM.loader import load_amduprofpcm
+from .models import DBBase
 from .utils import create_db_engine, load_settings
 
 

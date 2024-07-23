@@ -7,7 +7,8 @@ from typing import TypeVar
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from ..db_models import (
+from ..loader_utils import create_if_not_exists, extract_from_path, record_exists
+from ..models import (
     Machine,
     MetricsBase,
     MetricsDictBase,
@@ -17,7 +18,6 @@ from ..db_models import (
     UseCase,
 )
 from ..utils import InMemoryMetricsDict, InMemoryTaskSizesDict, load_settings
-from .loaders_utils import create_if_not_exists, extract_from_path, record_exists
 
 
 @dataclass

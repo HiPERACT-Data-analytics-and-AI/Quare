@@ -1,5 +1,5 @@
-from ..db_models.amduprofmpi_models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
-from .amduprof_plotter_utils import make_all
+from ..amduprof_plotter_utils import make_all
+from .models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
 
 
 def main() -> None:

@@ -1,5 +1,5 @@
-from ..db_models.amduprofpcm_models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
-from .amduprof_plotter_utils import make_all
+from ..amduprof_plotter_utils import make_all
+from .models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
 
 
 def main() -> None:
