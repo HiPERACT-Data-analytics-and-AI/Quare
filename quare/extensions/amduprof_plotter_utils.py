@@ -20,7 +20,7 @@ from ..models import (
     UseCase,
 )
 from ..utils import InMemoryTaskSizesDict, create_db_engine, load_settings
-from .AMDuProfPCM.models import (
+from .AMDuProfPCM_ext.models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
 )
