@@ -145,7 +145,7 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     )
 
 
-def load_amduprofpcm(db_session: Session, data_dir_path: Path) -> None:
+def load(db_session: Session, data_dir_path: Path) -> None:
     """
     _summary_
 

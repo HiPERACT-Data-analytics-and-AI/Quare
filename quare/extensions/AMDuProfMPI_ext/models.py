@@ -7,6 +7,7 @@ from ...models import DBBase, MetricsBase, MetricsDictBase, Repetition
 class AMDuProfMPI_environment(DBBase):
     """_summary_"""
 
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfMPI_environment"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
@@ -20,9 +21,11 @@ class AMDuProfMPI_environment(DBBase):
 
 
 class AMDuProfMPI_metrics_dict(MetricsDictBase):
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfMPI_metrics_dict"
 
 
 class AMDuProfMPI_metrics(MetricsBase):
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfMPI_metrics"
     metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfMPI_metrics_dict.id))

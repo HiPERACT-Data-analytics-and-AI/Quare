@@ -19,7 +19,7 @@ from ..models import (
     TaskSizesDict,
     UseCase,
 )
-from ..utils import InMemoryTaskSizesDict, create_db_engine, load_settings
+from ..utils import InMemoryTaskSizesDict, load_settings
 from .AMDuProfPCM_ext.models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
@@ -128,7 +128,6 @@ def make_info_plot(
     plt.clf()
 
 
-# TODO: Transform tuple[str, str, str] into a dataclass:
 def make_data_plots(
     x_range: list[float],
     x_tick_labels: list[str],
@@ -292,6 +291,7 @@ def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, s
 
 
 def make_all(
+    db_session: Session,
     metrics_table: type[MetricsBase],
     metrics_dict_table: type[MetricsDictBase],
     profiler_name: str,
@@ -299,6 +299,7 @@ def make_all(
     """
     _summary_
 
+    :param db_session: _description_
     :param metrics_table: _description_
     :param metrics_dict_table: _description_
     :param profiler_name: _description_
@@ -316,70 +317,70 @@ def make_all(
     sizes_to_get: list[str] = settings["sizes_to_get"]
     repetition_name_contains: str = settings["repetition_name_contains"]
 
-    with Session(create_db_engine()) as db_session:
-        if not metric_names:
-            stmt = select(
-                metrics_dict_table.name,
-                metrics_dict_table.unit,
-                metrics_dict_table.processing_unit,
-            )
-        else:
-            stmt = select(
-                metrics_dict_table.name,
-                metrics_dict_table.unit,
-                metrics_dict_table.processing_unit,
-            ).where(metrics_dict_table.name.in_(metric_names))
-        metrics_data: list = list(db_session.execute(stmt).all())
+    if not metric_names:
+        stmt = select(
+            metrics_dict_table.name,
+            metrics_dict_table.unit,
+            metrics_dict_table.processing_unit,
+        )
+    else:
+        stmt = select(
+            metrics_dict_table.name,
+            metrics_dict_table.unit,
+            metrics_dict_table.processing_unit,
+        ).where(metrics_dict_table.name.in_(metric_names))
+    metrics_data: list = list(db_session.execute(stmt).all())
 
-        metric_names: list[str] = [row[0] for row in metrics_data]
-        metric_units: list[str] = [row[1] for row in metrics_data]
-        metric_processing_units: list[str] = [row[2] for row in metrics_data]
+    metric_names: list[str] = [row[0] for row in metrics_data]
+    metric_units: list[str] = [row[1] for row in metrics_data]
+    metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
-        InMemoryTaskSizesDict.initialize(db_session)
+    InMemoryTaskSizesDict.initialize(db_session)
+
+    for metric_data in zip(metric_names, metric_units, metric_processing_units):
+        metrics[UniqueMetricKey(*metric_data)] = []
+
+    for task_size_name in sizes_to_get:
+        repetitions_ids = select_repetitions(
+            db_session,
+            session_name_contains,
+            machine_name,
+            use_case_name,
+            task_size_name,
+            repetition_name_contains,
+        )
+        if not result_info:
+            for repetition_id in repetitions_ids:
+                result_info = get_result_info_dict(db_session, repetition_id)
+                if result_info:
+                    break
+
+        print(task_size_name, repetitions_ids)
+
+        # TODO What if there is no PCM record with machine info and number of cores?
+        x_range.append(
+            InMemoryTaskSizesDict.rows[task_size_name][1]
+            / int(result_info["# of cores"])
+        )
+        x_tick_labels.append(str(task_size_name))
 
         for metric_data in zip(metric_names, metric_units, metric_processing_units):
-            metrics[UniqueMetricKey(*metric_data)] = []
-
-        for task_size_name in sizes_to_get:
-            repetitions_ids = select_repetitions(
-                db_session,
-                session_name_contains,
-                machine_name,
-                use_case_name,
-                task_size_name,
-                repetition_name_contains,
-            )
-            if not result_info:
-                result_info = get_result_info_dict(db_session, repetitions_ids[0])
-
-            print(task_size_name, repetitions_ids)
-
-            # TODO What if there is no PCM record with machine info and number of cores?
-            x_range.append(
-                InMemoryTaskSizesDict.rows[task_size_name][1]
-                / int(result_info["# of cores"])
-            )
-            x_tick_labels.append(str(task_size_name))
-
-            for metric_data in zip(metric_names, metric_units, metric_processing_units):
-                stmt = (
-                    select(metrics_table)
-                    .where(metrics_table.repetition.in_(repetitions_ids))
-                    .join(metrics_dict_table)
-                    .where(
-                        metrics_dict_table.name == metric_data[0],
-                        metrics_dict_table.unit == metric_data[1],
-                        metrics_dict_table.processing_unit == metric_data[2],
-                    )
+            stmt = (
+                select(metrics_table)
+                .where(metrics_table.repetition.in_(repetitions_ids))
+                .join(metrics_dict_table)
+                .where(
+                    metrics_dict_table.name == metric_data[0],
+                    metrics_dict_table.unit == metric_data[1],
+                    metrics_dict_table.processing_unit == metric_data[2],
                 )
-                rows = db_session.execute(stmt).all()
-                if not rows:
-                    metrics[UniqueMetricKey(*metric_data)].append(None)
-                else:
-                    values = [row[0].value for row in rows]
-                    metrics[UniqueMetricKey(*metric_data)].append(
-                        float(np.mean(values))
-                    )
+            )
+            rows = db_session.execute(stmt).all()
+            if not rows:
+                metrics[UniqueMetricKey(*metric_data)].append(None)
+            else:
+                values = [row[0].value for row in rows]
+                metrics[UniqueMetricKey(*metric_data)].append(float(np.mean(values)))
 
     parent_dir_path = (
         Path(settings["output_directory_path"])

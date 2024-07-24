@@ -85,6 +85,11 @@ class InMemoryMetricsDict:
         cls.rows = {str(row[1]) + str(row[2]) + row[3]: row[0] for row in results_list}
 
 
+def discover_extensions() -> list[Path]:
+    extensions_path: Path = Path(__file__).parent / "extensions"
+    return [path for path in extensions_path.glob("*_ext")]
+
+
 def load_settings() -> dict:
     """
     _summary_

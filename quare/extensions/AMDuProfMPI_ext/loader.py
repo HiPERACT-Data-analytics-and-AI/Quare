@@ -89,7 +89,7 @@ def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
     )
 
 
-def load_mpiuprof(db_session: Session, data_dir_path: Path) -> None:
+def load(db_session: Session, data_dir_path: Path) -> None:
     """
     _summary_
 

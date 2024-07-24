@@ -9,6 +9,7 @@ from ...models import DBBase, MetricsBase, MetricsDictBase, Repetition
 class AMDuProfPCM_machine_info(DBBase):
     """_summary_"""
 
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfPCM_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
@@ -36,6 +37,7 @@ class AMDuProfPCM_machine_info(DBBase):
 class AMDuProfPCM_machine_cpu_topology(DBBase):
     """_summary_"""
 
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfPCM_machine_cpu_topology"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
@@ -53,6 +55,7 @@ class AMDuProfPCM_machine_cpu_topology(DBBase):
 class AMDuProfPCM_further_machine_info(DBBase):
     """_summary_"""
 
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfPCM_further_machine_info"
     id: Mapped[int] = mapped_column(primary_key=True)
     repetition: Mapped[int] = mapped_column(ForeignKey(Repetition.id))
@@ -74,9 +77,11 @@ class AMDuProfPCM_further_machine_info(DBBase):
 
 
 class AMDuProfPCM_metrics_dict(MetricsDictBase):
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfPCM_metrics_dict"
 
 
 class AMDuProfPCM_metrics(MetricsBase):
+    __table_args__ = {"extend_existing": True}
     __tablename__ = "AMDuProfPCM_metrics"
     metric: Mapped[int] = mapped_column(ForeignKey(AMDuProfPCM_metrics_dict.id))
