@@ -160,7 +160,11 @@ def walk_through_data(
         )
 
         machine_name = extract_from_path("machine", data_dir_path, input_path)
-        machine = Machine(name=machine_name)
+        try:
+            num_of_cores = int(machine_name.split("_")[-1])
+        except ValueError:
+            num_of_cores = None
+        machine = Machine(name=machine_name, num_of_cores=num_of_cores)
         machine = create_if_not_exists(
             db_session=db_session,
             to_create=machine,

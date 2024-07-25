@@ -290,6 +290,15 @@ def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, s
         return {}
 
 
+def get_machine_cores_count(db_session: Session, machine_name: str) -> int | None:
+    stmt = select(Machine.num_of_cores).where(Machine.name == machine_name)
+    row = db_session.execute(stmt).first()
+    if row:
+        return row[0]
+    else:
+        return None
+
+
 def make_all(
     db_session: Session,
     metrics_table: type[MetricsBase],
@@ -340,6 +349,10 @@ def make_all(
     for metric_data in zip(metric_names, metric_units, metric_processing_units):
         metrics[UniqueMetricKey(*metric_data)] = []
 
+    machine_num_of_cores = get_machine_cores_count(db_session, machine_name)
+    if not machine_num_of_cores:
+        raise Exception(f'No num_of_cores for "{machine_name}" machine')
+
     for task_size_name in sizes_to_get:
         repetitions_ids = select_repetitions(
             db_session,
@@ -357,10 +370,8 @@ def make_all(
 
         print(task_size_name, repetitions_ids)
 
-        # TODO What if there is no PCM record with machine info and number of cores?
         x_range.append(
-            InMemoryTaskSizesDict.rows[task_size_name][1]
-            / int(result_info["# of cores"])
+            InMemoryTaskSizesDict.rows[task_size_name][1] / machine_num_of_cores
         )
         x_tick_labels.append(str(task_size_name))
 
