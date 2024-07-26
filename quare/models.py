@@ -126,7 +126,7 @@ class MetricsBase(DBBase):
     @classmethod
     def __raise_error(cls, name: str):
         raise NotImplementedError(
-            f"{name} must have a 'metric' attribute"
+            f"{name} class must have a 'metric' attribute "
             + "as a foreign key to a MetricsDict model"
         )
 

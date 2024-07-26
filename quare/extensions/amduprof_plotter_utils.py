@@ -86,7 +86,7 @@ def make_csv(
     pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
 
 
-def make_info_plot(
+def make_result_info_plot(
     result_info: dict[str, str],
     png_filename: Path | None = None,
     svg_filename: Path | None = None,
@@ -238,7 +238,7 @@ def select_repetitions(
     return ids
 
 
-def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, str]:
+def get_result_info(db_session: Session, repetition_id: int) -> dict[str, str]:
     """
     _summary_
 
@@ -290,7 +290,31 @@ def get_result_info_dict(db_session: Session, repetition_id: int) -> dict[str, s
         return {}
 
 
+def get_data(
+    db_session: Session,
+    metrics_table: type[MetricsBase],
+    metrics_dict_table: type[MetricsDictBase],
+) -> dict[UniqueMetricKey, list[float | int | None]]:
+    """_summary_
+
+    :param db_session: _description_
+    :param metrics_table: _description_
+    :param metrics_dict_table: _description_
+    :return: _description_
+    """
+    ...
+
+
+def get_x_range() -> list[float]: ...
+
+
 def get_machine_cores_count(db_session: Session, machine_name: str) -> int | None:
+    """_summary_
+
+    :param db_session: _description_
+    :param machine_name: _description_
+    :return: _description_
+    """
     stmt = select(Machine.num_of_cores).where(Machine.name == machine_name)
     row = db_session.execute(stmt).first()
     if row:
@@ -315,8 +339,8 @@ def make_all(
     """
     x_range: list[float] = []
     x_tick_labels: list[str] = []
-    metrics: dict[UniqueMetricKey, list[float | int | None]] = {}
     result_info: dict[str, str] = {}
+    metrics: dict[UniqueMetricKey, list[float | int | None]] = {}
 
     settings = load_settings()
     metric_names: list[str] = settings["metric_names"]
@@ -326,18 +350,18 @@ def make_all(
     sizes_to_get: list[str] = settings["sizes_to_get"]
     repetition_name_contains: str = settings["repetition_name_contains"]
 
-    if not metric_names:
-        stmt = select(
-            metrics_dict_table.name,
-            metrics_dict_table.unit,
-            metrics_dict_table.processing_unit,
-        )
-    else:
+    if metric_names:
         stmt = select(
             metrics_dict_table.name,
             metrics_dict_table.unit,
             metrics_dict_table.processing_unit,
         ).where(metrics_dict_table.name.in_(metric_names))
+    else:
+        stmt = select(
+            metrics_dict_table.name,
+            metrics_dict_table.unit,
+            metrics_dict_table.processing_unit,
+        )
     metrics_data: list = list(db_session.execute(stmt).all())
 
     metric_names: list[str] = [row[0] for row in metrics_data]
@@ -364,7 +388,7 @@ def make_all(
         )
         if not result_info:
             for repetition_id in repetitions_ids:
-                result_info = get_result_info_dict(db_session, repetition_id)
+                result_info = get_result_info(db_session, repetition_id)
                 if result_info:
                     break
 
@@ -408,7 +432,7 @@ def make_all(
         metrics,
         parent_dir_path / "results.csv",
     )
-    make_info_plot(result_info, png_filename=parent_dir_path / "INFO.png")
+    make_result_info_plot(result_info, png_filename=parent_dir_path / "INFO.png")
     multi_metrics = divide_dict_into_chunks(metrics, 1)
     for chunked_metrics in multi_metrics:
         one_key = list(chunked_metrics.keys())[0]
