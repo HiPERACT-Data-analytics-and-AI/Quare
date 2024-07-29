@@ -1,5 +1,7 @@
+from itertools import islice
 from json import load
 from pathlib import Path
+from typing import TypeVar
 
 from sqlalchemy import Engine
 from sqlalchemy import create_engine as _create_engine
@@ -83,6 +85,27 @@ class InMemoryMetricsDict:
             )
         ).all()
         cls.rows = {str(row[1]) + str(row[2]) + row[3]: row[0] for row in results_list}
+
+
+T = TypeVar("T")
+U = TypeVar("U")
+
+
+def divide_dict_into_chunks(
+    dict_to_splice: dict[T, U], max_size: int
+) -> list[dict[T, U]]:
+    """
+    _summary_
+
+    :param dict_to_splice: _description_
+    :param max_size: _description_
+    :return: _description_
+    """
+    dict_items_iterator = iter(dict_to_splice.items())
+    return [
+        dict(islice(dict_items_iterator, max_size))
+        for _ in range(0, len(dict_to_splice), max_size)
+    ]
 
 
 def discover_extensions() -> list[Path]:

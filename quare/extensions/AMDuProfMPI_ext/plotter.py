@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from ..amduprof_plotter_utils import make_all
+from ..amduprof_plotter_utils import Plotter
 from .models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
 
 
@@ -11,9 +11,9 @@ def plot(db_session: Session) -> None:
     :param db_session: _description_
     """
 
-    make_all(
+    Plotter(
         db_session,
         AMDuProfMPI_metrics,
         AMDuProfMPI_metrics_dict,
         "AMDuProfMPI",
-    )
+    ).make_all()
