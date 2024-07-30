@@ -42,11 +42,11 @@ def create_metric_instance(
     unit: str,
     processing_unit_idx: int | None,
     processing_unit: str,
+    in_memory_metrics: InMemoryMetricsDict,
     metrics_table: type[MetricsBaseType],
     metrics_dict_table: type[MetricsDictBase],
 ) -> MetricsBaseType:
-    """
-    _summary_
+    """_summary_
 
     :param context: _description_
     :param name: _description_
@@ -54,23 +54,24 @@ def create_metric_instance(
     :param unit: _description_
     :param processing_unit_idx: _description_
     :param processing_unit: _description_
+    :param in_memory_metrics: _description_
     :param metrics_table: _description_
     :param metrics_dict_table: _description_
     :return: _description_
     """
 
-    if name + str(unit) + processing_unit not in InMemoryMetricsDict.rows.keys():
+    if name + str(unit) + processing_unit not in in_memory_metrics.rows.keys():
         metric = metrics_dict_table(
             name=name, unit=unit, processing_unit=processing_unit
         )
         context.db_session.add(metric)
         context.db_session.commit()
-        InMemoryMetricsDict.update()
+        in_memory_metrics.update()
 
     instance = metrics_table(
         repetition=context.repetition_id,
         processing_unit_idx=processing_unit_idx,
-        metric=InMemoryMetricsDict.rows[str(name) + str(unit) + processing_unit],
+        metric=in_memory_metrics.rows[str(name) + str(unit) + processing_unit],
         value=value,
     )
     return instance
@@ -96,7 +97,7 @@ def load_generic_metrics(
     :return: _description_
     """
 
-    InMemoryMetricsDict.initialize(context.db_session, metrics_dict_table)
+    in_memory_metrics = InMemoryMetricsDict(context.db_session, metrics_dict_table)
     instances_to_add: list[MetricsBaseType] = list()
     for _, row in metrics_csv.iterrows():
         for name, value in row.items():
@@ -107,6 +108,7 @@ def load_generic_metrics(
                 "",
                 int(str(row.name)[index_trimmer:]),
                 processing_unit,
+                in_memory_metrics,
                 metrics_table,
                 metrics_dict_table,
             )
@@ -130,7 +132,7 @@ def walk_through_data(
     :param file_suffixes: _description_
     """
 
-    InMemoryTaskSizesDict.initialize(db_session)
+    in_memory_task_sizes = InMemoryTaskSizesDict(db_session)
     settings = load_settings()
 
     for input_path in Path(data_dir_path).glob(
@@ -187,11 +189,11 @@ def walk_through_data(
             task_size_size = int(task_size_name)
         except ValueError:
             pass
-        if task_size_name not in InMemoryTaskSizesDict.rows.keys():
+        if task_size_name not in in_memory_task_sizes.rows.keys():
             task_size = TaskSizesDict(name=task_size_name, size=task_size_size)
             db_session.add(task_size)
             db_session.commit()
-            InMemoryTaskSizesDict.update()
+            in_memory_task_sizes.update()
 
         db_session.commit()  # the commit needed to obtain the ids of the added objects
 
@@ -201,7 +203,7 @@ def walk_through_data(
             profiling_session=profiling_session.id,
             machine=machine.id,
             use_case=use_case.id,
-            task_size=InMemoryTaskSizesDict.rows[task_size_name][0],
+            task_size=in_memory_task_sizes.rows[task_size_name][0],
             date=datetime.strptime(repetition_date, "%Y%m%d_%H%M%S"),
             file_dir=input_path.parent.resolve().as_posix(),
         )

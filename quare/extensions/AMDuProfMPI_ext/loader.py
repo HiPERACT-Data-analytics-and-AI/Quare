@@ -54,7 +54,9 @@ def _load_functions_summary(
     except FileNotFoundError:
         return []
 
-    InMemoryMetricsDict.initialize(context.db_session, AMDuProfMPI_metrics_dict)
+    in_memory_metrics = InMemoryMetricsDict(
+        context.db_session, AMDuProfMPI_metrics_dict
+    )
     instances_to_add: list[AMDuProfMPI_metrics] = list()
     for _, row in metrics_csv.iterrows():
         for name, value in row.items():
@@ -65,6 +67,7 @@ def _load_functions_summary(
                 str(name),
                 None,
                 "function",
+                in_memory_metrics,
                 AMDuProfMPI_metrics,
                 AMDuProfMPI_metrics_dict,
             )

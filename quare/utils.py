@@ -14,77 +14,55 @@ from .models import MetricsDictBase, TaskSizesDict
 class InMemoryTaskSizesDict:
     """_summary_"""
 
-    _db_session: Session | None = None
-    """member description"""
-    rows: dict[str, tuple[int, int]] = {}
-    """member description"""
-
-    @classmethod
-    def initialize(cls, db_session: Session) -> None:
+    # TODO Construct InMemory classes in a way that "rows" is read-only
+    def __init__(self, db_session: Session) -> None:
         """_summary_
 
         :param db_session: _description_
         """
-        cls._db_session = db_session
-        cls.update()
+        self._db_session = db_session
+        self.rows: dict[str, tuple[int, int]] = {}
+        self.update()
 
-    @classmethod
-    def update(cls) -> None:
-        """_summary_
-
-        :raises Exception: _description_
-        """
-        if not cls._db_session:
-            raise Exception("Class not initialized")
-        results_list = cls._db_session.execute(
+    def update(self) -> None:
+        """_summary_"""
+        results_list = self._db_session.execute(
             select(
                 TaskSizesDict.id,
                 TaskSizesDict.name,
                 TaskSizesDict.size,
             )
         ).all()
-        cls.rows = {row.name: (row.id, row.size) for row in results_list}
+        self.rows = {row.name: (row.id, row.size) for row in results_list}
 
 
 class InMemoryMetricsDict:
     """_summary_"""
 
     # A little wet code in this class but not overly complicated
-    _table: type[MetricsDictBase]
-    """member description"""
-    _db_session: Session | None = None
-    """member description"""
-    rows: dict[str, int] = {}
-    """member description"""
 
-    @classmethod
-    def initialize(cls, db_session: Session, table: type[MetricsDictBase]) -> None:
+    def __init__(self, db_session: Session, table: type[MetricsDictBase]) -> None:
         """_summary_
 
         :param db_session: _description_
         :param table: _description_
         """
-        cls._db_session = db_session
-        cls._table = table
-        cls.update()
+        self._db_session = db_session
+        self._table = table
+        self.rows: dict[str, int] = {}
+        self.update()
 
-    @classmethod
-    def update(cls) -> None:
-        """_summary_
-
-        :raises Exception: _description_
-        """
-        if not cls._db_session:
-            raise Exception("Class not initialized")
-        results_list = cls._db_session.execute(
+    def update(self) -> None:
+        """_summary_"""
+        results_list = self._db_session.execute(
             select(
-                cls._table.id,
-                cls._table.name,
-                cls._table.unit,
-                cls._table.processing_unit,
+                self._table.id,
+                self._table.name,
+                self._table.unit,
+                self._table.processing_unit,
             )
         ).all()
-        cls.rows = {
+        self.rows = {
             str(row.name) + str(row.unit) + row.processing_unit: row.id
             for row in results_list
         }

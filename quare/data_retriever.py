@@ -55,8 +55,7 @@ class DataRetriever:
         self._db_session: Session = db_session
         self._metrics_table: type[MetricsBase] = metrics_table
         self._metrics_dict_table: type[MetricsDictBase] = metrics_dict_table
-
-        InMemoryTaskSizesDict.initialize(db_session)
+        self._in_memory_task_sizes = InMemoryTaskSizesDict(db_session)
 
     def get_repetitions(
         self,
@@ -224,7 +223,8 @@ class DataRetriever:
         x_tick_labels: list[str] = []
         for task_size_name in sizes:
             x_range.append(
-                InMemoryTaskSizesDict.rows[task_size_name][1] / machine_num_of_cores
+                self._in_memory_task_sizes.rows[task_size_name][1]
+                / machine_num_of_cores
             )
             x_tick_labels.append(task_size_name)
         return x_range, x_tick_labels
