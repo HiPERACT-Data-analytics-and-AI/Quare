@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from itertools import chain
 from pathlib import Path
 
 import numpy as np
@@ -9,7 +8,7 @@ from matplotlib import pyplot as plt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import (
+from .models import (
     Machine,
     MetricsBase,
     MetricsDictBase,
@@ -18,11 +17,7 @@ from ..models import (
     TaskSizesDict,
     UseCase,
 )
-from ..utils import InMemoryTaskSizesDict, divide_dict_into_chunks, load_settings
-from .AMDuProfPCM_ext.models import (
-    AMDuProfPCM_further_machine_info,
-    AMDuProfPCM_machine_info,
-)
+from .utils import InMemoryTaskSizesDict, divide_dict_into_chunks, load_settings
 
 
 @dataclass
@@ -43,27 +38,29 @@ class UniqueMetricKey:
         return f"{self.name} | {self.unit} | {self.processing_unit}"
 
 
-class Plotter:
+MetricsData = dict[UniqueMetricKey, list[float | int | None]]
+
+
+class DataRetriever:
+    """_summary_"""
+
     def __init__(
         self,
         db_session: Session,
         metrics_table: type[MetricsBase],
         metrics_dict_table: type[MetricsDictBase],
-        profiler_name: str,
     ) -> None:
         """_summary_
 
         :param db_session: _description_
         :param metrics_table: _description_
         :param metrics_dict_table: _description_
-        :param profiler_name: _description_
         """
         self._db_session: Session = db_session
         self._metrics_table: type[MetricsBase] = metrics_table
         self._metrics_dict_table: type[MetricsDictBase] = metrics_dict_table
-        self._profiler_name: str = profiler_name
 
-        self.settings = load_settings()
+        InMemoryTaskSizesDict.initialize(db_session)
 
     def get_repetitions(
         self,
@@ -108,67 +105,51 @@ class Plotter:
             result[size_name] = ids
         return result
 
-    def get_result_info(self, repetition_id: int) -> dict[str, str]:
+    def get_result_info(self, repetition_ids: dict[str, list[int]]) -> dict[str, str]:
         """
         _summary_
-
-        :param repetition_id: _description_
-        :return: _description_
-        """
-        stmt = (
-            select(
-                AMDuProfPCM_machine_info,
-                AMDuProfPCM_further_machine_info,
-                Machine,
-                UseCase,
-                ProfilingSession,
-            )
-            .where(AMDuProfPCM_machine_info.repetition == repetition_id)
-            .join(
-                AMDuProfPCM_further_machine_info,
-                AMDuProfPCM_machine_info.repetition
-                == AMDuProfPCM_further_machine_info.repetition,
-            )
-            .join(Repetition)
-            .join(Machine)
-            .join(UseCase)
-            .join(ProfilingSession)
-        )
-        row = self._db_session.execute(stmt).first()
-        if row:
-            return {
-                "Session": row[4].name,
-                "Use case": row[3].name,
-                "Machine name": row[2].name,
-                "System": row[0].system,
-                "# of sockets": row[0].num_of_sockets,
-                "# of ccds": row[0].num_of_ccds,
-                "# of ccxs": row[0].num_of_ccxs,
-                "# of cores": row[0].num_of_cores,
-                "# of threads": row[0].num_of_threads,
-                "# of threads sharing L3": row[0].num_of_threads_sharing_l3,
-                "Core p0 state freq": row[1].core_p0_state_freq,
-                "Multiplex interval for core": row[1].multiplex_interval_for_core,
-                "Multiplex interval for df": row[1].multiplex_interval_for_df,
-                "Multiplex interval for l3": row[1].multiplex_interval_for_l3,
-                "Measured df frequency": row[1].measured_df_frequency,
-                "Multiplex interval": row[1].multiplex_interval,
-                "Version": row[1].version,
-            }
-        else:
-            return {}
-
-    def get_data(
-        self, repetition_ids: dict[str, list[int]]
-    ) -> dict[UniqueMetricKey, list[float | int | None]]:
-        """_summary_
 
         :param repetition_ids: _description_
         :return: _description_
         """
-        metrics: dict[UniqueMetricKey, list[float | int | None]] = {}
+        result_info: dict[str, str] = {}
+        for size_repetition_ids in repetition_ids.values():
+            for repetition_id in size_repetition_ids:
+                stmt = (
+                    select(
+                        Repetition,
+                        Machine,
+                        UseCase,
+                        ProfilingSession,
+                    )
+                    .where(Repetition.id == repetition_id)
+                    .join(Machine)
+                    .join(UseCase)
+                    .join(ProfilingSession)
+                )
+                row = self._db_session.execute(stmt).first()
+                if row:
+                    result_info = {
+                        "Session": row[3].name,
+                        "Machine name": row[1].name,
+                        "Use case": row[2].name,
+                        "Num. of cores": row[1].num_of_cores,
+                        "Num. of threads": row[1].num_of_threads,
+                    }
+                    return result_info
+        return {}
 
-        metric_names: list[str] = self.settings["metric_names"]
+    def get_data(
+        self, repetition_ids: dict[str, list[int]], metric_names: list[str]
+    ) -> MetricsData:
+        """_summary_
+
+        :param repetition_ids: _description_
+        :param metric_names: _description_
+        :return: _description_
+        """
+        metrics: MetricsData = {}
+
         if metric_names:
             stmt = select(
                 self._metrics_dict_table.name,
@@ -183,17 +164,19 @@ class Plotter:
             )
         metrics_data: list = list(self._db_session.execute(stmt).all())
 
-        metric_names: list[str] = [row[0] for row in metrics_data]
+        validated_metric_names: list[str] = [row[0] for row in metrics_data]
         metric_units: list[str] = [row[1] for row in metrics_data]
         metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
-        InMemoryTaskSizesDict.initialize(self._db_session)
-
-        for metric_data in zip(metric_names, metric_units, metric_processing_units):
+        for metric_data in zip(
+            validated_metric_names, metric_units, metric_processing_units
+        ):
             metrics[UniqueMetricKey(*metric_data)] = []
 
-        for size_repetition_ids in repetition_ids:
-            for metric_data in zip(metric_names, metric_units, metric_processing_units):
+        for size_repetition_ids in repetition_ids.values():
+            for metric_data in zip(
+                validated_metric_names, metric_units, metric_processing_units
+            ):
                 stmt = (
                     select(self._metrics_table)
                     .where(self._metrics_table.repetition.in_(size_repetition_ids))
@@ -226,6 +209,46 @@ class Plotter:
             return row[0]
         else:
             return None
+
+    def get_x_range_and_labels(
+        self, sizes: list[str], machine_name: str
+    ) -> tuple[list[float], list[str]]:
+        """_summary_
+
+        :param sizes: _description_
+        :param machine_name: _description_
+        :raises Exception: _description_
+        :return: _description_
+        """
+        machine_num_of_cores = self.get_machine_cores_count(machine_name)
+        if not machine_num_of_cores:
+            raise Exception(f'No num_of_cores for "{machine_name}" machine')
+
+        x_range: list[float] = []
+        x_tick_labels: list[str] = []
+        for task_size_name in sizes:
+            x_range.append(
+                InMemoryTaskSizesDict.rows[task_size_name][1] / machine_num_of_cores
+            )
+            x_tick_labels.append(task_size_name)
+        return x_range, x_tick_labels
+
+
+class Plotter:
+    """_summary_"""
+
+    def __init__(
+        self,
+        data_retriever: DataRetriever,
+        profiler_name: str,
+    ) -> None:
+        """_summary_
+
+        :param data_retriever: _description_
+        :param profiler_name: _description_
+        """
+        self._data_retriever: DataRetriever = data_retriever
+        self._profiler_name: str = profiler_name
 
     def make_result_info_plot(
         self,
@@ -273,7 +296,7 @@ class Plotter:
         self,
         x_range: list[float],
         columns: list[str],
-        metrics: dict[UniqueMetricKey, list[float | int | None]],
+        metrics: MetricsData,
         filename: Path,
     ) -> None:
         """_summary_
@@ -293,22 +316,21 @@ class Plotter:
         self,
         x_range: list[float],
         x_tick_labels: list[str],
-        metrics: dict[UniqueMetricKey, list[float | int | None]],
+        metrics: MetricsData,
         png_filename: Path | None = None,
         svg_filename: Path | None = None,
         x_grid: bool = True,
         y_grid: bool = True,
     ) -> None:
-        """
-        _summary_
+        """_summary_
 
         :param x_range: _description_
         :param x_tick_labels: _description_
         :param metrics: _description_
-        :param x_grid: _description_, defaults to True
-        :param y_grid: _description_, defaults to True
         :param png_filename: _description_, defaults to None
         :param svg_filename: _description_, defaults to None
+        :param x_grid: _description_, defaults to True
+        :param y_grid: _description_, defaults to True
         """
         num_of_figures: int = len(metrics)
         # axes: list[list[Axes]]
@@ -330,7 +352,6 @@ class Plotter:
                 linestyle="dashed",
                 linewidth=0.4,
             )
-            # axes[i][0].set_title(f"{key[0]} ({key[2]}): task size vs. {unit}")
             axes[i][0].set_title(
                 key.name
                 + (" (" + key.unit + ") " if key.unit else " ")
@@ -361,43 +382,25 @@ class Plotter:
 
     def make_all(self) -> None:
         """_summary_"""
-        repetition_ids = self.get_repetitions(
-            self.settings["session_name_contains"],
-            self.settings["machine_name"],
-            self.settings["use_case_name"],
-            self.settings["sizes_to_get"],
-            self.settings["repetition_name_contains"],
+        settings = load_settings()
+
+        repetition_ids = self._data_retriever.get_repetitions(
+            settings["session_name_contains"],
+            settings["machine_name"],
+            settings["use_case_name"],
+            settings["sizes_to_get"],
+            settings["repetition_name_contains"],
         )
-
-        machine_num_of_cores = self.get_machine_cores_count(
-            self.settings["machine_name"]
+        x_range, x_tick_labels = self._data_retriever.get_x_range_and_labels(
+            settings["sizes_to_get"], settings["machine_name"]
         )
-        if not machine_num_of_cores:
-            raise Exception(
-                f'No num_of_cores for "{self.settings["machine_name"]}" machine'
-            )
-
-        x_range: list[float] = []
-        x_tick_labels: list[str] = []
-        for task_size_name in self.settings["sizes_to_get"]:
-            x_range.append(
-                InMemoryTaskSizesDict.rows[task_size_name][1] / machine_num_of_cores
-            )
-            x_tick_labels.append(str(task_size_name))
-
-        result_info: dict[str, str] = {}
-        for size_repetition_ids in repetition_ids.values():
-            for repetition_id in size_repetition_ids:
-                result_info = self.get_result_info(repetition_id)
-                if result_info:
-                    break
-            if result_info:
-                break
-
-        metrics = self.get_data(repetition_ids)
+        metrics = self._data_retriever.get_data(
+            repetition_ids, settings["metric_names"]
+        )
+        result_info = self._data_retriever.get_result_info(repetition_ids)
 
         parent_dir_path = (
-            Path(self.settings["output_directory_path"])
+            Path(settings["output_directory_path"])
             / result_info["Session"]
             / result_info["Machine name"]
             / result_info["Use case"]
@@ -405,15 +408,14 @@ class Plotter:
         )
         parent_dir_path.mkdir(parents=True, exist_ok=True)
 
+        self.make_result_info_plot(
+            result_info, png_filename=parent_dir_path / "INFO.png"
+        )
         self.make_csv(
             x_range,
             x_tick_labels,
             metrics,
             parent_dir_path / "results.csv",
-        )
-
-        self.make_result_info_plot(
-            result_info, png_filename=parent_dir_path / "INFO.png"
         )
         multi_metrics = divide_dict_into_chunks(metrics, 1)
         for chunked_metrics in multi_metrics:
