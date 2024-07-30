@@ -43,7 +43,7 @@ class InMemoryTaskSizesDict:
                 TaskSizesDict.size,
             )
         ).all()
-        cls.rows = {row[1]: (row[0], row[2]) for row in results_list}
+        cls.rows = {row.name: (row.id, row.size) for row in results_list}
 
 
 class InMemoryMetricsDict:
@@ -84,7 +84,10 @@ class InMemoryMetricsDict:
                 cls._table.processing_unit,
             )
         ).all()
-        cls.rows = {str(row[1]) + str(row[2]) + row[3]: row[0] for row in results_list}
+        cls.rows = {
+            str(row.name) + str(row.unit) + row.processing_unit: row.id
+            for row in results_list
+        }
 
 
 T = TypeVar("T")

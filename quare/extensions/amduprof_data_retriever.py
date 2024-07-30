@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from ..plotter import DataRetriever
+from ..data_retriever import DataRetriever
 from .AMDuProfPCM_ext.models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
