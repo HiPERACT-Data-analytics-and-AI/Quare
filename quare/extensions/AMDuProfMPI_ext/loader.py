@@ -4,13 +4,8 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from ...utils import InMemoryMetricsDict
-from ..amduprof_loader_utils import (
-    MetricContext,
-    create_metric_instance,
-    load_generic_metrics,
-    walk_through_data,
-)
+from ...data_loader import DataLoader, MetricContext
+from ...models import MetricsBase
 from .models import (
     AMDuProfMPI_environment,
     AMDuProfMPI_metrics,
@@ -18,7 +13,9 @@ from .models import (
 )
 
 
-def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
+def _load_environment(
+    data_loader: DataLoader, context: MetricContext
+) -> list[AMDuProfMPI_environment]:
     """
     _summary_
 
@@ -26,7 +23,7 @@ def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
     :return: _description_
     """
     try:
-        environment_csv = pd.read_csv(context.path, header=None, index_col=0).T
+        environment_csv = pd.read_csv(context.file_path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
 
@@ -41,8 +38,9 @@ def _load_environment(context: MetricContext) -> list[AMDuProfMPI_environment]:
 
 
 def _load_functions_summary(
+    data_loader: DataLoader,
     context: MetricContext,
-) -> list[AMDuProfMPI_metrics]:
+) -> list[MetricsBase]:
     """
     _summary_
 
@@ -50,32 +48,28 @@ def _load_functions_summary(
     :return: _description_
     """
     try:
-        metrics_csv = pd.read_csv(context.path, header=0, index_col=0)
+        metrics_csv = pd.read_csv(context.file_path, header=0, index_col=0)
     except FileNotFoundError:
         return []
 
-    in_memory_metrics = InMemoryMetricsDict(
-        context.db_session, AMDuProfMPI_metrics_dict
-    )
-    instances_to_add: list[AMDuProfMPI_metrics] = list()
+    instances_to_add: list[MetricsBase] = list()
     for _, row in metrics_csv.iterrows():
         for name, value in row.items():
-            instance = create_metric_instance(
+            instance = data_loader.create_metric_instance(
                 context,
                 str(row.name),
                 value,
                 str(name),
                 None,
                 "function",
-                in_memory_metrics,
-                AMDuProfMPI_metrics,
-                AMDuProfMPI_metrics_dict,
             )
             instances_to_add.append(instance)
     return instances_to_add
 
 
-def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
+def _load_rank_summary(
+    data_loader: DataLoader, context: MetricContext
+) -> list[MetricsBase]:
     """
     _summary_
 
@@ -83,13 +77,11 @@ def _load_rank_summary(context: MetricContext) -> list[AMDuProfMPI_metrics]:
     :return: _description_
     """
     try:
-        metrics_csv = pd.read_csv(context.path, header=0, index_col=0)
+        metrics_csv = pd.read_csv(context.file_path, header=0, index_col=0)
     except FileNotFoundError:
         return []
 
-    return load_generic_metrics(
-        context, metrics_csv, 0, "rank", AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
-    )
+    return data_loader.load_generic_metrics(context, metrics_csv, 0, "rank")
 
 
 def load(db_session: Session, data_dir_path: Path) -> None:
@@ -99,10 +91,13 @@ def load(db_session: Session, data_dir_path: Path) -> None:
     :param db_session: _description_
     :param data_dir_path: _description_
     """
-    FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
+    FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
         ("environment.csv", _load_environment),
         ("functions_summary.csv", _load_functions_summary),
         ("rank_summary.csv", _load_rank_summary),
     ]
 
-    walk_through_data(data_dir_path, db_session, "AMDuProfMPI", FILE_SUFFIXES)
+    data_loader = DataLoader(
+        db_session, data_dir_path, AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
+    )
+    data_loader.walk_through_data("AMDuProfMPI", FILE_SUFFIXES)

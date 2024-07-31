@@ -4,11 +4,8 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from ..amduprof_loader_utils import (
-    MetricContext,
-    load_generic_metrics,
-    walk_through_data,
-)
+from ...data_loader import DataLoader, MetricContext
+from ...models import MetricsBase
 from .models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_cpu_topology,
@@ -18,7 +15,9 @@ from .models import (
 )
 
 
-def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]:
+def _load_machine_info(
+    data_loader: DataLoader, context: MetricContext
+) -> list[AMDuProfPCM_machine_info]:
     """
     _summary_
 
@@ -26,7 +25,7 @@ def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]
     :return: _description_
     """
     try:
-        machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
+        machine_csv = pd.read_csv(context.file_path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
 
@@ -49,6 +48,7 @@ def _load_machine_info(context: MetricContext) -> list[AMDuProfPCM_machine_info]
 
 
 def _load_machine_cpu_topology(
+    data_loader: DataLoader,
     context: MetricContext,
 ) -> list[AMDuProfPCM_machine_cpu_topology]:
     """
@@ -58,7 +58,7 @@ def _load_machine_cpu_topology(
     :return: _description_
     """
     try:
-        cpu_csv = pd.read_csv(context.path)
+        cpu_csv = pd.read_csv(context.file_path)
     except FileNotFoundError:
         return []
 
@@ -76,6 +76,7 @@ def _load_machine_cpu_topology(
 
 
 def _load_further_machine_info(
+    data_loader: DataLoader,
     context: MetricContext,
 ) -> list[AMDuProfPCM_further_machine_info]:
     """
@@ -85,7 +86,7 @@ def _load_further_machine_info(
     :return: _description_
     """
     try:
-        further_machine_csv = pd.read_csv(context.path, header=None, index_col=0).T
+        further_machine_csv = pd.read_csv(context.file_path, header=None, index_col=0).T
     except FileNotFoundError:
         return []
 
@@ -109,7 +110,9 @@ def _load_further_machine_info(
     return [further_machine_uprof]
 
 
-def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+def _load_core_metrics(
+    data_loader: DataLoader, context: MetricContext
+) -> list[MetricsBase]:
     """
     _summary_
 
@@ -117,17 +120,17 @@ def _load_core_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     :return: _description_
     """
     try:
-        metrics_csv = pd.read_csv(context.path, header=0, index_col=0).T
+        metrics_csv = pd.read_csv(context.file_path, header=0, index_col=0).T
     except FileNotFoundError:
         return []
 
     name: str = "core"
-    return load_generic_metrics(
-        context, metrics_csv, 5, name, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
-    )
+    return data_loader.load_generic_metrics(context, metrics_csv, 5, name)
 
 
-def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
+def _load_l3_metrics(
+    data_loader: DataLoader, context: MetricContext
+) -> list[MetricsBase]:
     """
     _summary_
 
@@ -135,14 +138,12 @@ def _load_l3_metrics(context: MetricContext) -> list[AMDuProfPCM_metrics]:
     :return: _description_
     """
     try:
-        metrics_csv = pd.read_csv(context.path, header=0, index_col=0).T
+        metrics_csv = pd.read_csv(context.file_path, header=0, index_col=0).T
     except FileNotFoundError:
         return []
 
     name: str = "ccx"
-    return load_generic_metrics(
-        context, metrics_csv, 4, name, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
-    )
+    return data_loader.load_generic_metrics(context, metrics_csv, 4, name)
 
 
 def load(db_session: Session, data_dir_path: Path) -> None:
@@ -152,7 +153,8 @@ def load(db_session: Session, data_dir_path: Path) -> None:
     :param db_session: _description_
     :param data_dir_path: _description_
     """
-    FILE_SUFFIXES: list[tuple[str, Callable[[MetricContext], list]]] = [
+
+    FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
         ("machine_info.csv", _load_machine_info),
         ("machine_cpu_topology.csv", _load_machine_cpu_topology),
         ("further_machine_info.csv", _load_further_machine_info),
@@ -160,4 +162,7 @@ def load(db_session: Session, data_dir_path: Path) -> None:
         ("l3_metrics.csv", _load_l3_metrics),
     ]
 
-    walk_through_data(data_dir_path, db_session, "AMDuProfPCM", FILE_SUFFIXES)
+    data_loader = DataLoader(
+        db_session, data_dir_path, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
+    )
+    data_loader.walk_through_data("AMDuProfPCM", FILE_SUFFIXES)
