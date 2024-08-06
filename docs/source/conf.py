@@ -23,6 +23,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx_autodoc_typehints",
+    # "sphinx.ext.graphviz",
+    # "sphinx.ext.inheritance_diagram",
     # 'sphinx.ext.viewcode',
     # 'sphinx.ext.napoleon'
 ]
