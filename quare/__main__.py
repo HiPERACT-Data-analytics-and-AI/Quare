@@ -7,6 +7,10 @@ from .plot import plot
 
 
 def main() -> None:
+    """
+    Entry point function for the whole Quare toolkit.
+    A proper command has to be passed to run a specific tool.
+    """
     commands: dict[str, Callable[[Namespace], None]] = {
         "csvize": csvize,
         "create-db": create_db,

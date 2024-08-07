@@ -9,18 +9,18 @@ from .utils import divide_dict_into_chunks, load_settings
 
 
 class Plotter:
-    """_summary_"""
+    """
+    _summary_
+
+    :param data_retriever: _description_
+    :param profiler_name: _description_
+    """
 
     def __init__(
         self,
         data_retriever: DataRetriever,
         profiler_name: str,
     ) -> None:
-        """_summary_
-
-        :param data_retriever: _description_
-        :param profiler_name: _description_
-        """
         self._data_retriever: DataRetriever = data_retriever
         self._profiler_name: str = profiler_name
 

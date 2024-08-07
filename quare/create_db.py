@@ -11,6 +11,11 @@ from .utils import create_db_engine, discover_extensions, load_settings
 def create_db(_: Namespace):
     """
     Creates Quare's DB using custom loaders for different profilers.
+
+    The data is loaded by profiler-specific extensions.
+    The extensions are discovered automatically and currently there is no possibility
+    to load the data only by chosen extensions (however it is possible to temporarily
+    change extension's name - remove "_ext" suffix - to hide extension from Quare).
     """
     db_engine = create_db_engine()
     settings = load_settings()

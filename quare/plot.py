@@ -7,6 +7,13 @@ from .utils import create_db_engine, discover_extensions
 
 
 def plot(_: Namespace) -> None:
+    """
+    Plots chosen or all the metrics (depends on settings), creates INFO plot and CSV
+    file with data that has been used to make plots.
+
+    The data is plotted by profiler-specific extensions. A specific extension can be
+    temporarily hidden in a way described in :py:func:`.create_db.create_db`.
+    """
     db_engine = create_db_engine()
 
     with Session(db_engine) as db_session:
