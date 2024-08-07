@@ -1,10 +1,10 @@
 FVOPS = task_sizes_dict.size / profiling_session.exec_time_s
 L2 miss ratio (total) [%] = avg("L2 Miss (pti)") / avg("L2 Access (pti)") * 100.0
-L2 miss ratio from L2DC [%] = avg("L2 Miss from DC Miss (pti)") / avg("L2 Access from DC Miss (pti)") * 100.0
-L2 miss ratio from HWPF [%] = avg("L2 Miss from HWPF (pti)") / avg("L2 Access from HWPF (pti)") * 100.0
-L2hitRatio [%] = avg("L2 Hit (pti)") / avg("L2 Access (pti)") * 100.0
-L2DChitRatio [%] = avg("L2 Hit from DC Miss (pti)") / avg("L2 Access from DC Miss (pti)") * 100.0
-L2HWPFhitRatio [%] = avg("L2 Hit from HWPF (pti)") / avg("L2 Access from HWPF (pti)") * 100.0
+L2DC miss ratio [%] = avg("L2 Miss from DC Miss (pti)") / avg("L2 Access from DC Miss (pti)") * 100.0
+L2 HWPF miss ratio [%] = avg("L2 Miss from HWPF (pti)") / avg("L2 Access from HWPF (pti)") * 100.0
+L2 hit ratio (total) [%] = avg("L2 Hit (pti)") / avg("L2 Access (pti)") * 100.0
+L2DC hit ratio [%] = avg("L2 Hit from DC Miss (pti)") / avg("L2 Access from DC Miss (pti)") * 100.0
+L2 HWPF hit ratio [%] = avg("L2 Hit from HWPF (pti)") / avg("L2 Access from HWPF (pti)") * 100.0
 
 MPI ratio based on avg comm time [%] - strictly application specific (data only from an app log)
 

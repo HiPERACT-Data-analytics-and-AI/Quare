@@ -34,7 +34,8 @@ class UniqueMetricKey:
         return f"{self.name} | {self.unit} | {self.processing_unit}"
 
 
-MetricsData = dict[UniqueMetricKey, list[float | int | None]]
+MetricValue = float | int | None
+MetricsData = dict[UniqueMetricKey, list[MetricValue]]
 
 
 class DataRetriever:
@@ -135,8 +136,14 @@ class DataRetriever:
                     return result_info
         return {}
 
+    def get_analytics(self, repetition_ids: dict[str, list[int]]) -> MetricsData:
+        return {}
+
     def get_data(
-        self, repetition_ids: dict[str, list[int]], metric_names: list[str]
+        self,
+        repetition_ids: dict[str, list[int]],
+        metric_names: list[str],
+        analytics: bool,
     ) -> MetricsData:
         """_summary_
 
@@ -191,6 +198,8 @@ class DataRetriever:
                     metrics[UniqueMetricKey(*metric_data)].append(
                         float(np.mean(values))
                     )
+        if analytics:
+            metrics |= self.get_analytics(repetition_ids)
         return metrics
 
     def get_machine_cores_count(self, machine_name: str) -> int | None:

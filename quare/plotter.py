@@ -169,7 +169,7 @@ class Plotter:
             settings["sizes_to_get"], settings["machine_name"]
         )
         metrics = self._data_retriever.get_data(
-            repetition_ids, settings["metric_names"]
+            repetition_ids, settings["metric_names"], settings["analytics"]
         )
         result_info = self._data_retriever.get_result_info(repetition_ids)
 

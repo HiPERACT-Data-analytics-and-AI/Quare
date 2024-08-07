@@ -3,6 +3,8 @@
     "csvized_data_directory_path": "../../quare-test-db/csvized_data",
     "db_path": "../quare.sqlite3",
     "output_directory_path": "../output",
+
+    "analytics": true,
     "task_sizes": {
         "uxlow":  1,
         "xsmall": 10,
@@ -19,7 +21,8 @@
     },
 
     "metric_names": [],
-    "_COMMENTED_metric_names": [
+    "_COMMENTED_metric_names": [""],
+    "__COMMENTED_metric_names": [
         "L2 Access (pti)",
         "L2 Miss (pti)",
         "L2 Hit (pti)",
