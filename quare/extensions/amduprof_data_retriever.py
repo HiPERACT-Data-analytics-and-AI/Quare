@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from ..data_retriever import DataRetriever
+from ..data_retriever import DataRetriever, RepetitionIDs
 from .AMDuProfPCM_ext.models import (
     AMDuProfPCM_further_machine_info,
     AMDuProfPCM_machine_info,
@@ -8,7 +8,7 @@ from .AMDuProfPCM_ext.models import (
 
 
 class AMDuProfDataRetriever(DataRetriever):
-    def get_result_info(self, repetition_ids: dict[str, list[int]]) -> dict[str, str]:
+    def get_result_info(self, repetition_ids: RepetitionIDs) -> dict[str, str]:
         """
         _summary_
 

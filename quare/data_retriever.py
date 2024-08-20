@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -35,9 +36,11 @@ class UniqueMetricKey:
 
 
 MetricValue = float | int | None
-MetricsData = dict[UniqueMetricKey, list[MetricValue]]
+MetricsData = dict[UniqueMetricKey, list[MetricValue]]  # TODO: Maybe convert to class?
+RepetitionIDs = dict[str, list[int]]
 
 
+# Refactor DataRetriever to a factory - cached data will be available everywhere
 class DataRetriever:
     """_summary_"""
 
@@ -58,6 +61,7 @@ class DataRetriever:
         self._metrics_dict_table: type[MetricsDictBase] = metrics_dict_table
 
         self.in_memory_task_sizes = InMemoryTaskSizesDict(db_session)
+        self.AVAILABLE_ANALYTICS: dict[str, Callable[[RepetitionIDs], MetricsData]] = {}
 
     def get_repetitions(
         self,
@@ -66,7 +70,7 @@ class DataRetriever:
         use_case_name: str,
         task_size_names: list[str],
         repetition_name_contains: str,
-    ) -> dict[str, list[int]]:
+    ) -> RepetitionIDs:
         """
         _summary_
 
@@ -77,7 +81,7 @@ class DataRetriever:
         :param repetition_name_contains: _description_
         :return: _description_
         """
-        result: dict[str, list[int]] = {}
+        result: RepetitionIDs = {}
         for size_name in task_size_names:
             stmt = (
                 select(Repetition.id)
@@ -102,7 +106,7 @@ class DataRetriever:
             result[size_name] = ids
         return result
 
-    def get_result_info(self, repetition_ids: dict[str, list[int]]) -> dict[str, str]:
+    def get_result_info(self, repetition_ids: RepetitionIDs) -> dict[str, str]:
         """
         _summary_
 
@@ -136,21 +140,9 @@ class DataRetriever:
                     return result_info
         return {}
 
-    def get_analytics(self, repetition_ids: dict[str, list[int]]) -> MetricsData:
-        return {}
-
-    def get_data(
-        self,
-        repetition_ids: dict[str, list[int]],
-        metric_names: list[str],
-        analytics: bool,
+    def get_metrics(
+        self, repetition_ids: RepetitionIDs, metric_names: list[str]
     ) -> MetricsData:
-        """_summary_
-
-        :param repetition_ids: _description_
-        :param metric_names: _description_
-        :return: _description_
-        """
         metrics: MetricsData = {}
 
         if metric_names:
@@ -198,8 +190,29 @@ class DataRetriever:
                     metrics[UniqueMetricKey(*metric_data)].append(
                         float(np.mean(values))
                     )
-        if analytics:
-            metrics |= self.get_analytics(repetition_ids)
+
+        return metrics
+
+    def get_analysis(
+        self, repetition_ids: RepetitionIDs, analysis_names: list[str]
+    ) -> MetricsData:
+        return {}
+
+    # TODO: Keep the averaged data in memory (cache) - as instance variable
+    def get_data(
+        self,
+        repetition_ids: RepetitionIDs,
+        metric_names: list[str],
+        analysis_names: list[str],
+    ) -> MetricsData:
+        """_summary_
+
+        :param repetition_ids: _description_
+        :param metric_names: _description_
+        :return: _description_
+        """
+        metrics: MetricsData = self.get_metrics(repetition_ids, metric_names)
+        metrics |= self.get_analysis(repetition_ids, analysis_names)
         return metrics
 
     def get_machine_cores_count(self, machine_name: str) -> int | None:
