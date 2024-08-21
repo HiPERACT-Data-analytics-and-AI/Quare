@@ -17,6 +17,11 @@ from .models import (
 from .utils import InMemoryTaskSizesDict
 
 
+# TODO: Make it possible to keep individual values,
+# not only aggregated ones in the UniqueMetricKey objects.
+# Maybe repetition IDs should be also kept but not necessarily cached and hashed?
+# Hashing way can be settable by a flag
+# (but remember to make all hashed attributes immutable)
 @dataclass
 class UniqueMetricKey:
     """_summary_"""
@@ -36,8 +41,26 @@ class UniqueMetricKey:
 
 
 MetricValue = float | int | None
-MetricsData = dict[UniqueMetricKey, list[MetricValue]]  # TODO: Maybe convert to class?
+""""""
+
+# TODO: Maybe convert MetricsData type to a class?
+
+MetricsData = dict[UniqueMetricKey, list[MetricValue]]
+"""
+A key unambiguously points a particular metric. A single value in that dictionary
+is a list of task-size-wise aggregated (averaged) metrics.
+
+:alias of: dict[UniqueMetricKey, list[MetricValue]]
+"""
+
 RepetitionIDs = dict[str, list[int]]
+"""
+Type alias for pointing specific repetitions (task-size-wise).
+A key is a name of the task size. A value is a list of Repetition IDs
+belonging to that task size.
+
+:alias of: dict[str, list[int]]
+"""
 
 
 # Refactor DataRetriever to a factory - cached data will be available everywhere
