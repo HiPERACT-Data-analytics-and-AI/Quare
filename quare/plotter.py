@@ -81,7 +81,7 @@ class Plotter:
         :param filename: _description_
         """
         data: dict[UniqueMetricKey, Sequence[float | None]] = {
-            UniqueMetricKey("Cells per rank (size)", "", ""): x_range
+            UniqueMetricKey("Cells per rank (size)", "number", ""): x_range
         }
         data.update(metrics)
         pd.DataFrame.from_dict(data, orient="index", columns=columns).to_csv(filename)
@@ -168,39 +168,65 @@ class Plotter:
         x_range, x_tick_labels = self._data_retriever.get_x_range_and_labels(
             settings["sizes_to_get"], settings["machine_name"]
         )
-        metrics = self._data_retriever.get_data(
-            repetition_ids, settings["metric_names"], settings["analysis_names"]
-        )
         result_info = self._data_retriever.get_result_info(repetition_ids)
-
         parent_dir_path = (
             Path(settings["output_directory_path"])
             / result_info["Session"]
             / result_info["Machine name"]
             / result_info["Use case"]
-            / self._profiler_name
         )
-        parent_dir_path.mkdir(parents=True, exist_ok=True)
+
+        metrics = self._data_retriever.get_data(
+            repetition_ids, settings["metric_names"], [""]
+        )
+        metrics_parent_dir_path = (
+            parent_dir_path / "profiler_metrics" / self._profiler_name
+        )
+        metrics_parent_dir_path.mkdir(parents=True, exist_ok=True)
 
         self.make_result_info_plot(
-            result_info, png_filename=parent_dir_path / "INFO.png"
+            result_info, png_filename=metrics_parent_dir_path / "INFO.png"
         )
         self.make_csv(
             x_range,
             x_tick_labels,
             metrics,
-            parent_dir_path / "results.csv",
+            metrics_parent_dir_path / "results.csv",
         )
         multi_metrics = divide_dict_into_chunks(metrics, 1)
         for chunked_metrics in multi_metrics:
             one_key = list(chunked_metrics.keys())[0]
             if all(val is None for val in chunked_metrics[one_key]):
                 continue
-            png_filename: Path = parent_dir_path / f"Plot {one_key}.png"
+            png_filename: Path = metrics_parent_dir_path / f"Plot {one_key}.png"
             # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
             self.make_data_plots(
                 x_range,
                 [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
                 chunked_metrics,
+                png_filename=png_filename,
+            )
+
+        analytics = self._data_retriever.get_data(
+            repetition_ids, [""], settings["analysis_names"]
+        )
+        analytics_parent_dir_path = parent_dir_path / "basic_analysis"
+        analytics_parent_dir_path.mkdir(parents=True, exist_ok=True)
+        self.make_csv(
+            x_range,
+            x_tick_labels,
+            analytics,
+            analytics_parent_dir_path / "results.csv",
+        )
+        multi_analytics = divide_dict_into_chunks(analytics, 1)
+        for chunked_analytics in multi_analytics:
+            one_key = list(chunked_analytics.keys())[0]
+            if all(val is None for val in chunked_analytics[one_key]):
+                continue
+            png_filename: Path = analytics_parent_dir_path / f"Plot {one_key}.png"
+            self.make_data_plots(
+                x_range,
+                [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
+                chunked_analytics,
                 png_filename=png_filename,
             )

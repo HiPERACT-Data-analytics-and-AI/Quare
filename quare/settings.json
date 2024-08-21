@@ -19,9 +19,9 @@
         "xhigh":  100000000
     },
 
-    "__metric_names": [],
+    "metric_names": [],
     "_COMMENTED_metric_names": [""],
-    "metric_names": [
+    "__COMMENTED_metric_names": [
         "L2 Access (pti)",
         "L2 Miss (pti)",
         "L2 Hit (pti)",
@@ -32,7 +32,8 @@
     ],
 
     "analysis_names": [],
-    "_analysis_names": [
+    "_COMMENTED_analysis_names": [""],
+    "__COMMENTED_analysis_names": [
         "L2 miss ratio (total)",
         "L2DC miss ratio"
     ],
