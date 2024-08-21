@@ -4,6 +4,7 @@ from numpy import asarray
 from sqlalchemy.orm import Session
 
 from ...data_retriever import MetricsData, RepetitionIDs, UniqueMetricKey
+from ...ext_abcs import ExtensionDataPlotter
 from ...plotter import Plotter
 from ..amduprof_data_retriever import AMDuProfDataRetriever
 from .models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
@@ -113,17 +114,19 @@ class AMDuProfPCMAnalyzer(AMDuProfDataRetriever):
         return metrics
 
 
-def plot(db_session: Session) -> None:
-    """
-    _summary_
+class ExtensionDataPlotterImpl(ExtensionDataPlotter):
+    @staticmethod
+    def plot(db_session: Session) -> None:
+        """
+        _summary_
 
-    :param db_session: _description_
-    """
-    Plotter(
-        AMDuProfPCMAnalyzer(
-            db_session,
-            AMDuProfPCM_metrics,
-            AMDuProfPCM_metrics_dict,
-        ),
-        "AMDuProfPCM",
-    ).make_all()
+        :param db_session: _description_
+        """
+        Plotter(
+            AMDuProfPCMAnalyzer(
+                db_session,
+                AMDuProfPCM_metrics,
+                AMDuProfPCM_metrics_dict,
+            ),
+            "AMDuProfPCM",
+        ).make_all()

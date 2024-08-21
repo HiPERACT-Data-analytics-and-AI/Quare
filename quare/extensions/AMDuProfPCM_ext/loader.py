@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from ...data_loader import DataLoader, MetricContext
+from ...ext_abcs import ExtensionDataLoader
 from ...models import MetricsBase
 from .models import (
     AMDuProfPCM_further_machine_info,
@@ -150,23 +151,25 @@ class Loaders:
         return data_loader.load_generic_metrics(context, metrics_csv, 4, name)
 
 
-def load(db_session: Session, data_dir_path: Path) -> None:
-    """
-    _summary_
+class ExtensionDataLoaderImpl(ExtensionDataLoader):
+    @staticmethod
+    def load(db_session: Session, data_dir_path: Path) -> None:
+        """
+        _summary_
 
-    :param db_session: _description_
-    :param data_dir_path: _description_
-    """
+        :param db_session: _description_
+        :param data_dir_path: _description_
+        """
 
-    FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
-        ("machine_info.csv", Loaders.load_machine_info),
-        ("machine_cpu_topology.csv", Loaders.load_machine_cpu_topology),
-        ("further_machine_info.csv", Loaders.load_further_machine_info),
-        ("core_metrics.csv", Loaders.load_core_metrics),
-        ("l3_metrics.csv", Loaders.load_l3_metrics),
-    ]
+        FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
+            ("machine_info.csv", Loaders.load_machine_info),
+            ("machine_cpu_topology.csv", Loaders.load_machine_cpu_topology),
+            ("further_machine_info.csv", Loaders.load_further_machine_info),
+            ("core_metrics.csv", Loaders.load_core_metrics),
+            ("l3_metrics.csv", Loaders.load_l3_metrics),
+        ]
 
-    data_loader = DataLoader(
-        db_session, data_dir_path, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
-    )
-    data_loader.walk_through_data("AMDuProfPCM", FILE_SUFFIXES)
+        data_loader = DataLoader(
+            db_session, data_dir_path, AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
+        )
+        data_loader.walk_through_data("AMDuProfPCM", FILE_SUFFIXES)

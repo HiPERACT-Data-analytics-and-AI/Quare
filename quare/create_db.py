@@ -42,7 +42,7 @@ def create_db(_: Namespace):
                 if spec.loader is not None:
                     module.__package__ = "quare.extensions." + extension_path.stem
                     spec.loader.exec_module(module)
-                    module.load(db_session, data_dir_path)
+                    module.ExtensionDataLoaderImpl().load(db_session, data_dir_path)
 
         db_session.commit()
 

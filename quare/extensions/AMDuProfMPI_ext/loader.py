@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from ...data_loader import DataLoader, MetricContext
+from ...ext_abcs import ExtensionDataLoader
 from ...models import MetricsBase
 from .models import (
     AMDuProfMPI_environment,
@@ -86,20 +87,22 @@ class Loaders:
         return data_loader.load_generic_metrics(context, metrics_csv, 0, "rank")
 
 
-def load(db_session: Session, data_dir_path: Path) -> None:
-    """
-    _summary_
+class ExtensionDataLoaderImpl(ExtensionDataLoader):
+    @staticmethod
+    def load(db_session: Session, data_dir_path: Path) -> None:
+        """
+        _summary_
 
-    :param db_session: _description_
-    :param data_dir_path: _description_
-    """
-    FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
-        ("environment.csv", Loaders.load_environment),
-        ("functions_summary.csv", Loaders.load_functions_summary),
-        ("rank_summary.csv", Loaders.load_rank_summary),
-    ]
+        :param db_session: _description_
+        :param data_dir_path: _description_
+        """
+        FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
+            ("environment.csv", Loaders.load_environment),
+            ("functions_summary.csv", Loaders.load_functions_summary),
+            ("rank_summary.csv", Loaders.load_rank_summary),
+        ]
 
-    data_loader = DataLoader(
-        db_session, data_dir_path, AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
-    )
-    data_loader.walk_through_data("AMDuProfMPI", FILE_SUFFIXES)
+        data_loader = DataLoader(
+            db_session, data_dir_path, AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
+        )
+        data_loader.walk_through_data("AMDuProfMPI", FILE_SUFFIXES)
