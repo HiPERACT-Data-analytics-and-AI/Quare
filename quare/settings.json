@@ -31,9 +31,9 @@
         "Volume(Bytes)"
     ],
 
-    "analysis_names": [],
-    "_COMMENTED_analysis_names": [""],
-    "__COMMENTED_analysis_names": [
+    "analyses_names": [],
+    "_COMMENTED_analyses_names": [""],
+    "__COMMENTED_analyses_names": [
         "L2 miss ratio (total)",
         "L2DC miss ratio"
     ],

@@ -63,7 +63,7 @@ belonging to that task size.
 """
 
 
-# Refactor DataRetriever to a factory - cached data will be available everywhere
+# Refactor DataRetriever to a singleton - cached data will be available everywhere
 class DataRetriever:
     """_summary_"""
 
@@ -84,7 +84,9 @@ class DataRetriever:
         self._metrics_dict_table: type[MetricsDictBase] = metrics_dict_table
 
         self.in_memory_task_sizes = InMemoryTaskSizesDict(db_session)
-        self.AVAILABLE_ANALYTICS: dict[str, Callable[[RepetitionIDs], MetricsData]] = {}
+        self.AVAILABLE_ANALYTICS: dict[
+            UniqueMetricKey, Callable[[RepetitionIDs], list[MetricValue]]
+        ] = {}
 
     def get_repetitions(
         self,
@@ -163,11 +165,16 @@ class DataRetriever:
                     return result_info
         return {}
 
-    def get_metrics(
-        self, repetition_ids: RepetitionIDs, metric_names: list[str]
-    ) -> MetricsData:
-        metrics: MetricsData = {}
+    def discover_metric_keys(self, metric_names: list[str]) -> list[UniqueMetricKey]:
+        """
+        _summary_
 
+        :param metric_names: _description_
+        :return: A list of the keys corresponding to existing metrics.
+                 The length of the returned list can be different than the length
+                 of the source list, as the metrics can be not found or multiple metrics
+                 can be found for a particular name.
+        """
         if metric_names:
             stmt = select(
                 self._metrics_dict_table.name,
@@ -186,56 +193,76 @@ class DataRetriever:
         metric_units: list[str] = [row[1] for row in metrics_data]
         metric_processing_units: list[str] = [row[2] for row in metrics_data]
 
+        metric_keys: list[UniqueMetricKey] = []
         for metric_data in zip(
             validated_metric_names, metric_units, metric_processing_units
         ):
-            metrics[UniqueMetricKey(*metric_data)] = []
+            metric_keys.append(UniqueMetricKey(*metric_data))
+        return metric_keys
+
+    def get_metrics(
+        self, repetition_ids: RepetitionIDs, metric_keys: list[UniqueMetricKey]
+    ) -> MetricsData:
+        metrics: MetricsData = {}
+        for key in metric_keys:
+            metrics[key] = []
 
         for size_repetition_ids in repetition_ids.values():
-            for metric_data in zip(
-                validated_metric_names, metric_units, metric_processing_units
-            ):
+            for key in metric_keys:
                 stmt = (
                     select(self._metrics_table)
                     .where(self._metrics_table.repetition.in_(size_repetition_ids))
                     .join(self._metrics_dict_table)
                     .where(
-                        self._metrics_dict_table.name == metric_data[0],
-                        self._metrics_dict_table.unit == metric_data[1],
-                        self._metrics_dict_table.processing_unit == metric_data[2],
+                        self._metrics_dict_table.name == key.name,
+                        self._metrics_dict_table.unit == key.unit,
+                        self._metrics_dict_table.processing_unit == key.processing_unit,
                     )
                 )
                 rows = self._db_session.execute(stmt).all()
                 if not rows:
-                    metrics[UniqueMetricKey(*metric_data)].append(None)
+                    metrics[key].append(None)
                 else:
                     values = [row[0].value for row in rows]
-                    metrics[UniqueMetricKey(*metric_data)].append(
-                        float(np.mean(values))
-                    )
+                    metrics[key].append(float(np.mean(values)))
 
         return metrics
 
-    def get_analysis(
-        self, repetition_ids: RepetitionIDs, analysis_names: list[str]
+    def discover_analysis_keys(self, metric_names: list[str]) -> list[UniqueMetricKey]:
+        keys: list[UniqueMetricKey] = []
+        for name in metric_names:
+            for key in self.AVAILABLE_ANALYTICS.keys():
+                if name == key.name:
+                    keys.append(key)
+        return keys
+
+    def get_analyses(
+        self, repetition_ids: RepetitionIDs, analyses_keys: list[UniqueMetricKey]
     ) -> MetricsData:
-        return {}
+        analyses: MetricsData = {}
+        if not analyses_keys:
+            analyses_keys = list(self.AVAILABLE_ANALYTICS.keys())
+
+        for analysis_key in analyses_keys:
+            func = self.AVAILABLE_ANALYTICS.get(analysis_key, None)
+            if func is not None:
+                analyses |= {analysis_key: func(repetition_ids)}
+
+        return analyses
 
     # TODO: Keep the averaged data in memory (cache) - as instance variable
     def get_data(
         self,
         repetition_ids: RepetitionIDs,
-        metric_names: list[str],
-        analysis_names: list[str],
+        metrics_names: list[str],
+        analyses_names: list[str],
     ) -> MetricsData:
-        """_summary_
-
-        :param repetition_ids: _description_
-        :param metric_names: _description_
-        :return: _description_
-        """
-        metrics: MetricsData = self.get_metrics(repetition_ids, metric_names)
-        metrics |= self.get_analysis(repetition_ids, analysis_names)
+        metrics: MetricsData = self.get_metrics(
+            repetition_ids, self.discover_metric_keys(metrics_names)
+        )
+        metrics |= self.get_analyses(
+            repetition_ids, self.discover_analysis_keys(analyses_names)
+        )
         return metrics
 
     def get_machine_cores_count(self, machine_name: str) -> int | None:

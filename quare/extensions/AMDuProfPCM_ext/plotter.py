@@ -1,117 +1,101 @@
-from collections.abc import Callable
-
 from numpy import asarray
 from sqlalchemy.orm import Session
 
-from ...data_retriever import MetricsData, RepetitionIDs, UniqueMetricKey
-from ...ext_abcs import ExtensionDataPlotter
+from quare.models import MetricsBase, MetricsDictBase
+
+from ...data_retriever import MetricValue, RepetitionIDs, UniqueMetricKey
+from ...extensions_abcs import ExtensionDataPlotter
 from ...plotter import Plotter
 from ..amduprof_data_retriever import AMDuProfDataRetriever
 from .models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
 
 
 class AMDuProfPCMAnalyzer(AMDuProfDataRetriever):
-    def _calc_L2_miss_ratio_total(self, repetition_ids: RepetitionIDs) -> MetricsData:
-        metric_names_to_get: list[str] = [
-            "L2 Miss (pti)",
-            "L2 Access (pti)",
-        ]
-        metrics = self.get_metrics(repetition_ids, metric_names_to_get)
-        l2_miss = metrics[UniqueMetricKey("L2 Miss (pti)", "", "core")]
-        l2_access = metrics[UniqueMetricKey("L2 Access (pti)", "", "core")]
-
-        result = asarray(l2_miss) / asarray(l2_access) * 100.0
-        return {UniqueMetricKey("L2 miss ratio (total)", "%", "core"): result.tolist()}
-
-    def _calc_L2DC_miss_ratio(self, repetition_ids: RepetitionIDs) -> MetricsData:
-        metric_names_to_get: list[str] = [
-            "L2 Miss from DC Miss (pti)",
-            "L2 Access from DC Miss (pti)",
-        ]
-        metrics = self.get_metrics(repetition_ids, metric_names_to_get)
-        l2_miss = metrics[UniqueMetricKey("L2 Miss from DC Miss (pti)", "", "core")]
-        l2_access = metrics[UniqueMetricKey("L2 Access from DC Miss (pti)", "", "core")]
-
-        result = asarray(l2_miss) / asarray(l2_access) * 100.0
-        return {UniqueMetricKey("L2DC miss ratio", "%", "core"): result.tolist()}
-
-    def _calc_L2_HWPF_miss_ratio(self, repetition_ids: RepetitionIDs) -> MetricsData:
-        metric_names_to_get: list[str] = [
-            "L2 Miss from HWPF (pti)",
-            "L2 Access from HWPF (pti)",
-        ]
-        metrics = self.get_metrics(repetition_ids, metric_names_to_get)
-        l2_miss = metrics[UniqueMetricKey("L2 Miss from HWPF (pti)", "", "core")]
-        l2_access = metrics[UniqueMetricKey("L2 Access from HWPF (pti)", "", "core")]
-
-        result = asarray(l2_miss) / asarray(l2_access) * 100.0
-        return {UniqueMetricKey("L2 HWPF miss ratio", "%", "core"): result.tolist()}
-
-    def _calc_L2_hit_ratio_total(self, repetition_ids: RepetitionIDs) -> MetricsData:
-        metric_names_to_get: list[str] = [
-            "L2 Hit (pti)",
-            "L2 Access (pti)",
-        ]
-        metrics = self.get_metrics(repetition_ids, metric_names_to_get)
-        l2_hit = metrics[UniqueMetricKey("L2 Hit (pti)", "", "core")]
-        l2_access = metrics[UniqueMetricKey("L2 Access (pti)", "", "core")]
-
-        result = asarray(l2_hit) / asarray(l2_access) * 100.0
-        return {UniqueMetricKey("L2 hit ratio (total)", "%", "core"): result.tolist()}
-
-    def _calc_L2DC_hit_ratio(self, repetition_ids: RepetitionIDs) -> MetricsData:
-        metric_names_to_get: list[str] = [
-            "L2 Hit from DC Miss (pti)",
-            "L2 Access from DC Miss (pti)",
-        ]
-        metrics = self.get_metrics(repetition_ids, metric_names_to_get)
-        l2_hit = metrics[UniqueMetricKey("L2 Hit from DC Miss (pti)", "", "core")]
-        l2_access = metrics[UniqueMetricKey("L2 Access from DC Miss (pti)", "", "core")]
-
-        result = asarray(l2_hit) / asarray(l2_access) * 100.0
-        return {UniqueMetricKey("L2DC hit ratio", "%", "core"): result.tolist()}
-
-    def _calc_L2_HWPF_hit_ratio(self, repetition_ids: RepetitionIDs) -> MetricsData:
-        metric_names_to_get: list[str] = [
-            "L2 Hit from HWPF (pti)",
-            "L2 Access from HWPF (pti)",
-        ]
-        metrics = self.get_metrics(repetition_ids, metric_names_to_get)
-        l2_hit = metrics[UniqueMetricKey("L2 Hit from HWPF (pti)", "", "core")]
-        l2_access = metrics[UniqueMetricKey("L2 Access from HWPF (pti)", "", "core")]
-
-        result = asarray(l2_hit) / asarray(l2_access) * 100.0
-        return {UniqueMetricKey("L2 HWPF hit ratio", "%", "core"): result.tolist()}
-
-    def get_analysis(
-        self, repetition_ids: RepetitionIDs, analysis_names_to_get: list[str]
-    ) -> MetricsData:
-        self.AVAILABLE_ANALYTICS: dict[str, Callable[[RepetitionIDs], MetricsData]] = {
-            "L2 miss ratio (total)": self._calc_L2_miss_ratio_total,
-            "L2DC miss ratio": self._calc_L2DC_miss_ratio,
-            "L2 HWPF miss ratio": self._calc_L2_HWPF_miss_ratio,
-            "L2 hit ratio (total)": self._calc_L2_hit_ratio_total,
-            "L2DC hit ratio": self._calc_L2DC_hit_ratio,
-            "L2 HWPF hit ratio": self._calc_L2_HWPF_hit_ratio,
+    def __init__(
+        self,
+        db_session: Session,
+        metrics_table: type[MetricsBase],
+        metrics_dict_table: type[MetricsDictBase],
+    ) -> None:
+        super().__init__(db_session, metrics_table, metrics_dict_table)
+        # fmt: off
+        self.AVAILABLE_ANALYTICS |= {
+            UniqueMetricKey(
+                "L2 miss ratio (total)", "%", "core"
+            ): self._calc_L2_miss_ratio_total,
+            UniqueMetricKey(
+                "L2DC miss ratio", "%", "core"
+            ): self._calc_L2DC_miss_ratio,
+            UniqueMetricKey(
+                "L2 HWPF miss ratio", "%", "core"
+            ): self._calc_L2_HWPF_miss_ratio,
+            UniqueMetricKey(
+                "L2 hit ratio (total)", "%", "core"
+            ): self._calc_L2_hit_ratio_total,
+            UniqueMetricKey(
+                "L2DC hit ratio", "%", "core"
+            ): self._calc_L2DC_hit_ratio,
+            UniqueMetricKey(
+                "L2 HWPF hit ratio", "%", "core"
+            ): self._calc_L2_HWPF_hit_ratio,
         }
+        # fmt: on
 
-        metrics: MetricsData = {}
-        if not analysis_names_to_get:
-            analysis_names_to_get = list(self.AVAILABLE_ANALYTICS.keys())
+    def _calc_L2_miss_ratio_total(
+        self, repetition_ids: RepetitionIDs
+    ) -> list[MetricValue]:
+        l2_miss = UniqueMetricKey("L2 Miss (pti)", "", "core")
+        l2_access = UniqueMetricKey("L2 Access (pti)", "", "core")
+        metrics = self.get_metrics(repetition_ids, [l2_miss, l2_access])
 
-        for analysis_name in analysis_names_to_get:
-            func = self.AVAILABLE_ANALYTICS.get(analysis_name, None)
-            if func is not None:
-                metrics |= func(repetition_ids)
+        result = asarray(metrics[l2_miss]) / asarray(metrics[l2_access]) * 100.0
+        return result.tolist()
 
-            # metrics |= self._calc_L2_miss_ratio_total(repetition_ids)
-            # metrics |= self._calc_L2DC_miss_ratio(repetition_ids)
-            # metrics |= self._calc_L2_HWPF_miss_ratio(repetition_ids)
-            # metrics |= self._calc_L2_hit_ratio_total(repetition_ids)
-            # metrics |= self._calc_L2DC_hit_ratio(repetition_ids)
-            # metrics |= self._calc_L2_HWPF_hit_ratio(repetition_ids)
+    def _calc_L2DC_miss_ratio(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
+        l2_miss = UniqueMetricKey("L2 Miss from DC Miss (pti)", "", "core")
+        l2_access = UniqueMetricKey("L2 Access from DC Miss (pti)", "", "core")
+        metrics = self.get_metrics(repetition_ids, [l2_miss, l2_access])
 
-        return metrics
+        result = asarray(metrics[l2_miss]) / asarray(metrics[l2_access]) * 100.0
+        return result.tolist()
+
+    def _calc_L2_HWPF_miss_ratio(
+        self, repetition_ids: RepetitionIDs
+    ) -> list[MetricValue]:
+        l2_miss = UniqueMetricKey("L2 Miss from HWPF (pti)", "", "core")
+        l2_access = UniqueMetricKey("L2 Access from HWPF (pti)", "", "core")
+        metrics = self.get_metrics(repetition_ids, [l2_miss, l2_access])
+
+        result = asarray(metrics[l2_miss]) / asarray(metrics[l2_access]) * 100.0
+        return result.tolist()
+
+    def _calc_L2_hit_ratio_total(
+        self, repetition_ids: RepetitionIDs
+    ) -> list[MetricValue]:
+        l2_hit = UniqueMetricKey("L2 Hit (pti)", "", "core")
+        l2_access = UniqueMetricKey("L2 Access (pti)", "", "core")
+        metrics = self.get_metrics(repetition_ids, [l2_hit, l2_access])
+
+        result = asarray(metrics[l2_hit]) / asarray(metrics[l2_access]) * 100.0
+        return result.tolist()
+
+    def _calc_L2DC_hit_ratio(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
+        l2_hit = UniqueMetricKey("L2 Hit from DC Miss (pti)", "", "core")
+        l2_access = UniqueMetricKey("L2 Access from DC Miss (pti)", "", "core")
+        metrics = self.get_metrics(repetition_ids, [l2_hit, l2_access])
+
+        result = asarray(metrics[l2_hit]) / asarray(metrics[l2_access]) * 100.0
+        return result.tolist()
+
+    def _calc_L2_HWPF_hit_ratio(
+        self, repetition_ids: RepetitionIDs
+    ) -> list[MetricValue]:
+        l2_hit = UniqueMetricKey("L2 Hit from HWPF (pti)", "", "core")
+        l2_access = UniqueMetricKey("L2 Access from HWPF (pti)", "", "core")
+        metrics = self.get_metrics(repetition_ids, [l2_hit, l2_access])
+
+        result = asarray(metrics[l2_hit]) / asarray(metrics[l2_access]) * 100.0
+        return result.tolist()
 
 
 class ExtensionDataPlotterImpl(ExtensionDataPlotter):

@@ -208,9 +208,9 @@ class Plotter:
             )
 
         analytics = self._data_retriever.get_data(
-            repetition_ids, [""], settings["analysis_names"]
+            repetition_ids, [""], settings["analyses_names"]
         )
-        analytics_parent_dir_path = parent_dir_path / "analysis"
+        analytics_parent_dir_path = parent_dir_path / "analyses"
         analytics_parent_dir_path.mkdir(parents=True, exist_ok=True)
         self.make_csv(
             x_range,

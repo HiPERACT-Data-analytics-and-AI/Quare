@@ -5,7 +5,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from ...data_loader import DataLoader, MetricContext
-from ...ext_abcs import ExtensionDataLoader
+from ...extensions_abcs import ExtensionDataLoader
 from ...models import MetricsBase
 from .models import (
     AMDuProfMPI_environment,
