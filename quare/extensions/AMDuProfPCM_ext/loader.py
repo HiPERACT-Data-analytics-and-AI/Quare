@@ -154,13 +154,6 @@ class Loaders:
 class ExtensionDataLoaderImpl(ExtensionDataLoader):
     @staticmethod
     def load(data_dir_path: Path) -> None:
-        """
-        _summary_
-
-        :param db_session: _description_
-        :param data_dir_path: _description_
-        """
-
         FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
             ("machine_info.csv", Loaders.load_machine_info),
             ("machine_cpu_topology.csv", Loaders.load_machine_cpu_topology),

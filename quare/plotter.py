@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from .data_retriever import DataRetriever, MetricsData, UniqueMetricKey
+from .data_retriever import DataRetrieversManager, MetricsData, UniqueMetricKey
 from .utils import divide_dict_into_chunks, load_settings
 
 
@@ -18,10 +18,8 @@ class Plotter:
 
     def __init__(
         self,
-        data_retriever: DataRetriever,
         profiler_name: str,
     ) -> None:
-        self._data_retriever: DataRetriever = data_retriever
         self._profiler_name: str = profiler_name
 
     def make_result_info_plot(
@@ -157,18 +155,19 @@ class Plotter:
     def make_all(self) -> None:
         """_summary_"""
         settings = load_settings()
+        data_retriever = DataRetrieversManager.get_retriever(self._profiler_name)
 
-        repetition_ids = self._data_retriever.get_repetitions(
+        repetition_ids = data_retriever.get_repetitions(
             settings["session_name_contains"],
             settings["machine_name"],
             settings["use_case_name"],
             settings["sizes_to_get"],
             settings["repetition_name_contains"],
         )
-        x_range, x_tick_labels = self._data_retriever.get_x_range_and_labels(
+        x_range, x_tick_labels = data_retriever.get_x_range_and_labels(
             settings["sizes_to_get"], settings["machine_name"]
         )
-        result_info = self._data_retriever.get_result_info(repetition_ids)
+        result_info = data_retriever.get_result_info(repetition_ids)
         parent_dir_path = (
             Path(settings["output_directory_path"])
             / result_info["Session"]
@@ -176,7 +175,7 @@ class Plotter:
             / result_info["Use case"]
         )
 
-        metrics = self._data_retriever.get_data(
+        metrics = data_retriever.get_data(
             repetition_ids, settings["metric_names"], [""]
         )
         metrics_parent_dir_path = (
@@ -207,7 +206,7 @@ class Plotter:
                 png_filename=png_filename,
             )
 
-        analytics = self._data_retriever.get_data(
+        analytics = data_retriever.get_data(
             repetition_ids, [""], settings["analyses_names"]
         )
         analytics_parent_dir_path = parent_dir_path / "analyses"
