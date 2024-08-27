@@ -91,7 +91,14 @@ def divide_dict_into_chunks(
 
 def discover_extensions() -> list[Path]:
     extensions_path: Path = Path(__file__).parent / "extensions"
-    return [path for path in extensions_path.glob("*_ext")]
+    return [path.resolve() for path in extensions_path.glob("*_ext")]
+
+
+def get_extension_path(name: str) -> Path:
+    extension_path: Path = Path(__file__).parent / "extensions" / f"{name}_ext"
+    if not extension_path.exists():
+        raise ValueError(f'Extension "{name}" does not exist')
+    return extension_path.resolve()
 
 
 def load_settings() -> dict:
@@ -122,7 +129,7 @@ def load_settings() -> dict:
 # for passing a Session instance to all the functions. Another approach is to create
 # multiple engine instances - each module will have its own and independent Session.
 # Maybe some of these classes - Engine, Session - is a singleton already?
-def create_db_engine() -> Engine:
+def _create_db_engine() -> Engine:
     """
     Creates DB engine from SQLAlchemy, to have a consistent engine generation
     throughout the whole projects, for all modules
@@ -135,3 +142,20 @@ def create_db_engine() -> Engine:
     # TODO Check for inconsistent repetitions and warn the user if exist
 
     return db_engine
+
+
+session: Session | None = None
+
+
+def get_db_session() -> Session:
+    global session
+    if not session:
+        session = Session(_create_db_engine())
+    return session
+
+
+def close_db_session() -> None:
+    global session
+    if session:
+        session.close()
+        session = None

@@ -2,11 +2,11 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy.orm import Session
 
 from ...data_loader import DataLoader, MetricContext
 from ...extensions_abcs import ExtensionDataLoader
 from ...models import MetricsBase
+from ...utils import get_db_session
 from .models import (
     AMDuProfMPI_environment,
     AMDuProfMPI_metrics,
@@ -89,7 +89,7 @@ class Loaders:
 
 class ExtensionDataLoaderImpl(ExtensionDataLoader):
     @staticmethod
-    def load(db_session: Session, data_dir_path: Path) -> None:
+    def load(data_dir_path: Path) -> None:
         """
         _summary_
 
@@ -103,6 +103,9 @@ class ExtensionDataLoaderImpl(ExtensionDataLoader):
         ]
 
         data_loader = DataLoader(
-            db_session, data_dir_path, AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
+            get_db_session(),
+            data_dir_path,
+            AMDuProfMPI_metrics,
+            AMDuProfMPI_metrics_dict,
         )
         data_loader.walk_through_data("AMDuProfMPI", FILE_SUFFIXES)

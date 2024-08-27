@@ -4,6 +4,7 @@ from collections.abc import Callable
 from .create_db import create_db
 from .csvize import csvize
 from .plot import plot
+from .utils import close_db_session
 
 
 def main() -> None:
@@ -46,3 +47,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    close_db_session()

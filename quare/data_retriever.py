@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
+from importlib import util
 
 import numpy as np
 from sqlalchemy import select
@@ -14,7 +15,7 @@ from .models import (
     TaskSizesDict,
     UseCase,
 )
-from .utils import InMemoryTaskSizesDict
+from .utils import InMemoryTaskSizesDict, get_db_session, get_extension_path
 
 
 # TODO: Make it possible to keep individual values,
@@ -63,7 +64,6 @@ belonging to that task size.
 """
 
 
-# Refactor DataRetriever to a singleton - cached data will be available everywhere
 class DataRetriever:
     """_summary_"""
 
@@ -300,3 +300,31 @@ class DataRetriever:
             )
             x_tick_labels.append(task_size_name)
         return x_range, x_tick_labels
+
+
+class DataRetrieversManager:
+    retrievers: dict[str, DataRetriever] = {}
+
+    @classmethod
+    def init_retriever(cls, name: str) -> None:
+        path = get_extension_path(name) / "plotter.py"
+        spec = util.spec_from_file_location(path.stem, path)
+        if spec is not None:
+            module = util.module_from_spec(spec)
+            if spec.loader is not None:
+                module.__package__ = "quare.extensions." + path.parent.stem
+                spec.loader.exec_module(module)
+                retriever: DataRetriever = module.__extension_data_retriever__(
+                    get_db_session(),
+                    module.__extension_metrics_table__,
+                    module.__extension_metrics_dict__,
+                )
+        cls.retrievers[name] = retriever
+
+    @classmethod
+    def get_retriever(cls, name: str) -> DataRetriever:
+        retriever = cls.retrievers.get(name, None)
+        if not retriever:
+            cls.init_retriever(name)
+            retriever = cls.retrievers[name]
+        return retriever
