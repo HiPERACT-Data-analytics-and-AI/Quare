@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from ...data_loader import DataLoader, MetricContext
-from ...extensions_abcs import ExtensionDataLoader
+from ...extension_abcs import ExtensionDataLoader
 from ...models import MetricsBase
 from ...utils import get_db_session
 from .models import (

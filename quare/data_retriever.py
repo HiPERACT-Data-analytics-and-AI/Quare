@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from importlib import util
+from itertools import chain
 
 import numpy as np
 from sqlalchemy import select
@@ -87,6 +88,9 @@ class DataRetriever:
         self.AVAILABLE_ANALYTICS: dict[
             UniqueMetricKey, Callable[[RepetitionIDs], list[MetricValue]]
         ] = {}
+        self._cache: dict[UniqueMetricKey, dict[tuple[int, ...], list[MetricValue]]] = (
+            {}
+        )
 
     def get_repetitions(
         self,
@@ -200,15 +204,41 @@ class DataRetriever:
             metric_keys.append(UniqueMetricKey(*metric_data))
         return metric_keys
 
+    def add_data_to_cache(
+        self, data: MetricsData, repetition_ids: RepetitionIDs
+    ) -> None:
+        flattened_repetition_ids: tuple[int, ...] = tuple(
+            chain(*repetition_ids.values())
+        )
+        for key, val in data.items():
+            data_result_slot = self._cache.get(key, None)
+            if not data_result_slot:
+                self._cache[key] = {}
+            self._cache[key][flattened_repetition_ids] = val
+
     def get_metrics(
-        self, repetition_ids: RepetitionIDs, metric_keys: list[UniqueMetricKey]
+        self,
+        repetition_ids: RepetitionIDs,
+        metric_keys: list[UniqueMetricKey],
+        use_cache: bool = True,
     ) -> MetricsData:
-        metrics: MetricsData = {}
+        flattened_repetition_ids: tuple[int, ...] = tuple(
+            chain(*repetition_ids.values())
+        )
+        metrics_to_get: MetricsData = {}
+        metrics_from_cache: MetricsData = {}
         for key in metric_keys:
-            metrics[key] = []
+            if use_cache:
+                metric = self._cache.get(key, {}).get(flattened_repetition_ids, None)
+                if metric:
+                    metrics_from_cache[key] = metric
+                else:
+                    metrics_to_get[key] = []
+            else:
+                metrics_to_get[key] = []
 
         for size_repetition_ids in repetition_ids.values():
-            for key in metric_keys:
+            for key in metrics_to_get.keys():
                 stmt = (
                     select(self._metrics_table)
                     .where(self._metrics_table.repetition.in_(size_repetition_ids))
@@ -221,36 +251,53 @@ class DataRetriever:
                 )
                 rows = self._db_session.execute(stmt).all()
                 if not rows:
-                    metrics[key].append(None)
+                    metrics_to_get[key].append(None)
                 else:
                     values = [row[0].value for row in rows]
-                    metrics[key].append(float(np.mean(values)))
+                    metrics_to_get[key].append(float(np.mean(values)))
 
-        return metrics
+        if use_cache:
+            self.add_data_to_cache(metrics_to_get, repetition_ids)
+        return metrics_from_cache | metrics_to_get
 
     def discover_analysis_keys(self, metric_names: list[str]) -> list[UniqueMetricKey]:
         keys: list[UniqueMetricKey] = []
-        for name in metric_names:
-            for key in self.AVAILABLE_ANALYTICS.keys():
-                if name == key.name:
-                    keys.append(key)
+        if not metric_names:
+            keys = list(self.AVAILABLE_ANALYTICS.keys())
+        else:
+            for name in metric_names:
+                for key in self.AVAILABLE_ANALYTICS.keys():
+                    if name == key.name:
+                        keys.append(key)
         return keys
 
     def get_analyses(
-        self, repetition_ids: RepetitionIDs, analyses_keys: list[UniqueMetricKey]
+        self,
+        repetition_ids: RepetitionIDs,
+        analyses_keys: list[UniqueMetricKey],
+        use_cache: bool = True,
     ) -> MetricsData:
-        analyses: MetricsData = {}
-        if not analyses_keys:
-            analyses_keys = list(self.AVAILABLE_ANALYTICS.keys())
-
+        flattened_repetition_ids: tuple[int, ...] = tuple(
+            chain(*repetition_ids.values())
+        )
+        analyses_to_get: MetricsData = {}
+        analyses_from_cache: MetricsData = {}
         for analysis_key in analyses_keys:
+            if use_cache:
+                metric = self._cache.get(analysis_key, {}).get(
+                    flattened_repetition_ids, None
+                )
+                if metric:
+                    analyses_from_cache[analysis_key] = metric
+                    continue
             func = self.AVAILABLE_ANALYTICS.get(analysis_key, None)
             if func is not None:
-                analyses |= {analysis_key: func(repetition_ids)}
+                analyses_to_get[analysis_key] = func(repetition_ids)
 
-        return analyses
+        if use_cache:
+            self.add_data_to_cache(analyses_to_get, repetition_ids)
+        return analyses_from_cache | analyses_to_get
 
-    # TODO: Keep the averaged data in memory (cache) - as instance variable
     def get_data(
         self,
         repetition_ids: RepetitionIDs,

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from quare.models import MetricsBase, MetricsDictBase
 
 from ...data_retriever import DataRetriever, MetricValue, RepetitionIDs, UniqueMetricKey
-from ...extensions_abcs import ExtensionDataPlotter
+from ...extension_abcs import ExtensionDataPlotter
 from ...plotter import Plotter
 from ..amduprof_data_retriever import AMDuProfDataRetriever
 from .models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict

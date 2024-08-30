@@ -1,4 +1,4 @@
-from ...extensions_abcs import ExtensionDataPlotter
+from ...extension_abcs import ExtensionDataPlotter
 from ...plotter import Plotter
 from ..amduprof_data_retriever import AMDuProfDataRetriever
 from .models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
