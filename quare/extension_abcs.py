@@ -7,10 +7,3 @@ class ExtensionDataLoader(ABC):
     @abstractmethod
     def load(data_dir_path: Path) -> None:
         pass
-
-
-class ExtensionDataPlotter(ABC):
-    @staticmethod
-    @abstractmethod
-    def plot() -> None:
-        pass

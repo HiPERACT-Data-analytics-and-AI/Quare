@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from quare.models import MetricsBase, MetricsDictBase
 
 from ...data_retriever import DataRetriever, MetricValue, RepetitionIDs, UniqueMetricKey
-from ...extension_abcs import ExtensionDataPlotter
 from ...plotter import Plotter
 from ..amduprof_data_retriever import AMDuProfDataRetriever
 from .models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
@@ -99,11 +98,6 @@ class AMDuProfPCMAnalyzer(AMDuProfDataRetriever):
 
 
 __extension_data_retriever__: type[DataRetriever] = AMDuProfPCMAnalyzer
+__extension_data_plotter__: type[Plotter] = Plotter
 __extension_metrics_table__ = AMDuProfPCM_metrics
 __extension_metrics_dict__ = AMDuProfPCM_metrics_dict
-
-
-class ExtensionDataPlotterImpl(ExtensionDataPlotter):
-    @staticmethod
-    def plot() -> None:
-        Plotter("AMDuProfPCM").make_all()

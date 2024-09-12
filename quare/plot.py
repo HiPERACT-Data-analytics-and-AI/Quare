@@ -20,7 +20,9 @@ def plot(_: Namespace) -> None:
             if spec.loader is not None:
                 module.__package__ = "quare.extensions." + extension_path.stem
                 spec.loader.exec_module(module)
-                module.ExtensionDataPlotterImpl().plot()
+                module.__extension_data_plotter__(
+                    extension_path.stem[: -len("_ext")]
+                ).make_all()
     close_db_session()
 
 
