@@ -125,10 +125,6 @@ def load_settings() -> dict:
         return settings
 
 
-# TODO Make it as a singleton (or use as is?). Therefore, there will be no need
-# for passing a Session instance to all the functions. Another approach is to create
-# multiple engine instances - each module will have its own and independent Session.
-# Maybe some of these classes - Engine, Session - is a singleton already?
 def _create_db_engine() -> Engine:
     """
     Creates DB engine from SQLAlchemy, to have a consistent engine generation
