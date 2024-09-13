@@ -110,7 +110,7 @@ def load_settings() -> dict:
 
     KEYS_WITH_PATHS: tuple[str, ...] = (
         "raw_data_directory_path",
-        "csvized_data_directory_path",
+        "preprocessed_data_directory_path",
         "db_path",
         "output_directory_path",
     )

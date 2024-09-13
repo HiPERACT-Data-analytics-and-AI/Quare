@@ -35,6 +35,8 @@ DBBaseGeneric = TypeVar("DBBaseGeneric", bound=DBBase)
 # MetricsBaseGeneric = TypeVar("MetricsBaseGeneric", bound=MetricsBase)
 
 
+# TODO Make an ABC from the class below - load method must be implemented.
+# Then another ABC won' be needed.
 class DataLoader:
     """_summary_"""
 

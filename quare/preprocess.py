@@ -6,17 +6,16 @@ from shutil import copytree
 from .utils import load_settings
 
 
-def _csvize_multi_block_csv(
+def _split_multi_block_csv(
     raw_data_path: Path,
-    csvized_path: Path,
+    preprocessed_path: Path,
     filename_pattern: str,
     file_blocks: dict[str, tuple[str, bool]],
 ) -> int:
-    """
-    _summary_
+    """_summary_
 
     :param raw_data_path: _description_
-    :param csvized_path: _description_
+    :param preprocessed_path: _description_
     :param filename_pattern: _description_
     :param file_blocks: _description_
     :return: _description_
@@ -32,7 +31,7 @@ def _csvize_multi_block_csv(
             ) in file_blocks.items():
                 new_filename: str = f"{input_file_path.stem}.{filename_suffix}.csv"
                 output_file_path: Path = (
-                    csvized_path / input_file_path.relative_to(raw_data_path)
+                    preprocessed_path / input_file_path.relative_to(raw_data_path)
                 ).parent / new_filename
                 # print(output_file_path)
 
@@ -55,7 +54,7 @@ def _csvize_multi_block_csv(
     return file_counter
 
 
-def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
+def _split_uprof_pcm(raw_data_path: Path, preprocessed_path: Path) -> int:
     FILE_BLOCKS: dict[str, tuple[str, bool]] = {
         "machine_info": ("System:,", True),
         "machine_cpu_topology": ("CPU Topology", False),
@@ -63,8 +62,7 @@ def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
         "core_metrics": ("CORE METRICS", False),
         "l3_metrics": ("L3 METRICS", False),
     }
-    """
-    _summary_
+    """_summary_
 
     :return: _description_
     """
@@ -72,17 +70,16 @@ def _csvize_uprof_pcm(raw_data_path: Path, csvized_path: Path) -> int:
     # True means that specified string is already a part of data
     # Order of entries must be preserved
 
-    return _csvize_multi_block_csv(
-        raw_data_path, csvized_path, "**/AMDuProfPCM/**/*.csv", FILE_BLOCKS
+    return _split_multi_block_csv(
+        raw_data_path, preprocessed_path, "**/AMDuProfPCM/**/*.csv", FILE_BLOCKS
     )
 
 
-def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
-    """
-    _summary_
+def _split_uprof_mpi(raw_data_path: Path, preprocessed_path: Path) -> int:
+    """_summary_
 
     :param raw_data_path: _description_
-    :param csvized_path: _description_
+    :param preprocessed_path: _description_
     :return: _description_
     """
     FILE_BLOCKS: dict[str, tuple[str, bool]] = {
@@ -91,23 +88,22 @@ def _csvize_uprof_mpi(raw_data_path: Path, csvized_path: Path) -> int:
         "rank_summary": ("MPI RANK SUMMARY", False),
     }
 
-    return _csvize_multi_block_csv(
-        raw_data_path, csvized_path, "**/AMDuProfMPI/**/*.csv", FILE_BLOCKS
+    return _split_multi_block_csv(
+        raw_data_path, preprocessed_path, "**/AMDuProfMPI/**/*.csv", FILE_BLOCKS
     )
 
 
-def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
-    """
-    _summary_
+def _copy_app_logs(raw_data_path: Path, preprocessed_path: Path) -> int:
+    """_summary_
 
     :param raw_data_path: _description_
-    :param csvized_path: _description_
+    :param preprocessed_path: _description_
     :return: _description_
     """
     counter: int = 0
     for input_file_path in raw_data_path.glob("**/app_logs"):
         # print(input_file_path)
-        output_file_path: Path = csvized_path / input_file_path.relative_to(
+        output_file_path: Path = preprocessed_path / input_file_path.relative_to(
             raw_data_path
         )
         # print(output_file_path)
@@ -120,7 +116,7 @@ def _copy_app_logs(raw_data_path: Path, csvized_path: Path) -> int:
     return counter
 
 
-def csvize(__: Namespace) -> None:
+def preprocess(__: Namespace) -> None:
     """
     Sometimes profilers does not produce proper files. The files are hard to consume
     by the DB loaders. The function preprocess the files (if necessary) and copy them
@@ -130,25 +126,25 @@ def csvize(__: Namespace) -> None:
     """
     settings = load_settings()
     raw_data_path: Path = Path(settings["raw_data_directory_path"])
-    csvized_data_path: Path = Path(settings["csvized_data_directory_path"])
+    preprocessed_data_path: Path = Path(settings["preprocessed_data_directory_path"])
 
-    CSVIZERS: dict[str, Callable[[Path, Path], int]] = {
-        "AMDuProfPCM": _csvize_uprof_pcm,
-        "AMDuProfMPI": _csvize_uprof_mpi,
+    PREPROCESSORS: dict[str, Callable[[Path, Path], int]] = {
+        "AMDuProfPCM": _split_uprof_pcm,
+        "AMDuProfMPI": _split_uprof_mpi,
         "app_logs": _copy_app_logs,
     }
 
     if not raw_data_path.exists():
         raise FileNotFoundError(raw_data_path.resolve().as_posix())
 
-    if not csvized_data_path.exists():
-        csvized_data_path.mkdir()
+    if not preprocessed_data_path.exists():
+        preprocessed_data_path.mkdir()
 
     file_counter: int = 0
-    for _, csvizer in CSVIZERS.items():
-        file_counter += csvizer(raw_data_path, csvized_data_path)
+    for _, preprocessor in PREPROCESSORS.items():
+        file_counter += preprocessor(raw_data_path, preprocessed_data_path)
     print(f"Processed {file_counter} input files")
 
 
 if __name__ == "__main__":
-    csvize(Namespace())
+    preprocess(Namespace())

@@ -22,11 +22,11 @@ def create_db(_: Namespace):
     change extension's name - remove "_ext" suffix - to hide extension from Quare).
     """
     settings = load_settings()
-    data_dir_path = Path(settings["csvized_data_directory_path"])
+    data_dir_path = Path(settings["preprocessed_data_directory_path"])
 
     for extension_path in discover_extensions():
         path = extension_path / "models.py"
-        spec = util.spec_from_file_location(path.stem, path.resolve())
+        spec = util.spec_from_file_location(path.stem, path)
         if spec is not None:
             module = util.module_from_spec(spec)
             if spec.loader is not None:
@@ -37,7 +37,7 @@ def create_db(_: Namespace):
 
     for extension_path in discover_extensions():
         path = extension_path / "loader.py"
-        spec = util.spec_from_file_location(path.stem, path.resolve())
+        spec = util.spec_from_file_location(path.stem, path)
         if spec is not None:
             module = util.module_from_spec(spec)
             if spec.loader is not None:
@@ -46,8 +46,8 @@ def create_db(_: Namespace):
                 module.ExtensionDataLoaderImpl().load(data_dir_path)
 
         get_db_session().commit()
+    close_db_session()
 
 
 if __name__ == "__main__":
     create_db(Namespace())
-    close_db_session()
