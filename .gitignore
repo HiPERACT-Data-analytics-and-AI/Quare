@@ -5,7 +5,7 @@ venv
 docs/build
 docs/source/build
 raw_data/
-csvized_data/
+preprocessed_data/
 **/*.sqlite3
 **/*.sqlite3-journal
 **/output

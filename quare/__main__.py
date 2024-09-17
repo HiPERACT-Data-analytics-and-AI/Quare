@@ -2,20 +2,25 @@ from argparse import ArgumentParser, Namespace
 from collections.abc import Callable
 
 from .create_db import create_db
-from .csvize import csvize
 from .plot import plot
+from .preprocess import preprocess
+from .utils import close_db_session
 
 
 def main() -> None:
+    """
+    Entry point function for the whole Quare toolkit.
+    A proper command has to be passed to run a specific tool.
+    """
     commands: dict[str, Callable[[Namespace], None]] = {
-        "csvize": csvize,
+        "preprocess-data": preprocess,
         "create-db": create_db,
         "plot": plot,
     }
     parser = ArgumentParser()
     subparsers = parser.add_subparsers(title="Tools", required=True, dest="command")
 
-    subparsers.add_parser("csvize")
+    subparsers.add_parser("preprocess-data")
     # csvize_parser = subparsers.add_parser("csvize")
     # csvize_parser.add_argument(
     #     "-s",
@@ -42,3 +47,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    close_db_session()

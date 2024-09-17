@@ -37,6 +37,10 @@ class Machine(DBBase):
     """column description"""
     desc: Mapped[str | None] = mapped_column(String(1024))
     """column description"""
+    num_of_cores: Mapped[int | None]
+    """column description"""
+    num_of_threads: Mapped[int | None]
+    """column description"""
 
 
 class UseCase(DBBase):
@@ -105,12 +109,6 @@ class MetricsDictBase(DBBase):
     __table_args__ = (UniqueConstraint(name, unit, processing_unit),)
 
 
-def _raise_error(name):
-    raise NotImplementedError(
-        f"{name} must have a 'metric' attribute as a foreign key to a MetricsDict model"
-    )
-
-
 class MetricsBase(DBBase):
     """_summary__"""
 
@@ -125,12 +123,19 @@ class MetricsBase(DBBase):
     value: Mapped[float] = mapped_column(sort_order=10)
     """column description"""
 
+    @classmethod
+    def __raise_error(cls, name: str):
+        raise NotImplementedError(
+            f"{name} class must have a 'metric' attribute "
+            + "as a foreign key to a MetricsDict model"
+        )
+
     def __init_subclass__(cls, **kw: Any) -> None:
         """
         _summary_
         """
         if not hasattr(cls, "metric"):
-            _raise_error(cls.__name__)
+            cls.__raise_error(cls.__name__)
         elif not isinstance(cls.metric, Mapped):
-            _raise_error(cls.__name__)
+            cls.__raise_error(cls.__name__)
         return super().__init_subclass__(**kw)

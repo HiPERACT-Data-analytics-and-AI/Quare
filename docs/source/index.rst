@@ -17,7 +17,7 @@ why a given application is characterized by a specific performance.
 
 Currently there are three steps of data processing:
 
-- Profile files preprocessing (`csvize.py`)
+- Profile files preprocessing (`preprocess.py`)
 - Loading profile files to a database (`create_db.py`)
 - Data from DB processing and producing plots and data files (`plot.py`)
 
@@ -31,6 +31,7 @@ To properly generate docs use `generate_docs.sh` script from, run from the top p
    :maxdepth: 0
    :caption: Contents:
 
+   diagram
    build/modules
 
 

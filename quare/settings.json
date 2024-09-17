@@ -1,8 +1,9 @@
 {
     "raw_data_directory_path": "../../quare-test-db/raw_data",
-    "csvized_data_directory_path": "../../quare-test-db/csvized_data",
+    "preprocessed_data_directory_path": "../../quare-test-db/preprocessed_data",
     "db_path": "../quare.sqlite3",
     "output_directory_path": "../output",
+
     "task_sizes": {
         "uxlow":  1,
         "xsmall": 10,
@@ -19,7 +20,8 @@
     },
 
     "metric_names": [],
-    "_COMMENTED_metric_names": [
+    "_COMMENTED_metric_names": [""],
+    "__COMMENTED_metric_names": [
         "L2 Access (pti)",
         "L2 Miss (pti)",
         "L2 Hit (pti)",
@@ -28,6 +30,14 @@
         "MPI_Allreduce",
         "Volume(Bytes)"
     ],
+
+    "analyses_names": [],
+    "_COMMENTED_analyses_names": [""],
+    "__COMMENTED_analyses_names": [
+        "L2 miss ratio (total)",
+        "L2DC miss ratio"
+    ],
+
     "session_name_contains": "Session1",
     "machine_name": "ROME_128",
     "use_case_name": "motorBike",
