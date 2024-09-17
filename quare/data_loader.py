@@ -45,7 +45,7 @@ class DataLoader:
     def __init__(
         self,
         db_session: Session,
-        data_dir_path: Path,
+        preprocessed_data_path: Path,
         metrics_table: type[MetricsBase],
         metrics_dict_table: type[MetricsDictBase],
     ) -> None:
@@ -55,7 +55,7 @@ class DataLoader:
         :param data_dir_path: _description_
         """
         self._db_session: Session = db_session
-        self._data_dir_path: Path = data_dir_path
+        self._data_path: Path = preprocessed_data_path
         self._metrics_table: type[MetricsBase] = metrics_table
         self._metrics_dict_table: type[MetricsDictBase] = metrics_dict_table
 
@@ -75,7 +75,7 @@ class DataLoader:
             "task_size": (3,),
             "repetition_&_date": (4,),
         }
-        file_path = file_path.relative_to(self._data_dir_path)
+        file_path = file_path.relative_to(self._data_path)
         return ".".join(file_path.parts[i] for i in path_struct[key])
 
     def create_if_not_exists(
@@ -204,7 +204,7 @@ class DataLoader:
         in_memory_task_sizes = InMemoryTaskSizesDict(self._db_session)
         settings = load_settings()
 
-        for input_path in Path(self._data_dir_path).glob(
+        for input_path in Path(self._data_path).glob(
             f"**/{dir_name_pattern}/**/*.{file_suffixes[0][0]}"
         ):
             repetition_name = (

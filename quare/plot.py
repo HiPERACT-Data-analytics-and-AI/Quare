@@ -14,6 +14,8 @@ def plot(_: Namespace) -> None:
     """
     for extension_path in discover_extensions():
         path = extension_path / "plotter.py"
+        if not path.exists():
+            continue
         spec = util.spec_from_file_location(path.stem, path)
         if spec is not None:
             module = util.module_from_spec(spec)
