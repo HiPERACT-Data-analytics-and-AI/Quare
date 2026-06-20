@@ -155,4 +155,4 @@ pre-commit install      # install git hooks (black, isort, flake8, …)
 
 MIT License — see [LICENSE](LICENSE).
 
-Copyright (c) 2024-2026 Poznań Supercomputing and Networking Center (PSNC)
+Copyright (c) 2023-2026 Poznan Supercomputing and Networking Center (PSNC)
