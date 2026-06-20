@@ -61,7 +61,8 @@ class Preprocessor:
 
     def copy_directories(self, dirname_pattern: str) -> int:
         """
-        Recursively copy matching directories from the raw area to the preprocessed area.
+        Recursively copy matching directories from the raw area to the
+        preprocessed area.
 
         Walks :attr:`_raw_data_path` recursively, finds every directory whose
         name matches *dirname_pattern*, and copies it (together with its

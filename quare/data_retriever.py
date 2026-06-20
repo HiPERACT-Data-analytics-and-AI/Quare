@@ -136,7 +136,8 @@ class DataRetriever:
         :class:`UniqueMetricKey` instances; values are callables that accept a
         :data:`RepetitionIDs` mapping and return a per-task-size
         :data:`MetricsData` value list.
-    :vartype AVAILABLE_ANALYTICS: dict[UniqueMetricKey, Callable[[RepetitionIDs], list[MetricValue]]]
+    :vartype AVAILABLE_ANALYTICS: dict[UniqueMetricKey,
+        Callable[[RepetitionIDs], list[MetricValue]]]
     """
 
     def __init__(
@@ -236,7 +237,8 @@ class DataRetriever:
         :class:`~quare.models.UseCase`, and
         :class:`~quare.models.ProfilingSession`.
 
-        Subclasses (e.g. :class:`~quare.extensions.amduprof_data_retriever.AMDuProfDataRetriever`)
+        Subclasses (e.g.
+        :class:`~quare.extensions.amduprof_data_retriever.AMDuProfDataRetriever`)
         can override this method to include profiler-specific fields and merge
         the result with ``super().get_result_info()``.
 

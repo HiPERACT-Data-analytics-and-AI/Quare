@@ -12,8 +12,8 @@ import sys
 sys.path.insert(0, os.path.abspath("../.."))
 
 project = "Quare"
-copyright = "2024, PSNC"
-author = "PSNC"
+copyright = "2024-2026, Poznań Supercomputing and Networking Center (PSNC)"
+author = "Marcin Lawenda"
 release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------

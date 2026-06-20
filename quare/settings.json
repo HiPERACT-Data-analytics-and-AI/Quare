@@ -1,8 +1,8 @@
 {
-    "raw_data_directory_path": "../../quare-test-db/raw_data",
-    "preprocessed_data_directory_path": "../../quare-test-db/preprocessed_data",
-    "db_path": "../quare.sqlite3",
-    "output_directory_path": "../output",
+    "raw_data_directory_path": "raw_data",
+    "preprocessed_data_directory_path": "preprocessed_data",
+    "db_path": "quare.sqlite3",
+    "output_directory_path": "output",
 
     "task_sizes": {
         "uxlow":  1,

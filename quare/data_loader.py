@@ -351,7 +351,8 @@ class DataLoader:
             glob.  Each *loader_function* receives this :class:`DataLoader`
             instance and a :class:`MetricContext`, and must return a list of
             ORM instances to add to the session.
-        :type file_suffixes: list[tuple[str, Callable[[DataLoader, MetricContext], list]]]
+        :type file_suffixes: list[tuple[str, Callable[[DataLoader, MetricContext],
+            list]]]
         """
         in_memory_task_sizes = InMemoryTaskSizesDict(self._db_session)
         settings = load_settings()

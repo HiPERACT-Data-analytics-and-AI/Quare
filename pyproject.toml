@@ -2,7 +2,23 @@
 name = "quare"
 version = "0.1.0"
 description = "QUality AnalyzeR of application Efficiency — performance profiling analytics framework"
+authors = ["Marcin Lawenda <lawenda@man.poznan.pl>"]
+license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/HiPERACT-Data-analytics-and-AI/Quare"
+repository = "https://github.com/HiPERACT-Data-analytics-and-AI/Quare"
+keywords = ["profiling", "HPC", "performance analysis", "AMD uProf", "benchmarking"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Benchmark",
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
