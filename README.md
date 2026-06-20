@@ -2,12 +2,37 @@
 
 **QUality AnalyzeR of application Efficiency**
 
-Quare is a Python framework for ingesting, storing, and visualising
-performance-profiling data from HPC applications. It answers the question:
-*why does this application perform the way it does on this hardware?*
+> **Development status:** Quare is actively under development. The API,
+> configuration format, and extension interface may change between releases.
+> Contributions and feedback are welcome.
 
-In Latin, *quare* means "therefore", "because of this", "why" — which is
-exactly what the tool is designed to tell you.
+## Why Quare?
+
+Modern HPC applications are hard to optimise. Profiling tools such as AMD uProf
+generate large volumes of raw counter data, but turning that data into
+actionable insight requires a repeatable, automated pipeline: ingest the raw
+output, normalise it, store it in a structured form, and produce consistent
+visualisations across runs, machines, and problem sizes.
+
+Without such a pipeline, performance analysis becomes ad-hoc — scattered
+spreadsheets, one-off scripts, and results that are difficult to reproduce or
+compare. Quare solves this by providing a unified ETL and analytics framework
+tailored to HPC workloads.
+
+The name is deliberate. In Latin, *quare* means "therefore", "because of this",
+"why" — which is exactly what the tool is designed to tell you: *why* does this
+application perform the way it does on this hardware?
+
+### Current scope
+
+Quare currently focuses on **OpenFOAM**-based workloads as its primary
+application target. OpenFOAM is a widely-used open-source CFD (Computational
+Fluid Dynamics) framework, and the existing extensions, analyses, and example
+configurations are oriented towards profiling OpenFOAM solvers at scale.
+Support for other HPC application frameworks is planned for future releases.
+
+Quare is a Python framework for ingesting, storing, and visualising
+performance-profiling data from HPC applications.
 
 ## Supported profilers
 
