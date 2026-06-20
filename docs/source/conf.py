@@ -45,7 +45,6 @@ autodoc_mock_imports = [
     "pandas",
     "numpy",
     "matplotlib",
-    "yaml",
 ]
 
 # -- Options for HTML output -------------------------------------------------
