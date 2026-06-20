@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../.."))
 
 project = "Quare"
-copyright = "2023-2026, Poznan Supercomputing and Networking Center (PSNC)"
+copyright = "2023-2026, Marcin Lawenda, Poznan Supercomputing and Networking Center"
 author = "Marcin Lawenda"
 release = "0.1.0"
 
