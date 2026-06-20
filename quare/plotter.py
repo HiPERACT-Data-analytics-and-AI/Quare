@@ -1,3 +1,30 @@
+"""
+Core visualisation and export logic shared by all profiler extensions.
+
+:class:`Plotter` produces three kinds of output for each profiler:
+
+1. **INFO plot** — a table image (PNG) summarising the experimental context
+   (machine, session, use-case).
+2. **CSV export** — all metric/analysis values alongside the x-axis (cells
+   per rank) in a spreadsheet-friendly format.
+3. **Data plots** — one semi-log scatter plot per metric/analysis.
+
+All output is written to a directory tree under ``output_directory_path``
+(from settings)::
+
+    <output>/
+    └── <session>/
+        └── <machine>/
+            └── <use_case>/
+                ├── profiler_metrics/<profiler_name>/
+                │   ├── INFO.png
+                │   ├── results.csv
+                │   └── Plot <metric_key>.png
+                └── analyses/
+                    ├── results.csv
+                    └── Plot <analysis_key>.png
+"""
+
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -10,16 +37,25 @@ from .utils import divide_dict_into_chunks, load_settings
 
 class Plotter:
     """
-    _summary_
+    Generates plots, CSV exports, and INFO tables for a single profiler extension.
 
-    :param data_retriever: _description_
-    :param profiler_name: _description_
+    Instantiated with the profiler name; acquires its
+    :class:`~quare.data_retriever.DataRetriever` lazily via
+    :class:`~quare.data_retriever.DataRetrieversManager`.
+
+    Extension ``plotter.py`` modules assign this class (or a subclass) to
+    ``__extension_data_plotter__``.
     """
 
-    def __init__(
-        self,
-        profiler_name: str,
-    ) -> None:
+    def __init__(self, profiler_name: str) -> None:
+        """
+        Initialise a Plotter for a specific profiler.
+
+        :param profiler_name: Bare profiler name without the ``_ext`` suffix
+            (e.g. ``"AMDuProfPCM"``).  Used as the subdirectory name under
+            ``profiler_metrics/`` in the output tree.
+        :type profiler_name: str
+        """
         self._profiler_name: str = profiler_name
 
     def make_result_info_plot(
@@ -29,13 +65,24 @@ class Plotter:
         svg_filename: Path | None = None,
     ) -> None:
         """
-        _summary_
+        Render a metadata summary table to an image file.
 
-        :param result_info: _description_
-        :param png_filename: _description_, defaults to None
-        :param svg_filename: _description_, defaults to None
+        Produces a figure containing a two-column table (key / value) with
+        alternating row shading.  At least one of *png_filename* or
+        *svg_filename* must be supplied; passing ``None`` for both is valid
+        but produces no output.
+
+        :param result_info: Ordered mapping of display labels to their
+            corresponding string (or numeric) values, as returned by
+            :meth:`~quare.data_retriever.DataRetriever.get_result_info`.
+        :type result_info: dict[str, str]
+        :param png_filename: Destination path for a 300 DPI PNG file, or
+            ``None`` to skip PNG output.
+        :type png_filename: pathlib.Path or None
+        :param svg_filename: Destination path for an SVG file, or ``None`` to
+            skip SVG output.
+        :type svg_filename: pathlib.Path or None
         """
-        # axes: list[list[Axes]]
         fig, axes = plt.subplots(1, 1, figsize=(12, 5), squeeze=False)
         fig.subplots_adjust(
             left=0.01, bottom=0.01, right=0.99, top=0.99, wspace=0.0, hspace=0.0
@@ -61,8 +108,6 @@ class Plotter:
         if svg_filename:
             fig.savefig(svg_filename.as_posix())
         plt.close()
-        plt.cla()
-        plt.clf()
 
     def make_csv(
         self,
@@ -71,12 +116,24 @@ class Plotter:
         metrics: MetricsData,
         filename: Path,
     ) -> None:
-        """_summary_
+        """
+        Export metric values to a CSV file.
 
-        :param x_range: _description_
-        :param columns: _description_
-        :param metrics: _description_
-        :param filename: _description_
+        Prepends an extra row for the x-axis values (cells per rank) and then
+        adds one row per metric.  Column headers are the task-size tick labels.
+
+        :param x_range: Ordered list of x-axis values (cells per rank), one
+            per task size.
+        :type x_range: list[float]
+        :param columns: Task-size label strings used as column headers in the
+            CSV.
+        :type columns: list[str]
+        :param metrics: :data:`~quare.data_retriever.MetricsData` dict to
+            export; each key becomes a row label.
+        :type metrics: MetricsData
+        :param filename: Destination path for the CSV file.  Parent directories
+            must already exist.
+        :type filename: pathlib.Path
         """
         data: dict[UniqueMetricKey, Sequence[float | None]] = {
             UniqueMetricKey("Cells per rank (size)", "number", ""): x_range
@@ -94,18 +151,33 @@ class Plotter:
         x_grid: bool = True,
         y_grid: bool = True,
     ) -> None:
-        """_summary_
+        """
+        Render a stacked figure of semi-log scatter plots, one per metric.
 
-        :param x_range: _description_
-        :param x_tick_labels: _description_
-        :param metrics: _description_
-        :param png_filename: _description_, defaults to None
-        :param svg_filename: _description_, defaults to None
-        :param x_grid: _description_, defaults to True
-        :param y_grid: _description_, defaults to True
+        Each subplot shows a single metric's values against the x-axis (cells
+        per rank) on a logarithmic x-scale.  Only the bottom subplot carries
+        x-axis tick labels to avoid repetition.  At least one of
+        *png_filename* or *svg_filename* must be provided; passing ``None``
+        for both is valid but produces no output.
+
+        :param x_range: Ordered list of x-axis values (cells per rank).
+        :type x_range: list[float]
+        :param x_tick_labels: Labels for the x-axis ticks (displayed only on
+            the bottom subplot).
+        :type x_tick_labels: list[str]
+        :param metrics: :data:`~quare.data_retriever.MetricsData` to plot;
+            each entry produces one subplot.
+        :type metrics: MetricsData
+        :param png_filename: Destination path for a 300 DPI PNG, or ``None``.
+        :type png_filename: pathlib.Path or None
+        :param svg_filename: Destination path for an SVG, or ``None``.
+        :type svg_filename: pathlib.Path or None
+        :param x_grid: Whether to draw vertical grid lines.
+        :type x_grid: bool
+        :param y_grid: Whether to draw horizontal grid lines.
+        :type y_grid: bool
         """
         num_of_figures: int = len(metrics)
-        # axes: list[list[Axes]]
         fig, axes = plt.subplots(
             num_of_figures, 1, figsize=(12, num_of_figures * 5), squeeze=False
         )
@@ -120,7 +192,6 @@ class Plotter:
                 x_range,
                 value_series,
                 "bo",
-                # label=key,
                 linestyle="dashed",
                 linewidth=0.4,
             )
@@ -131,7 +202,6 @@ class Plotter:
             )
             axes[i][0].set_xticks(x_range)
             axes[i][0].set_ylabel(key.unit if key.unit else "unknown unit")
-            # axes[i][0].legend(loc="upper right", fontsize="8")
             axes[i][0].yaxis.get_major_formatter().set_scientific(
                 False
             )  # pyright: ignore
@@ -149,11 +219,25 @@ class Plotter:
         if svg_filename:
             fig.savefig(svg_filename.as_posix())
         plt.close()
-        plt.cla()
-        plt.clf()
 
     def make_all(self) -> None:
-        """_summary_"""
+        """
+        Run the full output pipeline for this profiler.
+
+        Reads all necessary configuration from :func:`~quare.utils.load_settings`,
+        then:
+
+        1. Queries :class:`~quare.data_retriever.DataRetriever` for matching
+           repetition IDs and result info.
+        2. Resolves the output directory path.
+        3. Generates and saves the INFO table image.
+        4. For raw metrics: saves ``results.csv`` and one PNG per metric.
+        5. For computed analyses: saves ``results.csv`` and one PNG per
+           analysis.
+
+        Metrics and analyses whose values are *all* ``None`` are skipped (no
+        plot is produced).
+        """
         settings = load_settings()
         data_retriever = DataRetrieversManager.get_retriever(self._profiler_name)
 
@@ -176,7 +260,7 @@ class Plotter:
         )
 
         metrics = data_retriever.get_data(
-            repetition_ids, settings["metric_names"], [""]
+            repetition_ids, settings["metric_names"], []
         )
         metrics_parent_dir_path = (
             parent_dir_path / "profiler_metrics" / self._profiler_name
@@ -198,7 +282,6 @@ class Plotter:
             if all(val is None for val in chunked_metrics[one_key]):
                 continue
             png_filename: Path = metrics_parent_dir_path / f"Plot {one_key}.png"
-            # svg_filename = parent_dir_path / f"GRAPH{i}.svg"
             self.make_data_plots(
                 x_range,
                 [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
@@ -207,7 +290,7 @@ class Plotter:
             )
 
         analytics = data_retriever.get_data(
-            repetition_ids, [""], settings["analyses_names"]
+            repetition_ids, [], settings["analyses_names"]
         )
         analytics_parent_dir_path = parent_dir_path / "analyses"
         analytics_parent_dir_path.mkdir(parents=True, exist_ok=True)
@@ -222,7 +305,7 @@ class Plotter:
             one_key = list(chunked_analytics.keys())[0]
             if all(val is None for val in chunked_analytics[one_key]):
                 continue
-            png_filename: Path = analytics_parent_dir_path / f"Plot {one_key}.png"
+            png_filename = analytics_parent_dir_path / f"Plot {one_key}.png"
             self.make_data_plots(
                 x_range,
                 [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],

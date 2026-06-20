@@ -1,3 +1,16 @@
+"""
+Database loader for the AMD uProf Performance Counter Monitor (PCM) extension.
+
+Reads the preprocessed CSV files produced by
+:class:`~quare.extensions.AMDuProfPCM_ext.preprocessor.AMDuProfPCMPreprocessor`
+and inserts the data into the ORM models defined in
+:mod:`quare.extensions.AMDuProfPCM_ext.models`.
+
+The :class:`Loaders` helper class contains one static method per CSV file
+type.  :class:`ExtensionDataLoaderImpl` wires them together and is the entry
+point called by :func:`~quare.create_db.create_db`.
+"""
+
 from collections.abc import Callable
 from pathlib import Path
 
@@ -17,15 +30,37 @@ from .models import (
 
 
 class Loaders:
+    """
+    Collection of static loader functions, one per preprocessed CSV file type.
+
+    Each method accepts a :class:`~quare.data_loader.DataLoader` instance and
+    a :class:`~quare.data_loader.MetricContext`, reads the CSV at
+    ``context.file_path``, and returns a list of ORM instances to be added to
+    the session.  Missing files are handled gracefully by returning an empty
+    list.
+    """
+
     @staticmethod
     def load_machine_info(
         data_loader: DataLoader, context: MetricContext
     ) -> list[AMDuProfPCM_machine_info]:
         """
-        _summary_
+        Parse the ``machine_info`` CSV and return an :class:`AMDuProfPCM_machine_info` row.
 
-        :param context: _description_
-        :return: _description_
+        The file is expected to have no header row (``header=None``) and the
+        first column acts as the row index; the data is transposed so that
+        column names become the index of the resulting single-row DataFrame.
+
+        :param data_loader: The :class:`~quare.data_loader.DataLoader` managing
+            the current import session (not used directly here but required by
+            the loader callback protocol).
+        :type data_loader: quare.data_loader.DataLoader
+        :param context: Bundle containing the path to the ``machine_info.csv``
+            file and the owning repetition ID.
+        :type context: quare.data_loader.MetricContext
+        :returns: A list containing a single :class:`AMDuProfPCM_machine_info`
+            ORM instance, or an empty list if the file does not exist.
+        :rtype: list[AMDuProfPCM_machine_info]
         """
         try:
             machine_csv = pd.read_csv(context.file_path, header=None, index_col=0).T
@@ -55,10 +90,20 @@ class Loaders:
         context: MetricContext,
     ) -> list[AMDuProfPCM_machine_cpu_topology]:
         """
-        _summary_
+        Parse the ``machine_cpu_topology`` CSV and return topology rows.
 
-        :param context: _description_
-        :return: _description_
+        One :class:`AMDuProfPCM_machine_cpu_topology` instance is created per
+        line (socket/CCD/CCX entry) in the CSV.
+
+        :param data_loader: The managing :class:`~quare.data_loader.DataLoader`
+            (not used directly but required by the callback protocol).
+        :type data_loader: quare.data_loader.DataLoader
+        :param context: Bundle containing the path to the
+            ``machine_cpu_topology.csv`` file and the owning repetition ID.
+        :type context: quare.data_loader.MetricContext
+        :returns: A list of :class:`AMDuProfPCM_machine_cpu_topology` ORM
+            instances, or an empty list if the file does not exist.
+        :rtype: list[AMDuProfPCM_machine_cpu_topology]
         """
         try:
             cpu_csv = pd.read_csv(context.file_path)
@@ -83,10 +128,21 @@ class Loaders:
         context: MetricContext,
     ) -> list[AMDuProfPCM_further_machine_info]:
         """
-        _summary_
+        Parse the ``further_machine_info`` CSV and return a configuration row.
 
-        :param context: _description_
-        :return: _description_
+        The file layout is identical to ``machine_info.csv`` (transposed
+        key-value format).
+
+        :param data_loader: The managing :class:`~quare.data_loader.DataLoader`
+            (not used directly but required by the callback protocol).
+        :type data_loader: quare.data_loader.DataLoader
+        :param context: Bundle containing the path to the
+            ``further_machine_info.csv`` file and the owning repetition ID.
+        :type context: quare.data_loader.MetricContext
+        :returns: A list containing a single
+            :class:`AMDuProfPCM_further_machine_info` ORM instance, or an
+            empty list if the file does not exist.
+        :rtype: list[AMDuProfPCM_further_machine_info]
         """
         try:
             further_machine_csv = pd.read_csv(
@@ -119,41 +175,82 @@ class Loaders:
         data_loader: DataLoader, context: MetricContext
     ) -> list[MetricsBase]:
         """
-        _summary_
+        Parse the ``core_metrics`` CSV and return per-core metric rows.
 
-        :param context: _description_
-        :return: _description_
+        The CSV is expected to have performance-counter values organised with
+        one row per core (row index ``"Core <N>"``) and one column per metric.
+        The row index is trimmed by 5 characters (``len("Core ")``)) to extract
+        the integer core index.
+
+        :param data_loader: The :class:`~quare.data_loader.DataLoader` used to
+            create metric instances via
+            :meth:`~quare.data_loader.DataLoader.load_generic_metrics`.
+        :type data_loader: quare.data_loader.DataLoader
+        :param context: Bundle containing the path to the ``core_metrics.csv``
+            file and the owning repetition ID.
+        :type context: quare.data_loader.MetricContext
+        :returns: A list of :class:`~quare.models.MetricsBase` ORM instances
+            (one per core-metric cell), or an empty list if the file is absent.
+        :rtype: list[quare.models.MetricsBase]
         """
         try:
             metrics_csv = pd.read_csv(context.file_path, header=0, index_col=0).T
         except FileNotFoundError:
             return []
 
-        name: str = "core"
-        return data_loader.load_generic_metrics(context, metrics_csv, 5, name)
+        return data_loader.load_generic_metrics(context, metrics_csv, 5, "core")
 
     @staticmethod
     def load_l3_metrics(
         data_loader: DataLoader, context: MetricContext
     ) -> list[MetricsBase]:
         """
-        _summary_
+        Parse the ``l3_metrics`` CSV and return per-CCX L3 metric rows.
 
-        :param context: _description_
-        :return: _description_
+        The CSV row index is of the form ``"CCX<N>"``; the first 3 characters
+        (``len("CCX")``) are trimmed to extract the integer CCX index.
+
+        :param data_loader: The :class:`~quare.data_loader.DataLoader` used to
+            create metric instances.
+        :type data_loader: quare.data_loader.DataLoader
+        :param context: Bundle containing the path to the ``l3_metrics.csv``
+            file and the owning repetition ID.
+        :type context: quare.data_loader.MetricContext
+        :returns: A list of :class:`~quare.models.MetricsBase` ORM instances
+            (one per CCX-metric cell), or an empty list if the file is absent.
+        :rtype: list[quare.models.MetricsBase]
         """
         try:
             metrics_csv = pd.read_csv(context.file_path, header=0, index_col=0).T
         except FileNotFoundError:
             return []
 
-        name: str = "ccx"
-        return data_loader.load_generic_metrics(context, metrics_csv, 4, name)
+        return data_loader.load_generic_metrics(context, metrics_csv, 4, "ccx")
 
 
 class ExtensionDataLoaderImpl(ExtensionDataLoader):
+    """
+    Concrete :class:`~quare.extension_abcs.ExtensionDataLoader` for AMD uProf PCM.
+
+    Wires together the five CSV file types and their corresponding loader
+    functions, then delegates the directory walk to
+    :meth:`~quare.data_loader.DataLoader.walk_through_data`.
+    """
+
     @staticmethod
     def load(data_dir_path: Path) -> None:
+        """
+        Load all AMD uProf PCM data found under *data_dir_path* into the database.
+
+        Discovers repetitions by globbing for ``*.machine_info.csv`` files
+        inside ``AMDuProfPCM`` subdirectories.  For each new repetition, all
+        five file types are processed in order via the :class:`Loaders`
+        callbacks.
+
+        :param data_dir_path: Root of the preprocessed-data directory tree
+            (value of ``preprocessed_data_directory_path`` from settings).
+        :type data_dir_path: pathlib.Path
+        """
         FILE_SUFFIXES: list[tuple[str, Callable[[DataLoader, MetricContext], list]]] = [
             ("machine_info.csv", Loaders.load_machine_info),
             ("machine_cpu_topology.csv", Loaders.load_machine_cpu_topology),
