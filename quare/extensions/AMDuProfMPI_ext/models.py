@@ -8,6 +8,8 @@ All tables use ``extend_existing=True`` so that they can be safely re-imported
 during dynamic extension discovery.
 """
 
+from __future__ import annotations
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 

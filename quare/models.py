@@ -22,6 +22,8 @@ directly.  Each extension subclasses them to produce its own
 ``<profiler>_metrics_dict`` and ``<profiler>_metrics`` tables.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
@@ -270,6 +272,7 @@ class MetricsBase(DBBase):
         """
         if not hasattr(cls, "metric"):
             cls.__raise_error(cls.__name__)
-        elif not isinstance(cls.metric, Mapped):
+        elif isinstance(Mapped, type) and not isinstance(cls.metric, Mapped):
+            # Guard: when Mapped is mocked (docs build), skip the isinstance check.
             cls.__raise_error(cls.__name__)
         return super().__init_subclass__(**kw)

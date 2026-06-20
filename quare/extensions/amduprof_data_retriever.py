@@ -12,6 +12,8 @@ Both the PCM extension and the MPI extension inherit from this class so that
 their INFO plots display consistent AMD hardware information.
 """
 
+from __future__ import annotations
+
 from sqlalchemy import select
 
 from ..data_retriever import DataRetriever, RepetitionIDs

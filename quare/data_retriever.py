@@ -20,6 +20,8 @@ Type aliases
     :class:`~quare.models.Repetition` IDs that belong to it.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from importlib import util

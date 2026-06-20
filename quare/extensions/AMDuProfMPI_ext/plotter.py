@@ -22,6 +22,8 @@ Module-level attributes
     :class:`~quare.extensions.AMDuProfMPI_ext.models.AMDuProfMPI_metrics_dict`.
 """
 
+from __future__ import annotations
+
 from ...data_retriever import DataRetriever
 from ...plotter import Plotter
 from ..amduprof_data_retriever import AMDuProfDataRetriever

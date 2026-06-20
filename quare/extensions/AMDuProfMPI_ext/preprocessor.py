@@ -27,13 +27,13 @@ class AMDuProfMPIPreprocessor(Preprocessor):
 
     Section mapping
     ---------------
-    ========================= ========================== =================
-    Output suffix             Header prefix              Include header?
-    ========================= ========================== =================
-    ``environment``           ``"ENVIRONMENT"``          No
-    ``functions_summary``     ``"MPI FUNCTIONS SUMMARY"``  No
-    ``rank_summary``          ``"MPI RANK SUMMARY"``     No
-    ========================= ========================== =================
+    ====================== =========================== =================
+    Output suffix          Header prefix               Include header?
+    ====================== =========================== =================
+    ``environment``        ``"ENVIRONMENT"``           No
+    ``functions_summary``  ``"MPI FUNCTIONS SUMMARY"`` No
+    ``rank_summary``       ``"MPI RANK SUMMARY"``      No
+    ====================== =========================== =================
     """
 
     def preprocess(self) -> None:

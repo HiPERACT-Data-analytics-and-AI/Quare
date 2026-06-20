@@ -11,6 +11,8 @@ type.  :class:`ExtensionDataLoaderImpl` wires them together and is the entry
 point called by :func:`~quare.create_db.create_db`.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from pathlib import Path
 

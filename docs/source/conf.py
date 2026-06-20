@@ -8,52 +8,51 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../../src/"))
-sys.path.insert(0, os.path.abspath("../../"))
-
+# Project root (Quare/) is two levels above docs/source/
+sys.path.insert(0, os.path.abspath("../.."))
 
 project = "Quare"
 copyright = "2024, PSNC"
 author = "PSNC"
+release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
-    # "sphinx.ext.graphviz",
-    # "sphinx.ext.inheritance_diagram",
-    # 'sphinx.ext.viewcode',
-    # 'sphinx.ext.napoleon'
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = ["_templates"]
 autosummary_generate = True
-numpydoc_show_class_members = False
 autodoc_member_order = "bysource"
+autodoc_typehints = "description"
 
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+}
+
+# Stub out heavy runtime dependencies so autodoc can import source modules
+# without a full package install.
+autodoc_mock_imports = [
+    "sqlalchemy",
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "yaml",
+]
 
 # -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
-
 # Typehints settings
-typehints_fully_qualified = True
+typehints_fully_qualified = False
 typehints_document_rtype = True
-
-
-# Hook to add headers to each module
-# def autodoc_process_docstring(app, what, name, obj, options, lines):
-#     if what == "module":
-#         lines.insert(0, "===================================================")
-#         lines.insert(0, name)
-
-
-# def setup(app):
-#     app.connect("autodoc-process-docstring", autodoc_process_docstring)

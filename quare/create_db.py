@@ -18,6 +18,8 @@ This module can also be executed directly::
     python -m quare.create_db
 """
 
+from __future__ import annotations
+
 from argparse import Namespace
 from importlib import util
 from pathlib import Path

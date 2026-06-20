@@ -13,6 +13,8 @@ Provides:
   :func:`get_db_session`, :func:`close_db_session`).
 """
 
+from __future__ import annotations
+
 from itertools import islice
 from json import load
 from os import environ

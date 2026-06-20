@@ -25,6 +25,8 @@ All output is written to a directory tree under ``output_directory_path``
                     └── Plot <analysis_key>.png
 """
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 from pathlib import Path
 

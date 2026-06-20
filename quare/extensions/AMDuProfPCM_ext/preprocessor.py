@@ -28,15 +28,15 @@ class AMDuProfPCMPreprocessor(Preprocessor):
 
     Section mapping
     ---------------
-    ======================= ====================== =================
-    Output suffix           Header prefix          Include header?
-    ======================= ====================== =================
-    ``machine_info``        ``"System:,"``         Yes
-    ``machine_cpu_topology``  ``"CPU Topology"``   No
-    ``further_machine_info``  ``"Core P0 state…"`` Yes
-    ``core_metrics``        ``"CORE METRICS"``     No
-    ``l3_metrics``          ``"L3 METRICS"``       No
-    ======================= ====================== =================
+    ======================== ======================= =================
+    Output suffix            Header prefix           Include header?
+    ======================== ======================= =================
+    ``machine_info``         ``"System:,"``          Yes
+    ``machine_cpu_topology`` ``"CPU Topology"``      No
+    ``further_machine_info`` ``"Core P0 state…"``    Yes
+    ``core_metrics``         ``"CORE METRICS"``      No
+    ``l3_metrics``           ``"L3 METRICS"``        No
+    ======================== ======================= =================
     """
 
     def preprocess(self) -> None:

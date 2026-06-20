@@ -13,6 +13,8 @@ This module can also be executed directly::
     python -m quare.preprocess
 """
 
+from __future__ import annotations
+
 from argparse import Namespace
 from importlib import util
 from pathlib import Path

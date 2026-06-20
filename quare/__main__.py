@@ -9,6 +9,8 @@ here.  Each subcommand maps to a single workflow function:
 * ``plot``            — query the database and generate plots / CSV exports.
 """
 
+from __future__ import annotations
+
 from argparse import ArgumentParser, Namespace
 from collections.abc import Callable
 from pathlib import Path

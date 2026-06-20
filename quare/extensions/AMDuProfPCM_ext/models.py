@@ -9,6 +9,8 @@ if the module is loaded multiple times during the dynamic extension discovery
 process in :func:`~quare.create_db.create_db`.
 """
 
+from __future__ import annotations
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 

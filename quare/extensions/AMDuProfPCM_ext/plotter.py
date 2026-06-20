@@ -26,6 +26,8 @@ Module-level attributes
     :class:`~quare.extensions.AMDuProfPCM_ext.models.AMDuProfPCM_metrics_dict`.
 """
 
+from __future__ import annotations
+
 from sqlalchemy.orm import Session
 
 from ...data_retriever import DataRetriever, MetricValue, RepetitionIDs, UniqueMetricKey
