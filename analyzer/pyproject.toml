@@ -2,7 +2,6 @@
 name = "analyzer"
 version = "0.1.0"
 description = "Analyzer subproject (stub — not yet implemented)"
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"

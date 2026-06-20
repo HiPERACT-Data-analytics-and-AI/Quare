@@ -323,7 +323,7 @@ class DataLoader:
     def walk_through_data(
         self,
         dir_name_pattern: str,
-        file_suffixes: list[tuple[str, Callable[["DataLoader", MetricContext], list]]],
+        file_suffixes: list[tuple[str, Callable[[DataLoader, MetricContext], list]]],
     ) -> None:
         """
         Walk the preprocessed-data directory tree and load all new repetitions.

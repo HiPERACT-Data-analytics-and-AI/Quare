@@ -261,9 +261,7 @@ class Plotter:
             / result_info["Use case"]
         )
 
-        metrics = data_retriever.get_data(
-            repetition_ids, settings["metric_names"], []
-        )
+        metrics = data_retriever.get_data(repetition_ids, settings["metric_names"], [])
         metrics_parent_dir_path = (
             parent_dir_path / "profiler_metrics" / self._profiler_name
         )

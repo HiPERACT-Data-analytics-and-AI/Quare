@@ -68,7 +68,8 @@ class AMDuProfPCMAnalyzer(AMDuProfDataRetriever):
     """
     Data retriever with L2 cache ratio analyses for AMD uProf PCM data.
 
-    Registers six derived analyses in :attr:`~quare.data_retriever.DataRetriever.AVAILABLE_ANALYTICS`
+    Registers six derived analyses in
+    :attr:`~quare.data_retriever.DataRetriever.AVAILABLE_ANALYTICS`
     upon construction.  Each analysis is a ratio (miss or hit percentage)
     computed from pairs of raw PCM performance counters.
 

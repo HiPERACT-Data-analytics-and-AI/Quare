@@ -290,6 +290,7 @@ def load_settings() -> dict:
 # Database engine / session
 # ---------------------------------------------------------------------------
 
+
 def create_db_engine() -> Engine:
     """
     Create an SQLAlchemy engine connected to the configured SQLite database.

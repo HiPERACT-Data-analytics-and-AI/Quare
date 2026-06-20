@@ -44,7 +44,8 @@ class Loaders:
         data_loader: DataLoader, context: MetricContext
     ) -> list[AMDuProfMPI_environment]:
         """
-        Parse the ``environment`` CSV and return an :class:`AMDuProfMPI_environment` row.
+        Parse the ``environment`` CSV and return an
+        :class:`AMDuProfMPI_environment` row.
 
         The file is expected to have no header row (``header=None``) and uses
         the first column as the row index; the data is transposed so that

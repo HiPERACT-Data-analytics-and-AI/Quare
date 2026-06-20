@@ -28,8 +28,10 @@ class AMDuProfDataRetriever(DataRetriever):
     :class:`~quare.data_retriever.DataRetriever` subclass that enriches the
     result-info dictionary with AMD-specific hardware metadata.
 
-    Queries :class:`~quare.extensions.AMDuProfPCM_ext.models.AMDuProfPCM_machine_info`
-    and :class:`~quare.extensions.AMDuProfPCM_ext.models.AMDuProfPCM_further_machine_info`
+    Queries
+    :class:`~quare.extensions.AMDuProfPCM_ext.models.AMDuProfPCM_machine_info`
+    and
+    :class:`~quare.extensions.AMDuProfPCM_ext.models.AMDuProfPCM_further_machine_info`
     for the first matching repetition and merges the result with the base-class
     info dictionary.
     """

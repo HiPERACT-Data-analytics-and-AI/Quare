@@ -47,7 +47,8 @@ class Loaders:
         data_loader: DataLoader, context: MetricContext
     ) -> list[AMDuProfPCM_machine_info]:
         """
-        Parse the ``machine_info`` CSV and return an :class:`AMDuProfPCM_machine_info` row.
+        Parse the ``machine_info`` CSV and return an
+        :class:`AMDuProfPCM_machine_info` row.
 
         The file is expected to have no header row (``header=None``) and the
         first column acts as the row index; the data is transposed so that
