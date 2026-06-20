@@ -12,4 +12,4 @@ preprocessed_data/
 **/output
 *.svg
 *.png
-!**/db_diagram.png
+!docs/source/db_diagram.png

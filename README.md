@@ -17,6 +17,10 @@ exactly what the tool is designed to tell you.
 | `AMDuProfMPI_ext` | AMD uProf MPI profiler | Stable |
 | `OpenFOAMlogs_ext` | OpenFOAM solver logs | Work in progress |
 
+## Database schema
+
+![Database schema](docs/source/db_diagram.png)
+
 ## Prerequisites
 
 - Python 3.10 or later

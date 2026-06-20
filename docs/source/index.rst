@@ -31,6 +31,7 @@ To properly generate docs use `generate_docs.sh` script from, run from the top p
    :maxdepth: 0
    :caption: Contents:
 
+   analyses
    diagram
    build/modules
 
