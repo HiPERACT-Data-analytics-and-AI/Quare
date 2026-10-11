@@ -16,6 +16,7 @@ authors:
     given-names: Filip
 repository-code: "https://github.com/HiPERACT-Data-analytics-and-AI/Quare"
 license: MIT
+doi: 10.5281/zenodo.23299540
 version: 0.1.0
 date-released: "2026-06-20"
 keywords:
