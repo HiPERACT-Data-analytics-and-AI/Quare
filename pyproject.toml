@@ -3,7 +3,8 @@ name = "quare"
 version = "0.1.0"
 description = "QUality AnalyzeR of application Efficiency — performance profiling analytics framework"
 authors = [
-    {name = "Marcin Lawenda", email = "lawenda@man.poznan.pl"}
+    {name = "Marcin Lawenda", email = "lawenda@man.poznan.pl"},
+    {name = "Filip Depta"}
 ]
 license = "MIT"
 readme = "README.md"
