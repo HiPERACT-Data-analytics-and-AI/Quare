@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "Quare: QUality AnalyzeR of application Efficiency"
+abstract: >-
+  Python ETL and analytics framework that ingests, stores and visualises
+  performance-profiling data from HPC applications, currently focused on
+  OpenFOAM CFD workloads with AMD uProf counters and MPI profilers.
+authors:
+  - family-names: Lawenda
+    given-names: Marcin
+    orcid: "https://orcid.org/0000-0003-4844-3655"
+    affiliation: "Poznan Supercomputing and Networking Center"
+    email: lawenda@man.poznan.pl
+  - family-names: Depta
+    given-names: Filip
+repository-code: "https://github.com/HiPERACT-Data-analytics-and-AI/Quare"
+license: MIT
+version: 0.1.0
+date-released: "2026-06-20"
+keywords:
+  - hpc
+  - performance analysis
+  - profiling
+  - openfoam
+  - amd uprof
