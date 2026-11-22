@@ -70,7 +70,9 @@ def load_mapping(path: Path) -> dict:
     and ``machines``.  ``machines`` maps the machine name used in Quare
     (a trailing ``_<cores>`` gives the core count) to an object with the key
     ``source`` (platform directory) and any of the roles ``counters``,
-    ``trace`` and ``topdown`` naming the variant directory.
+    ``trace`` and ``topdown`` naming the variant directory.  The optional
+    ``trace_logs`` maps a size name to the solver log of the traced run when it
+    is not ``log.simpleFoam.MPItrace0``.
 
     :param path: Path to the JSON file.
     :type path: pathlib.Path
@@ -223,7 +225,9 @@ def _import_counters(size_dir: Path, size: str, writer: _RunWriter) -> int:
     return imported
 
 
-def _import_trace(size_dir: Path, writer: _RunWriter) -> int:
+def _import_trace(
+    size_dir: Path, writer: _RunWriter, log_name: str = MPI_TRACE_LOG
+) -> int:
     """
     Import the MPI trace run of the ``trace`` variant.
 
@@ -231,10 +235,15 @@ def _import_trace(size_dir: Path, writer: _RunWriter) -> int:
     :type size_dir: pathlib.Path
     :param writer: Run directory allocator.
     :type writer: _RunWriter
+    :param log_name: Solver log of the traced run.  It is
+        ``log.simpleFoam.MPItrace0`` unless the mapping names another one
+        (``trace_logs``), for example when ``mpi.trace0`` holds the trace of a
+        later run.
+    :type log_name: str
     :returns: ``1`` if the run was imported, else ``0``.
     :rtype: int
     """
-    log_path = size_dir / MPI_TRACE_LOG
+    log_path = size_dir / log_name
     summary = size_dir / MPI_SUMMARY
     if not log_path.exists() or not summary.exists():
         return 0
@@ -315,7 +324,11 @@ def import_motorbike_2024(
                 if role == COUNTERS:
                     counts[role] += _import_counters(size_dir, size, writer)
                 elif role == TRACE:
-                    counts[role] += _import_trace(size_dir, writer)
+                    counts[role] += _import_trace(
+                        size_dir,
+                        writer,
+                        machine.get("trace_logs", {}).get(size, MPI_TRACE_LOG),
+                    )
                 else:
                     counts[role] += _import_topdown(size_dir, size, writer)
     return counts

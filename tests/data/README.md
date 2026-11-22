@@ -10,3 +10,8 @@ the mesh size and the number of ranks, and the solver logs keep the lines up to 
 banner (with the date and time), the `ExecutionTime` lines and the
 `Total Time` line.  The original analysis scripts give identical results on
 the full and the reduced files.
+
+`motorBike_2024/128_ROME`, `192_GENOA` and `256_BERGAMO` hold the `xsmall`
+size only (timing and counters, MPI trace, and top-down where measured; Rome
+has no top-down run), reduced in the same way.  For Bergamo the trace log is
+`log.simpleFoam.MPItrace1_Delay_22`, because `mpi.trace0` belongs to that run.

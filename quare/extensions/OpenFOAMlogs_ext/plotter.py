@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import statistics
 from collections.abc import Callable
-
+from functools import partial
 from pathlib import Path
 
 from matplotlib import pyplot as plt
@@ -173,7 +173,9 @@ class OpenFOAMAnalyzer(DataRetriever):
     ) -> dict[str, list[float]] | None:
         """Values of *names* in the first repetition that has all of them."""
         for repetition in repetitions:
-            found = {n: self._values(metrics, metrics_dict, repetition, n) for n in names}
+            found = {
+                n: self._values(metrics, metrics_dict, repetition, n) for n in names
+            }
             if all(found.values()):
                 return found
         return None
@@ -190,8 +192,8 @@ class OpenFOAMAnalyzer(DataRetriever):
             windows: list[float] = []
             steps = cells = 0.0
             for run in self._with_tag(ids, TAG_TIMING):
-                get = lambda n: self._values(  # noqa: E731
-                    OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run, n
+                get = partial(
+                    self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
                 )
                 first, last = get(f"{SOLVER} first step time"), get(
                     f"{SOLVER} last step time"
@@ -256,7 +258,10 @@ class OpenFOAMAnalyzer(DataRetriever):
         def ratio(ids: list[int]) -> MetricValue:
             for run in self._with_tag(ids, TAG_TRACE):
                 times = self._values(
-                    AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict, run, "MPI Time(seconds)"
+                    AMDuProfMPI_metrics,
+                    AMDuProfMPI_metrics_dict,
+                    run,
+                    "MPI Time(seconds)",
                 )
                 # the run time of the traced run is the LAST cumulative
                 # ExecutionTime, not the time stepping window (as in the script)
@@ -273,79 +278,123 @@ class OpenFOAMAnalyzer(DataRetriever):
         return lambda repetition_ids: self._per_size(repetition_ids, ratio)
 
 
+def _points(
+    x_range: list[float], data: dict[str, list[MetricValue]], name: str
+) -> tuple[list[float], list[float]]:
+    """The (x, value) pairs of analysis *name* that have a value."""
+    pairs = [(x, v) for x, v in zip(x_range, data.get(name, [])) if v is not None]
+    return [p[0] for p in pairs], [p[1] for p in pairs]
+
+
 class OpenFOAMPlotter(Plotter):
     """Generic plots plus the combined FVOPS / ratios figure of the scripts."""
 
-    def make_all(self) -> None:
-        """Write the generic output and ``Summary.png`` next to the analyses."""
-        super().make_all()
+    def _collect(
+        self, machine: str
+    ) -> tuple[list[float], dict[str, list[MetricValue]], dict[str, str]]:
+        """x range, analyses and result info of one machine of the settings."""
         settings = load_settings()
         retriever = DataRetrieversManager.get_retriever(self._profiler_name)
         ids = retriever.get_repetitions(
             settings["session_name_contains"],
-            settings["machine_name"],
+            machine,
             settings["use_case_name"],
             settings["sizes_to_get"],
             settings.get("repetition_name_contains", ""),
         )
-        x_range, _ = retriever.get_x_range_and_labels(
-            settings["sizes_to_get"], settings["machine_name"]
-        )
-        info = retriever.get_result_info(ids)
+        x_range, _ = retriever.get_x_range_and_labels(settings["sizes_to_get"], machine)
         data = {
             key.name: values
             for key, values in retriever.get_analyses(
                 ids, retriever.discover_analysis_keys([])
             ).items()
         }
-        folder = (
+        return x_range, data, retriever.get_result_info(ids)
+
+    def make_all(self) -> None:
+        """Write the generic output, ``Summary.png`` and, if configured,
+        ``Comparison.png``.
+
+        ``Summary.png`` (in the analyses folder) shows the configured machine.
+        The optional setting ``compare_machines`` (list of machine names)
+        adds ``<output>/<session>/<use case>/Comparison.png``: one panel per
+        machine, as in the original scripts.
+        """
+        super().make_all()
+        settings = load_settings()
+        x_range, data, info = self._collect(settings["machine_name"])
+        use_case_dir = (
             Path(settings["output_directory_path"])
             / info["Session"]
             / info["Machine name"]
             / info["Use case"]
-            / "analyses"
-            / self._profiler_name
         )
-        self.make_summary_plot(x_range, data, info["Machine name"], folder / "Summary.png")
+        self.make_comparison_plot(
+            [(info["Machine name"], x_range, data)],
+            use_case_dir / "analyses" / self._profiler_name / "Summary.png",
+        )
+        machines = settings.get("compare_machines", [])
+        if machines:
+            entries = []
+            for machine in machines:
+                x, values, _ = self._collect(machine)
+                entries.append((machine, x, values))
+            self.make_comparison_plot(
+                entries,
+                use_case_dir.parent.parent / info["Use case"] / "Comparison.png",
+            )
 
     @staticmethod
-    def make_summary_plot(
-        x_range: list[float],
-        data: dict[str, list[MetricValue]],
-        title: str,
+    def make_comparison_plot(
+        entries: list[tuple[str, list[float], dict[str, list[MetricValue]]]],
         png_filename: Path,
     ) -> None:
-        """FVOPS (left) and the ratios in percent (right) against cells per rank."""
-        fig, (left, right) = plt.subplots(1, 2, figsize=(14, 5))
-        fig.subplots_adjust(left=0.07, right=0.97, wspace=0.25)
+        """
+        One panel per machine: FVOPS (left axis, blue) and the ratios in
+        percent (right axis) against the cells per rank.
 
-        def points(name: str) -> tuple[list[float], list[float]]:
-            pairs = [(x, v) for x, v in zip(x_range, data.get(name, [])) if v is not None]
-            return [p[0] for p in pairs], [p[1] for p in pairs]
+        :param entries: ``(title, x range, analyses)`` per machine.
+        :param png_filename: Destination file; parent folders are created.
+        """
+        fig, axes = plt.subplots(
+            1, len(entries), figsize=(7 * len(entries), 5), squeeze=False
+        )
+        fig.subplots_adjust(left=0.06, right=0.95, wspace=0.45, bottom=0.12)
+        for axis, (title, x_range, data) in zip(axes[0], entries):
 
-        xs, ys = points("FVOPS")
-        left.semilogx(xs, ys, "bo", linestyle="dashed", linewidth=0.4, label="FVOPS")
-        left.set_ylabel("FVOPS")
-        left.yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
-        for name in (
-            "L2 miss ratio (total)",
-            "L2 miss ratio from L1DC",
-            "L2 miss ratio from HWPF",
-            "L3 miss ratio",
-            "MPI ratio (avg)",
-            "Backend Bound Memory",
-            "Frontend Bound",
-        ):
-            xs, ys = points(name)
-            if ys:
-                right.semilogx(xs, ys, marker="d", linestyle="dashed", linewidth=0.4, label=name)
-        right.set_ylim(0, 100)
-        right.set_ylabel("Ratio [%]")
-        for axis in (left, right):
+            right = axis.twinx()
+            xs, ys = _points(x_range, data, "FVOPS")
+            axis.semilogx(
+                xs, ys, "bo", linestyle="dashed", linewidth=0.4, label="FVOPS"
+            )
+            axis.set_ylabel("FVOPS")
+            axis.yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
+            for name in (
+                "L2 miss ratio (total)",
+                "L2 miss ratio from L1DC",
+                "L2 miss ratio from HWPF",
+                "L3 miss ratio",
+                "MPI ratio (avg)",
+                "Backend Bound Memory",
+                "Frontend Bound",
+            ):
+                xs, ys = _points(x_range, data, name)
+                if ys:
+                    right.semilogx(
+                        xs,
+                        ys,
+                        marker="d",
+                        linestyle="dashed",
+                        linewidth=0.4,
+                        label=name,
+                    )
+            right.set_ylim(0, 100)
+            right.set_ylabel("Ratio [%]")
             axis.set_xlabel("Cells per rank")
+            axis.set_title(title)
             axis.grid(alpha=0.3)
-            axis.legend(fontsize=8)
-        fig.suptitle(title)
+            axis.legend(loc="upper left", fontsize=7)
+            right.legend(loc="upper right", fontsize=7)
         png_filename.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(png_filename.as_posix(), dpi=200)
         plt.close(fig)

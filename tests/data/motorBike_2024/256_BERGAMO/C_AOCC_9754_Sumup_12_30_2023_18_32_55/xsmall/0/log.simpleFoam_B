@@ -1,0 +1,221 @@
+--------------------------------------------------------------------------
+WARNING: There was an error initializing an OpenFabrics device.
+
+  Local host:   electra009
+  Local device: mlx5_0
+--------------------------------------------------------------------------
+[electra009:17352] 255 more processes have sent help message help-mpi-btl-openib.txt / error in device init
+[electra009:17352] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2212                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _66908158ae-20221220 OPENFOAM=2212 version=v2212
+Arch   : "LSB;label=32;scalar=64"
+Exec   : simpleFoam -parallel -decomposeParDict system/decomposeParDict.6
+Date   : Feb 06 2024
+Time   : 15:23:04
+ExecutionTime = 0.1 s  ClockTime = 0 s
+ExecutionTime = 0.12 s  ClockTime = 0 s
+ExecutionTime = 0.14 s  ClockTime = 0 s
+ExecutionTime = 0.16 s  ClockTime = 0 s
+ExecutionTime = 0.18 s  ClockTime = 0 s
+ExecutionTime = 0.19 s  ClockTime = 0 s
+ExecutionTime = 0.21 s  ClockTime = 0 s
+ExecutionTime = 0.23 s  ClockTime = 0 s
+ExecutionTime = 0.24 s  ClockTime = 0 s
+ExecutionTime = 0.26 s  ClockTime = 0 s
+ExecutionTime = 0.28 s  ClockTime = 0 s
+ExecutionTime = 0.29 s  ClockTime = 0 s
+ExecutionTime = 0.31 s  ClockTime = 0 s
+ExecutionTime = 0.33 s  ClockTime = 0 s
+ExecutionTime = 0.34 s  ClockTime = 0 s
+ExecutionTime = 0.36 s  ClockTime = 0 s
+ExecutionTime = 0.38 s  ClockTime = 0 s
+ExecutionTime = 0.39 s  ClockTime = 0 s
+ExecutionTime = 0.41 s  ClockTime = 0 s
+ExecutionTime = 0.42 s  ClockTime = 0 s
+ExecutionTime = 0.44 s  ClockTime = 0 s
+ExecutionTime = 0.46 s  ClockTime = 0 s
+ExecutionTime = 0.47 s  ClockTime = 0 s
+ExecutionTime = 0.49 s  ClockTime = 0 s
+ExecutionTime = 0.5 s  ClockTime = 0 s
+ExecutionTime = 0.52 s  ClockTime = 0 s
+ExecutionTime = 0.53 s  ClockTime = 0 s
+ExecutionTime = 0.54 s  ClockTime = 0 s
+ExecutionTime = 0.56 s  ClockTime = 0 s
+ExecutionTime = 0.57 s  ClockTime = 0 s
+ExecutionTime = 0.59 s  ClockTime = 0 s
+ExecutionTime = 0.6 s  ClockTime = 0 s
+ExecutionTime = 0.62 s  ClockTime = 0 s
+ExecutionTime = 0.64 s  ClockTime = 0 s
+ExecutionTime = 0.66 s  ClockTime = 0 s
+ExecutionTime = 0.67 s  ClockTime = 0 s
+ExecutionTime = 0.69 s  ClockTime = 0 s
+ExecutionTime = 0.7 s  ClockTime = 0 s
+ExecutionTime = 0.72 s  ClockTime = 0 s
+ExecutionTime = 0.73 s  ClockTime = 0 s
+ExecutionTime = 0.75 s  ClockTime = 0 s
+ExecutionTime = 0.76 s  ClockTime = 1 s
+ExecutionTime = 0.78 s  ClockTime = 1 s
+ExecutionTime = 0.79 s  ClockTime = 1 s
+ExecutionTime = 0.81 s  ClockTime = 1 s
+ExecutionTime = 0.82 s  ClockTime = 1 s
+ExecutionTime = 0.84 s  ClockTime = 1 s
+ExecutionTime = 0.85 s  ClockTime = 1 s
+ExecutionTime = 0.87 s  ClockTime = 1 s
+ExecutionTime = 0.88 s  ClockTime = 1 s
+ExecutionTime = 0.9 s  ClockTime = 1 s
+ExecutionTime = 0.91 s  ClockTime = 1 s
+ExecutionTime = 0.93 s  ClockTime = 1 s
+ExecutionTime = 0.95 s  ClockTime = 1 s
+ExecutionTime = 0.96 s  ClockTime = 1 s
+ExecutionTime = 0.98 s  ClockTime = 1 s
+ExecutionTime = 0.99 s  ClockTime = 1 s
+ExecutionTime = 1.01 s  ClockTime = 1 s
+ExecutionTime = 1.02 s  ClockTime = 1 s
+ExecutionTime = 1.03 s  ClockTime = 1 s
+ExecutionTime = 1.05 s  ClockTime = 1 s
+ExecutionTime = 1.06 s  ClockTime = 1 s
+ExecutionTime = 1.08 s  ClockTime = 1 s
+ExecutionTime = 1.09 s  ClockTime = 1 s
+ExecutionTime = 1.11 s  ClockTime = 1 s
+ExecutionTime = 1.12 s  ClockTime = 1 s
+ExecutionTime = 1.14 s  ClockTime = 1 s
+ExecutionTime = 1.15 s  ClockTime = 1 s
+ExecutionTime = 1.17 s  ClockTime = 1 s
+ExecutionTime = 1.18 s  ClockTime = 1 s
+ExecutionTime = 1.2 s  ClockTime = 1 s
+ExecutionTime = 1.21 s  ClockTime = 1 s
+ExecutionTime = 1.23 s  ClockTime = 1 s
+ExecutionTime = 1.25 s  ClockTime = 1 s
+ExecutionTime = 1.26 s  ClockTime = 1 s
+ExecutionTime = 1.28 s  ClockTime = 1 s
+ExecutionTime = 1.29 s  ClockTime = 1 s
+ExecutionTime = 1.31 s  ClockTime = 1 s
+ExecutionTime = 1.32 s  ClockTime = 1 s
+ExecutionTime = 1.34 s  ClockTime = 1 s
+ExecutionTime = 1.35 s  ClockTime = 1 s
+ExecutionTime = 1.37 s  ClockTime = 1 s
+ExecutionTime = 1.38 s  ClockTime = 1 s
+ExecutionTime = 1.4 s  ClockTime = 1 s
+ExecutionTime = 1.41 s  ClockTime = 1 s
+ExecutionTime = 1.43 s  ClockTime = 1 s
+ExecutionTime = 1.44 s  ClockTime = 1 s
+ExecutionTime = 1.46 s  ClockTime = 1 s
+ExecutionTime = 1.48 s  ClockTime = 1 s
+ExecutionTime = 1.49 s  ClockTime = 1 s
+ExecutionTime = 1.51 s  ClockTime = 1 s
+ExecutionTime = 1.52 s  ClockTime = 1 s
+ExecutionTime = 1.54 s  ClockTime = 1 s
+ExecutionTime = 1.55 s  ClockTime = 1 s
+ExecutionTime = 1.57 s  ClockTime = 1 s
+ExecutionTime = 1.58 s  ClockTime = 1 s
+ExecutionTime = 1.6 s  ClockTime = 1 s
+ExecutionTime = 1.62 s  ClockTime = 2 s
+ExecutionTime = 1.63 s  ClockTime = 2 s
+ExecutionTime = 1.65 s  ClockTime = 2 s
+ExecutionTime = 1.66 s  ClockTime = 2 s
+ExecutionTime = 1.68 s  ClockTime = 2 s
+ExecutionTime = 1.69 s  ClockTime = 2 s
+ExecutionTime = 1.71 s  ClockTime = 2 s
+ExecutionTime = 1.72 s  ClockTime = 2 s
+ExecutionTime = 1.73 s  ClockTime = 2 s
+ExecutionTime = 1.75 s  ClockTime = 2 s
+ExecutionTime = 1.76 s  ClockTime = 2 s
+ExecutionTime = 1.78 s  ClockTime = 2 s
+ExecutionTime = 1.8 s  ClockTime = 2 s
+ExecutionTime = 1.81 s  ClockTime = 2 s
+ExecutionTime = 1.83 s  ClockTime = 2 s
+ExecutionTime = 1.89 s  ClockTime = 2 s
+ExecutionTime = 1.93 s  ClockTime = 2 s
+ExecutionTime = 1.96 s  ClockTime = 2 s
+ExecutionTime = 2 s  ClockTime = 2 s
+ExecutionTime = 2.03 s  ClockTime = 2 s
+ExecutionTime = 2.06 s  ClockTime = 2 s
+ExecutionTime = 2.08 s  ClockTime = 2 s
+ExecutionTime = 2.1 s  ClockTime = 2 s
+ExecutionTime = 2.13 s  ClockTime = 2 s
+ExecutionTime = 2.16 s  ClockTime = 2 s
+ExecutionTime = 2.18 s  ClockTime = 2 s
+ExecutionTime = 2.21 s  ClockTime = 2 s
+ExecutionTime = 2.23 s  ClockTime = 2 s
+ExecutionTime = 2.25 s  ClockTime = 2 s
+ExecutionTime = 2.28 s  ClockTime = 2 s
+ExecutionTime = 2.3 s  ClockTime = 2 s
+ExecutionTime = 2.32 s  ClockTime = 2 s
+ExecutionTime = 2.36 s  ClockTime = 2 s
+ExecutionTime = 2.38 s  ClockTime = 2 s
+ExecutionTime = 2.42 s  ClockTime = 2 s
+ExecutionTime = 2.44 s  ClockTime = 2 s
+ExecutionTime = 2.48 s  ClockTime = 2 s
+ExecutionTime = 2.49 s  ClockTime = 2 s
+ExecutionTime = 2.51 s  ClockTime = 3 s
+ExecutionTime = 2.53 s  ClockTime = 3 s
+ExecutionTime = 2.54 s  ClockTime = 3 s
+ExecutionTime = 2.56 s  ClockTime = 3 s
+ExecutionTime = 2.57 s  ClockTime = 3 s
+ExecutionTime = 2.59 s  ClockTime = 3 s
+ExecutionTime = 2.6 s  ClockTime = 3 s
+ExecutionTime = 2.62 s  ClockTime = 3 s
+ExecutionTime = 2.64 s  ClockTime = 3 s
+ExecutionTime = 2.65 s  ClockTime = 3 s
+ExecutionTime = 2.67 s  ClockTime = 3 s
+ExecutionTime = 2.69 s  ClockTime = 3 s
+ExecutionTime = 2.71 s  ClockTime = 3 s
+ExecutionTime = 2.72 s  ClockTime = 3 s
+ExecutionTime = 2.74 s  ClockTime = 3 s
+ExecutionTime = 2.76 s  ClockTime = 3 s
+ExecutionTime = 2.77 s  ClockTime = 3 s
+ExecutionTime = 2.79 s  ClockTime = 3 s
+ExecutionTime = 2.81 s  ClockTime = 3 s
+ExecutionTime = 2.82 s  ClockTime = 3 s
+ExecutionTime = 2.84 s  ClockTime = 3 s
+ExecutionTime = 2.86 s  ClockTime = 3 s
+ExecutionTime = 2.88 s  ClockTime = 3 s
+ExecutionTime = 2.89 s  ClockTime = 3 s
+ExecutionTime = 2.91 s  ClockTime = 3 s
+ExecutionTime = 2.93 s  ClockTime = 3 s
+ExecutionTime = 2.95 s  ClockTime = 3 s
+ExecutionTime = 2.96 s  ClockTime = 3 s
+ExecutionTime = 2.98 s  ClockTime = 3 s
+ExecutionTime = 2.99 s  ClockTime = 3 s
+ExecutionTime = 3.01 s  ClockTime = 3 s
+ExecutionTime = 3.03 s  ClockTime = 3 s
+ExecutionTime = 3.04 s  ClockTime = 3 s
+ExecutionTime = 3.06 s  ClockTime = 3 s
+ExecutionTime = 3.08 s  ClockTime = 3 s
+ExecutionTime = 3.09 s  ClockTime = 3 s
+ExecutionTime = 3.11 s  ClockTime = 3 s
+ExecutionTime = 3.13 s  ClockTime = 3 s
+ExecutionTime = 3.15 s  ClockTime = 3 s
+ExecutionTime = 3.16 s  ClockTime = 3 s
+ExecutionTime = 3.18 s  ClockTime = 3 s
+ExecutionTime = 3.2 s  ClockTime = 3 s
+ExecutionTime = 3.21 s  ClockTime = 3 s
+ExecutionTime = 3.23 s  ClockTime = 3 s
+ExecutionTime = 3.25 s  ClockTime = 3 s
+ExecutionTime = 3.26 s  ClockTime = 3 s
+ExecutionTime = 3.28 s  ClockTime = 3 s
+ExecutionTime = 3.3 s  ClockTime = 3 s
+ExecutionTime = 3.32 s  ClockTime = 3 s
+ExecutionTime = 3.33 s  ClockTime = 3 s
+ExecutionTime = 3.35 s  ClockTime = 3 s
+ExecutionTime = 3.37 s  ClockTime = 4 s
+ExecutionTime = 3.39 s  ClockTime = 4 s
+ExecutionTime = 3.4 s  ClockTime = 4 s
+ExecutionTime = 3.42 s  ClockTime = 4 s
+ExecutionTime = 3.44 s  ClockTime = 4 s
+ExecutionTime = 3.45 s  ClockTime = 4 s
+ExecutionTime = 3.47 s  ClockTime = 4 s
+ExecutionTime = 3.48 s  ClockTime = 4 s
+ExecutionTime = 3.5 s  ClockTime = 4 s
+ExecutionTime = 3.52 s  ClockTime = 4 s
+ExecutionTime = 3.53 s  ClockTime = 4 s
+ExecutionTime = 3.55 s  ClockTime = 4 s
+ExecutionTime = 3.57 s  ClockTime = 4 s
+ExecutionTime = 3.62 s  ClockTime = 4 s
+Total Time: 20.829630213

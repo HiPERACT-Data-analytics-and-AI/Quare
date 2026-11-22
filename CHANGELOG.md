@@ -29,6 +29,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   ratios (min/avg/max), selected by the run tags `counters`, `trace` and
   `topdown`; plus a combined `Summary.png` (FVOPS and ratios); results equal
   the original scripts to 1e-12
+- Import of all seven 2024 platforms (Rome, Milan, Milan X, Genoa 128/192,
+  Genoa X, Bergamo); `trace_logs` in the import mapping selects the log of the
+  traced run when `mpi.trace0` belongs to another run (Bergamo `xsmall`).
+  Tests on `xsmall` data of Rome, Genoa 192 and Bergamo 256 reproduce the
+  original scripts to 1e-12
+- Optional setting `compare_machines`: `Comparison.png` with one panel per
+  machine
 
 ### Fixed
 
