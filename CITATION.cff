@@ -12,6 +12,10 @@ authors:
     orcid: "https://orcid.org/0000-0003-4844-3655"
     affiliation: "Poznan Supercomputing and Networking Center"
     email: lawenda@man.poznan.pl
+  - family-names: Szustak
+    given-names: Łukasz
+    orcid: "https://orcid.org/0000-0001-7429-6981"
+    affiliation: "Czestochowa University of Technology"
   - family-names: Depta
     given-names: Filip
 repository-code: "https://github.com/HiPERACT-Data-analytics-and-AI/Quare"

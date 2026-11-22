@@ -7,6 +7,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- End-to-end tests on a synthetic AMD uProf PCM data set (`tests/`) and a
+  test step in CI
+- Łukasz Szustak added as author (`CITATION.cff`, package metadata)
+
+### Fixed
+
+- `quare create-db` failed on a clean install: extension modules are now
+  imported as regular package modules, so SQLAlchemy can resolve the
+  annotations of the ORM models
+- `plot` mixed metrics and analyses in each other's output; they are now
+  queried separately
+- `plot` wrote the analyses of all extensions into one folder and they
+  overwrote each other; they now go to `analyses/<profiler>/`
+- `repetition_name_contains` is optional, as the settings reference implies
+- README described the raw data layout in the wrong order
+
+### Removed
+
+- Two stray files that were never importable
+  (`fvops_aocc_analyzer.py.`, `plotter_BACKUP.py.`); they stay in the git history
+
+---
+
 ## [0.1.0] — 2026-06-20
 
 Initial public release.

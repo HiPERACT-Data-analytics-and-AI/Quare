@@ -248,7 +248,7 @@ class Plotter:
             settings["machine_name"],
             settings["use_case_name"],
             settings["sizes_to_get"],
-            settings["repetition_name_contains"],
+            settings.get("repetition_name_contains", ""),
         )
         x_range, x_tick_labels = data_retriever.get_x_range_and_labels(
             settings["sizes_to_get"], settings["machine_name"]

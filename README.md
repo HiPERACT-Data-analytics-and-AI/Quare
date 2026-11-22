@@ -88,6 +88,7 @@ Key fields:
 | `machine_name` | Filter: target machine name |
 | `use_case_name` | Filter: target application/use-case name |
 | `sizes_to_get` | List of task-size labels to include in plots |
+| `repetition_name_contains` | Optional filter: keep only repetitions whose name contains this string (default: all) |
 | `metric_names` | Specific metric names to plot (empty = all) |
 | `analyses_names` | Specific derived analyses to plot (empty = all) |
 
@@ -134,12 +135,12 @@ Quare discovers profiling runs by walking a tree structured as:
 
 ```
 raw_data/
-└── <profiler>/          e.g. AMDuProfPCM
-    └── <session>/       e.g. Session1
-        └── <machine>/   e.g. ROME_128
-            └── <use_case>/   e.g. motorBike
-                └── <task_size>/  e.g. small
-                    └── <repetition>/
+└── <session>/                  e.g. Session1
+    └── <machine>/              e.g. ROME_128 (a trailing _<n> gives the core count)
+        └── <use_case>/         e.g. motorBike
+            └── <task_size>/    e.g. small
+                └── <date>/     e.g. 20260101_120000 (YYYYMMDD_HHMMSS)
+                    └── <profiler>/   e.g. AMDuProfPCM
                         └── *.csv
 ```
 
