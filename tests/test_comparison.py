@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from argparse import Namespace
 from pathlib import Path
 
 import pytest
@@ -80,7 +79,9 @@ def test_speedup_matches_the_original_table() -> None:
 
 
 def test_speedup_skips_missing_sizes() -> None:
-    ranges = speedup_ranges({"a": [2.0, None, 4.0], "b": [1.0, 3.0, 1.0], "c": [None] * 3})
+    ranges = speedup_ranges(
+        {"a": [2.0, None, 4.0], "b": [1.0, 3.0, 1.0], "c": [None] * 3}
+    )
     assert ranges[("a", "b")] == (2.0, 4.0)
     assert ranges[("a", "c")] is None
 

@@ -60,6 +60,37 @@ def _text(value: object) -> str:
     return "" if value is None or pd.isna(value) else str(value)
 
 
+AGGREGATE_ROW = "System (Aggregated)"
+"""Row (column of the raw file) with the value of the whole system; present in
+newer uProf versions, which also write files with only this row."""
+
+
+def _load_with_aggregate(
+    data_loader: DataLoader,
+    context: MetricContext,
+    metrics_csv: pd.DataFrame,
+    index_trimmer: int,
+    processing_unit: str,
+) -> list[MetricsBase]:
+    """
+    Like :meth:`~quare.data_loader.DataLoader.load_generic_metrics`, but a row
+    named ``System (Aggregated)`` is stored with the processing unit
+    ``"system"`` and no index instead of failing on its name.
+    """
+    instances: list[MetricsBase] = []
+    if AGGREGATE_ROW in metrics_csv.index:
+        for name, value in metrics_csv.loc[AGGREGATE_ROW].items():
+            instances.append(
+                data_loader.create_metric_instance(
+                    context, str(name), value, "", None, "system"
+                )
+            )
+        metrics_csv = metrics_csv.drop(index=AGGREGATE_ROW)
+    return instances + data_loader.load_generic_metrics(
+        context, metrics_csv, index_trimmer, processing_unit
+    )
+
+
 class Loaders:
     """
     Collection of static loader functions, one per preprocessed CSV file type.
@@ -230,7 +261,7 @@ class Loaders:
         except FileNotFoundError:
             return []
 
-        return data_loader.load_generic_metrics(context, metrics_csv, 5, "core")
+        return _load_with_aggregate(data_loader, context, metrics_csv, 5, "core")
 
     @staticmethod
     def load_l3_metrics(
@@ -257,7 +288,7 @@ class Loaders:
         except FileNotFoundError:
             return []
 
-        return data_loader.load_generic_metrics(context, metrics_csv, 4, "ccx")
+        return _load_with_aggregate(data_loader, context, metrics_csv, 4, "ccx")
 
 
 class ExtensionDataLoaderImpl(ExtensionDataLoader):

@@ -41,6 +41,7 @@ performance-profiling data from HPC applications.
 | `AMDuProfPCM_ext` | AMD uProf Performance Counter Monitor | Stable |
 | `AMDuProfMPI_ext` | AMD uProf MPI profiler | Stable |
 | `OpenFOAMlogs_ext` | OpenFOAM `checkMesh` and solver logs (cells, ranks, time steps, step times) | Work in progress |
+| `AMDuProfTimechart_ext` | AMD uProf Timechart (node power traces) | Work in progress |
 
 ## Database schema
 
@@ -106,8 +107,10 @@ Quare processes data in three sequential steps.
 ### Step 0 — Import a measurement tree with a different layout (optional)
 
 If your measurements are not yet in the layout described below, an importer
-can convert them. The 2024 single-node OpenFOAM motorBike measurements are
-supported; `examples/motorbike_2024_import.json` shows the mapping file:
+can convert them. The 2024 single-node (`--layout motorbike-2024`) and the
+2026 multi-node OpenFOAM motorBike measurements with power
+(`--layout motorbike-2026`) are supported; `examples/motorbike_2024_import.json`
+and `examples/motorbike_2026_import.json` show the mapping files:
 
 ```bash
 poetry run quare import-data --config my_settings.json --layout motorbike-2024 \
@@ -116,8 +119,10 @@ poetry run quare import-data --config my_settings.json --layout motorbike-2024 \
 
 The runs are written below `raw_data_directory_path`. The date directory of a
 run may carry a tag after the timestamp (`20231228_174712_counters`); the
-importer uses the tags `counters`, `trace` and `topdown` for the three kinds
-of measurement campaign.
+importer uses the tags `counters`, `trace`, `topdown` and (2026) `power` for the
+kinds of measurement campaign. In the 2026 layout every run configuration
+becomes a machine `<platform>_<nodes>N_<ranks per CCX>PCCX_<ranks>`, so that
+the x axis is the number of cells per MPI rank.
 
 ### Step 1 — Preprocess raw profiler output
 

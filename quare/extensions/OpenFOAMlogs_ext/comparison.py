@@ -131,9 +131,7 @@ def make_timing_plot(
             for position, name in enumerate(names):
                 values = runs[name][row].get(key, [])
                 jitter = generator.uniform(-0.15, 0.15, len(values))
-                axis.scatter(
-                    position + jitter, values, alpha=0.5, linewidth=1, s=25
-                )
+                axis.scatter(position + jitter, values, alpha=0.5, linewidth=1, s=25)
             axis.set_xticks(range(len(names)))
             axis.set_xticklabels(
                 [labels.get(n, n) for n in names], fontsize=7, rotation=20

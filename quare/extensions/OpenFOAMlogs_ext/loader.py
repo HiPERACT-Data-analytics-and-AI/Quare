@@ -8,7 +8,8 @@ values below as metrics with processing unit ``"run"``:
 * from a solver log (``simpleFoam`` or ``pimpleFoam``): ``<solver> time
   steps`` (number of ``ExecutionTime`` entries), ``<solver> first step time``
   and ``<solver> last step time`` (first and last cumulative ``ExecutionTime``,
-  in seconds) and ``<solver> total time`` (the ``Total Time:`` line, if any).
+  in seconds) and ``<solver> total time`` (the first ``Total Time: <s>`` or
+  ``Total time = <s>`` line, if any).
 
 The time stepping window used by the analysis scripts is
 ``last step time - first step time``.
@@ -42,7 +43,7 @@ PROCESSING_UNIT = "run"
 _CELLS = re.compile(r"^\s*cells:\s+(\d+)")
 _RANKS = re.compile(r"^nProcs\s*:\s*(\d+)")
 _EXECUTION_TIME = re.compile(r"^ExecutionTime = ([0-9.eE+-]+) s")
-_TOTAL_TIME = re.compile(r"^Total Time:\s*([0-9.eE+-]+)")
+_TOTAL_TIME = re.compile(r"^Total [Tt]ime(?::|\s*=)\s*([0-9.eE+-]+)")
 
 
 def parse_check_mesh(path: Path) -> dict[str, float]:

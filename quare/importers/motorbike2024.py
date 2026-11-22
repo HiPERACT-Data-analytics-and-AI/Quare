@@ -41,7 +41,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -332,26 +332,6 @@ def import_motorbike_2024(
                 else:
                     counts[role] += _import_topdown(size_dir, size, writer)
     return counts
-
-
-def add_arguments(parser: ArgumentParser) -> None:
-    """
-    Register the command-line arguments of this importer.
-
-    :param parser: Parser of the ``import-data`` command.
-    :type parser: argparse.ArgumentParser
-    """
-    parser.add_argument(
-        "--source", type=Path, required=True, help="root of the 2024 motorBike tree"
-    )
-    parser.add_argument(
-        "--map", type=Path, required=True, help="JSON mapping file (see examples/)"
-    )
-    parser.add_argument(
-        "--machine",
-        action="append",
-        help="machine name to import (repeatable; default: all in the mapping)",
-    )
 
 
 def run(args: Namespace, raw_data_path: Path) -> None:

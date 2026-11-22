@@ -4,7 +4,7 @@ into the raw data layout used by ``preprocess-data``.
 
 Usage::
 
-    quare import-data --layout motorbike-2024 --source DIR --map FILE
+    quare import-data --layout motorbike-2024|motorbike-2026 --source DIR --map FILE
 """
 
 from __future__ import annotations
@@ -12,23 +12,32 @@ from __future__ import annotations
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from .importers import motorbike2024
+from .importers import motorbike2024, motorbike2026
 from .utils import load_settings
 
-IMPORTERS = {"motorbike-2024": motorbike2024}
+IMPORTERS = {"motorbike-2024": motorbike2024, "motorbike-2026": motorbike2026}
 """Available importers, by the name given to ``--layout``."""
 
 
 def add_arguments(parser: ArgumentParser) -> None:
     """
-    Register ``--layout`` and the arguments of every importer.
+    Register ``--layout`` and the arguments shared by all importers.
 
     :param parser: Parser of the ``import-data`` command.
     :type parser: argparse.ArgumentParser
     """
     parser.add_argument("--layout", choices=sorted(IMPORTERS), required=True)
-    for importer in IMPORTERS.values():
-        importer.add_arguments(parser)
+    parser.add_argument(
+        "--source", type=Path, required=True, help="root of the measurement tree"
+    )
+    parser.add_argument(
+        "--map", type=Path, required=True, help="JSON mapping file (see examples/)"
+    )
+    parser.add_argument(
+        "--machine",
+        action="append",
+        help="machine name to import (repeatable; default: all in the mapping)",
+    )
 
 
 def import_data(args: Namespace) -> None:

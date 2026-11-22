@@ -41,9 +41,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `Speedup.png` (as `speddup.py`, computed from unrounded times); optional
   setting `machine_labels` for display names; new analyses `Time stepping
   time` and `Total time` (median of the timing runs)
+- 2026 multi-node data: `quare import-data --layout motorbike-2026`
+  (`examples/motorbike_2026_import.json`) turns every run configuration into a
+  machine `<platform>_<N>N_<C>PCCX_<R>` (nodes, ranks per CCX, ranks) with
+  `counters`, `topdown`, `trace` and `power` runs
+- `AMDuProfTimechart_ext`: node power traces of the uProf timechart
+- New analyses `CVOPTS`, `Aggregate node power`, `Average node power`,
+  `Aggregate energy`, `MPI volume (aggregate)` and `MPI volume (per rank)`;
+  they equal `app_info.py`, `en_info.py` and `mpi_info.py` of the dataset
+  scripts to 1e-12 on the test data
+- PCM files with a `System (Aggregated)` row are loaded (processing unit
+  `system`); analyses use the aggregate when present, as `uProf_info.py`
+- OpenFOAM logs with `Total time = <s>` (2026 runs) are parsed
 
 ### Fixed
 
+- `quare import-data` no longer registers its shared arguments once per importer
 - Plot file names no longer break on units that contain `/`
 - `quare create-db` failed on a clean install: extension modules are now
   imported as regular package modules, so SQLAlchemy can resolve the

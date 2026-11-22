@@ -15,7 +15,13 @@ stamp of the repetition directory (see :mod:`quare.importers.motorbike2024`):
 ``topdown``
     The run with the Zen 4 top-down counters.
 
-Repetition names without a tag are treated as timing and counter runs.
+``power``
+    The run with the AMD uProf power timecharts (2026 data): the node power
+    traces and the log of the run, which gives the time stepping window.
+
+Repetition names without a tag are treated as timing and counter runs.  In the
+2026 data the PCM file belongs to the ``topdown`` run, so the cache ratios look
+in the timing runs first and then in the top-down run.
 
 Registered analyses
 -------------------
@@ -26,10 +32,17 @@ FVOPS                           cells / (median window time / (steps-1))
 L3 miss ratio                   mean over CCXs of ``L3 Miss %``
 L2 ... ratio (six)              ratio of the means over cores of the pti
                                 counters, in percent
-Backend Bound Memory,           mean over cores of the top-down value
+Backend Bound Memory,           system aggregate of the top-down value
+                                (mean over cores if the file has none)
 Frontend Bound, Retiring
 MPI ratio (min/avg/max)         per-rank MPI time / last cumulative
                                 ``ExecutionTime`` of the traced run
+CVOPTS                          cells per rank (rounded to 2 decimals) /
+                                average step time of the lower median run
+Aggregate / average node power  mean of the last ``int(window/0.1) - 1``
+                                samples of each node trace [W]
+Aggregate energy                sum over nodes of power * window [kWh]
+MPI volume (aggregate/per rank) sum / mean of the per-rank volumes [GB]
 =============================== =========================================
 
 ``FVOPS`` follows the original analysis script: the window of a run is the
@@ -63,6 +76,10 @@ from ...plotter import Plotter
 from ...utils import load_settings
 from ..AMDuProfMPI_ext.models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
 from ..AMDuProfPCM_ext.models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
+from ..AMDuProfTimechart_ext.models import (
+    AMDuProfTimechart_metrics,
+    AMDuProfTimechart_metrics_dict,
+)
 from .comparison import RunTimes, make_timing_plot, median_run, write_speedup
 from .models import OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict
 
@@ -70,7 +87,10 @@ SOLVER = "simpleFoam"
 TAG_TIMING = "counters"
 TAG_TRACE = "trace"
 TAG_TOPDOWN = "topdown"
-_ALL_TAGS = (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN)
+TAG_POWER = "power"
+_ALL_TAGS = (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN, TAG_POWER)
+POWER_SAMPLE_INTERVAL = 0.1
+"""Sampling interval of the uProf timechart in seconds."""
 
 # L2 analyses: name -> (numerator counter, denominator counter)
 _L2_RATIOS: dict[str, tuple[str, str]] = {
@@ -117,6 +137,14 @@ class OpenFOAMAnalyzer(DataRetriever):
             UniqueMetricKey("L3 miss ratio", "%", "ccx"): self._calc_l3,
             UniqueMetricKey("Time stepping time", "s", "run"): self._timing("steps"),
             UniqueMetricKey("Total time", "s", "run"): self._timing("total"),
+            UniqueMetricKey("CVOPTS", "cells/rank/s", "run"): self._calc_cvopts,
+            UniqueMetricKey("Aggregate node power", "W", "node"): self._power("sum"),
+            UniqueMetricKey("Average node power", "W", "node"): self._power("mean"),
+            UniqueMetricKey("Aggregate energy", "kWh", "node"): self._power("energy"),
+            UniqueMetricKey("MPI volume (aggregate)", "GB", "rank"): self._volume(
+                False
+            ),
+            UniqueMetricKey("MPI volume (per rank)", "GB", "rank"): self._volume(True),
             UniqueMetricKey("MPI ratio (min)", "%", "rank"): self._mpi_ratio(min),
             UniqueMetricKey("MPI ratio (avg)", "%", "rank"): self._mpi_ratio(
                 statistics.fmean
@@ -167,19 +195,41 @@ class OpenFOAMAnalyzer(DataRetriever):
         )
         return [row[0] for row in self._db_session.execute(stmt)]
 
-    def _first_with_values(
-        self,
-        metrics: type[MetricsBase],
-        metrics_dict: type[MetricsDictBase],
-        repetitions: list[int],
-        names: list[str],
-    ) -> dict[str, list[float]] | None:
-        """Values of *names* in the first repetition that has all of them."""
+    def _pcm_means(
+        self, repetitions: list[int], names: list[str]
+    ) -> dict[str, float] | None:
+        """
+        PCM values of *names* in the first repetition that has all of them.
+
+        The value of a counter is the system aggregate when the file has one
+        (newer uProf files), else the mean over the cores or CCXs, as in the
+        original scripts.
+        """
         for repetition in repetitions:
-            found = {
-                n: self._values(metrics, metrics_dict, repetition, n) for n in names
-            }
-            if all(found.values()):
+            found: dict[str, float] = {}
+            for name in names:
+                rows = self._db_session.execute(
+                    select(
+                        AMDuProfPCM_metrics.value,
+                        AMDuProfPCM_metrics_dict.processing_unit,
+                    )
+                    .join(
+                        AMDuProfPCM_metrics_dict,
+                        AMDuProfPCM_metrics_dict.id == AMDuProfPCM_metrics.metric,
+                    )
+                    .where(
+                        AMDuProfPCM_metrics.repetition == repetition,
+                        AMDuProfPCM_metrics_dict.name == name,
+                    )
+                    .order_by(AMDuProfPCM_metrics.processing_unit_idx)
+                ).all()
+                if not rows:
+                    break
+                system = [r[0] for r in rows if r[1] == "system"]
+                found[name] = (
+                    system[0] if system else statistics.fmean(r[0] for r in rows)
+                )
+            if len(found) == len(names):
                 return found
         return None
 
@@ -249,15 +299,15 @@ class OpenFOAMAnalyzer(DataRetriever):
             repetition_ids, lambda ids: median_run(self.run_times(ids)[key])
         )
 
+    def _counter_runs(self, ids: list[int]) -> list[int]:
+        """Timing runs first, then the top-down run (it has the cache counters
+        in the 2026 data, where there is no separate counter run)."""
+        return self._with_tag(ids, TAG_TIMING) + self._with_tag(ids, TAG_TOPDOWN)
+
     def _calc_l3(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
         def l3(ids: list[int]) -> MetricValue:
-            found = self._first_with_values(
-                AMDuProfPCM_metrics,
-                AMDuProfPCM_metrics_dict,
-                self._with_tag(ids, TAG_TIMING),
-                ["L3 Miss %"],
-            )
-            return statistics.fmean(found["L3 Miss %"]) if found else None
+            found = self._pcm_means(self._counter_runs(ids), ["L3 Miss %"])
+            return found["L3 Miss %"] if found else None
 
         return self._per_size(repetition_ids, l3)
 
@@ -265,30 +315,129 @@ class OpenFOAMAnalyzer(DataRetriever):
         numerator, denominator = _L2_RATIOS[name]
 
         def ratio(ids: list[int]) -> MetricValue:
-            found = self._first_with_values(
-                AMDuProfPCM_metrics,
-                AMDuProfPCM_metrics_dict,
-                self._with_tag(ids, TAG_TIMING),
-                [numerator, denominator],
-            )
-            if not found:
+            found = self._pcm_means(self._counter_runs(ids), [numerator, denominator])
+            if not found or not found[denominator]:
                 return None
-            den = statistics.fmean(found[denominator])
-            return statistics.fmean(found[numerator]) / den * 100.0 if den else None
+            return found[numerator] / found[denominator] * 100.0
 
         return lambda repetition_ids: self._per_size(repetition_ids, ratio)
 
     def _topdown(self, counter: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
         def mean(ids: list[int]) -> MetricValue:
-            found = self._first_with_values(
-                AMDuProfPCM_metrics,
-                AMDuProfPCM_metrics_dict,
-                self._with_tag(ids, TAG_TOPDOWN),
-                [counter],
-            )
-            return statistics.fmean(found[counter]) if found else None
+            found = self._pcm_means(self._with_tag(ids, TAG_TOPDOWN), [counter])
+            return found[counter] if found else None
 
         return lambda repetition_ids: self._per_size(repetition_ids, mean)
+
+    def _calc_cvopts(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
+        """
+        Cells per rank and second, as ``app_info.py`` of the dataset scripts.
+
+        The run is the lower median of the timing runs sorted by their last
+        ``ExecutionTime`` (so all values come from one real run); the cells
+        per rank are rounded to two decimals first, as in the script.
+        """
+
+        def cvopts(ids: list[int]) -> MetricValue:
+            records: list[tuple[float, float]] = []  # (last time, CVOPTS)
+            for run in self._with_tag(ids, TAG_TIMING):
+                get = partial(
+                    self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
+                )
+                first, last = get(f"{SOLVER} first step time"), get(
+                    f"{SOLVER} last step time"
+                )
+                n_steps, cells, ranks = (
+                    get(f"{SOLVER} time steps"),
+                    get("cells"),
+                    get("ranks"),
+                )
+                if not (first and last and n_steps and cells and ranks):
+                    continue
+                per_rank = round(cells[0] / ranks[0], 2)
+                average = (last[0] - first[0]) / (n_steps[0] - 1)
+                records.append((last[0], per_rank / average))
+            if not records:
+                return None
+            records.sort(key=lambda r: r[0])
+            return records[(len(records) - 1) // 2][1]
+
+        return self._per_size(repetition_ids, cvopts)
+
+    def _power(self, kind: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """
+        Power or energy of the ``power`` run, as ``en_info.py``.
+
+        The window is the last minus the first ``ExecutionTime`` of the power
+        run log; the average power of a node is the mean of the last
+        ``int(window / 0.1) - 1`` samples of its trace (100 ms sampling).
+        *kind*: ``sum`` (all nodes), ``mean`` (per node) or ``energy`` (sum of
+        the node energies in kWh).
+        """
+
+        def value(ids: list[int]) -> MetricValue:
+            for run in self._with_tag(ids, TAG_POWER):
+                first = self._values(
+                    OpenFOAMlogs_metrics,
+                    OpenFOAMlogs_metrics_dict,
+                    run,
+                    f"{SOLVER} first step time",
+                )
+                last = self._values(
+                    OpenFOAMlogs_metrics,
+                    OpenFOAMlogs_metrics_dict,
+                    run,
+                    f"{SOLVER} last step time",
+                )
+                traces = self._node_traces(run)
+                if not (first and last and traces):
+                    continue
+                window = last[0] - first[0]
+                samples = int(window / POWER_SAMPLE_INTERVAL) - 1
+                averages = []
+                for trace in traces:
+                    tail = trace[int(len(trace) - samples) :]
+                    averages.append(sum(tail) / len(tail))
+                if kind == "sum":
+                    return sum(averages)
+                if kind == "mean":
+                    return sum(averages) / len(averages)
+                return sum((a / 1000.0) * (window / 3600.0) for a in averages)
+            return None
+
+        return lambda repetition_ids: self._per_size(repetition_ids, value)
+
+    def _node_traces(self, run: int) -> list[list[float]]:
+        """Power samples of every node of a run, in node order."""
+        names = [
+            row[0]
+            for row in self._db_session.execute(
+                select(AMDuProfTimechart_metrics_dict.name).distinct()
+            )
+        ]
+        traces = []
+        for name in sorted(names, key=lambda n: int(n.split()[1])):
+            values = self._values(
+                AMDuProfTimechart_metrics, AMDuProfTimechart_metrics_dict, run, name
+            )
+            if values:
+                traces.append(values)
+        return traces
+
+    def _volume(self, per_rank: bool) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """MPI volume in GB (1e9 bytes) of the trace run: total or per rank."""
+
+        def volume(ids: list[int]) -> MetricValue:
+            for run in self._with_tag(ids, TAG_TRACE):
+                values = self._values(
+                    AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict, run, "Volume(Bytes)"
+                )
+                if values:
+                    total = sum(values) / 1000 / 1000 / 1000
+                    return total / len(values) if per_rank else total
+            return None
+
+        return lambda repetition_ids: self._per_size(repetition_ids, volume)
 
     def _mpi_ratio(
         self, reduce: Callable[[list[float]], float]

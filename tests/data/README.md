@@ -15,3 +15,9 @@ the full and the reduced files.
 size only (timing and counters, MPI trace, and top-down where measured; Rome
 has no top-down run), reduced in the same way.  For Bergamo the trace log is
 `log.simpleFoam.MPItrace1_Delay_22`, because `mpi.trace0` belongs to that run.
+
+`motorBike_2026/192_GENOA_2026` is the `xsmall` size of one 2026 run
+configuration (2 nodes, 192 ranks, 4 ranks per CCX): timing, power-run and MPI
+trace logs, the top-down counter file (with a `System (Aggregated)` column),
+the MPI summary and the power timecharts.  The solver logs are reduced as for
+2024 and also lose the `MCW rank` binding lines of the banner.
