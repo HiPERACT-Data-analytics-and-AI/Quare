@@ -63,6 +63,7 @@ from ...plotter import Plotter
 from ...utils import load_settings
 from ..AMDuProfMPI_ext.models import AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict
 from ..AMDuProfPCM_ext.models import AMDuProfPCM_metrics, AMDuProfPCM_metrics_dict
+from .comparison import RunTimes, make_timing_plot, median_run, write_speedup
 from .models import OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict
 
 SOLVER = "simpleFoam"
@@ -114,6 +115,8 @@ class OpenFOAMAnalyzer(DataRetriever):
         analytics = {
             UniqueMetricKey("FVOPS", "cells/s", "run"): self._calc_fvops,
             UniqueMetricKey("L3 miss ratio", "%", "ccx"): self._calc_l3,
+            UniqueMetricKey("Time stepping time", "s", "run"): self._timing("steps"),
+            UniqueMetricKey("Total time", "s", "run"): self._timing("total"),
             UniqueMetricKey("MPI ratio (min)", "%", "rank"): self._mpi_ratio(min),
             UniqueMetricKey("MPI ratio (avg)", "%", "rank"): self._mpi_ratio(
                 statistics.fmean
@@ -210,6 +213,41 @@ class OpenFOAMAnalyzer(DataRetriever):
             return cells / (median / steps) if median > 0 else None
 
         return self._per_size(repetition_ids, fvops)
+
+    def run_times(self, ids: list[int]) -> RunTimes:
+        """
+        Times of all timing runs of one task size (see :data:`RunTimes`).
+
+        A run counts only with a ``Total Time`` line; the lists are sorted
+        independently of each other, as in the original script.
+        """
+        steps, total, all_steps, pct, delay = [], [], [], [], []
+        for run in self._with_tag(ids, TAG_TIMING):
+            get = partial(
+                self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
+            )
+            first = get(f"{SOLVER} first step time")
+            last = get(f"{SOLVER} last step time")
+            whole = get(f"{SOLVER} total time")
+            if not (first and last and whole):
+                continue
+            steps.append(last[0] - first[0])
+            total.append(whole[0])
+            all_steps.append(last[0])
+            pct.append(last[0] / whole[0] * 100.0)
+            delay.append(whole[0] - last[0])
+        return {
+            "steps": sorted(steps),
+            "total": sorted(total),
+            "all_steps": sorted(all_steps),
+            "pct": sorted(pct),
+            "delay": sorted(delay),
+        }
+
+    def _timing(self, key: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        return lambda repetition_ids: self._per_size(
+            repetition_ids, lambda ids: median_run(self.run_times(ids)[key])
+        )
 
     def _calc_l3(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
         def l3(ids: list[int]) -> MetricValue:
@@ -335,6 +373,9 @@ class OpenFOAMPlotter(Plotter):
         )
         machines = settings.get("compare_machines", [])
         if machines:
+            self._make_timing_outputs(
+                machines, use_case_dir.parent.parent / info["Use case"]
+            )
             entries = []
             for machine in machines:
                 x, values, _ = self._collect(machine)
@@ -343,6 +384,29 @@ class OpenFOAMPlotter(Plotter):
                 entries,
                 use_case_dir.parent.parent / info["Use case"] / "Comparison.png",
             )
+
+    def _make_timing_outputs(self, machines: list[str], folder: Path) -> None:
+        """``Timing comparison.png``, ``Speedup.csv`` and ``Speedup.png``."""
+        settings = load_settings()
+        retriever = DataRetrieversManager.get_retriever(self._profiler_name)
+        assert isinstance(retriever, OpenFOAMAnalyzer)
+        runs: dict[str, list[RunTimes]] = {}
+        times: dict[str, list[float | None]] = {}
+        for machine in machines:
+            ids = retriever.get_repetitions(
+                settings["session_name_contains"],
+                machine,
+                settings["use_case_name"],
+                settings["sizes_to_get"],
+                settings.get("repetition_name_contains", ""),
+            )
+            runs[machine] = [retriever.run_times(i) for i in ids.values()]
+            times[machine] = [median_run(r["steps"]) for r in runs[machine]]
+        labels = settings.get("machine_labels", {})
+        make_timing_plot(
+            runs, settings["sizes_to_get"], labels, folder / "Timing comparison.png"
+        )
+        write_speedup(times, labels, folder / "Speedup.csv", folder / "Speedup.png")
 
     @staticmethod
     def make_comparison_plot(

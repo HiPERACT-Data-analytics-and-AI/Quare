@@ -168,6 +168,7 @@ def test_comparison_plot_for_several_machines(tmp_path: Path) -> None:
         "session_name_contains": mapping["session"],
         "machine_name": "ROME_128",
         "compare_machines": machines,
+        "machine_labels": {"ROME_128": "Rome (128c)"},
         "use_case_name": mapping["use_case"],
         "sizes_to_get": ["xsmall"],
     }
@@ -186,4 +187,9 @@ def test_comparison_plot_for_several_machines(tmp_path: Path) -> None:
         utils._settings_path_override = None
         DataRetrieversManager.retrievers.clear()
     out = tmp_path / "output/Motorbike2024"
-    assert (out / "motorBike/Comparison.png").stat().st_size > 10_000
+    folder = out / "motorBike"
+    for name in ("Comparison.png", "Timing comparison.png", "Speedup.png"):
+        assert (folder / name).stat().st_size > 10_000, name
+    rows = (folder / "Speedup.csv").read_text().splitlines()
+    assert rows[0] == ",Rome (128c),GENOA_192"
+    assert rows[1].startswith("Rome (128c),-,")
