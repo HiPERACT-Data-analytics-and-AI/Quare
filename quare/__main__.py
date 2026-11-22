@@ -8,6 +8,7 @@ here.  Each subcommand maps to a single workflow function:
 * ``preprocess-data`` — split / copy raw profiler files into a normalised layout.
 * ``create-db``       — load preprocessed files into the SQLite database.
 * ``plot``            — query the database and generate plots / CSV exports.
+* ``export-dataset``  — build the machine-learning input table of the motorBike study.
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .create_db import create_db
+from .export_dataset import add_arguments as add_export_arguments
+from .export_dataset import export_dataset
 from .import_data import add_arguments as add_import_arguments
 from .import_data import import_data
 from .plot import plot
@@ -66,6 +69,8 @@ def main() -> None:
         Call :func:`~quare.create_db.create_db`.
     plot
         Call :func:`~quare.plot.plot`.
+    export-dataset
+        Call :func:`~quare.export_dataset.export_dataset`.
 
     :raises SystemExit: When ``--help`` is passed or required arguments are
         missing (standard :mod:`argparse` behaviour).
@@ -75,6 +80,7 @@ def main() -> None:
         "preprocess-data": preprocess,
         "create-db": create_db,
         "plot": plot,
+        "export-dataset": export_dataset,
     }
     parser = ArgumentParser(prog="quare")
     subparsers = parser.add_subparsers(title="Tools", required=True, dest="command")
@@ -84,6 +90,8 @@ def main() -> None:
         _add_common_args(subparser)
         if name == "import-data":
             add_import_arguments(subparser)
+        elif name == "export-dataset":
+            add_export_arguments(subparser)
 
     args = parser.parse_args()
 

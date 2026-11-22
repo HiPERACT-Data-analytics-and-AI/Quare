@@ -329,42 +329,64 @@ class OpenFOAMAnalyzer(DataRetriever):
 
         return lambda repetition_ids: self._per_size(repetition_ids, mean)
 
-    def _calc_cvopts(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
+    def timing_record(self, ids: list[int]) -> dict[str, float | None] | None:
         """
-        Cells per rank and second, as ``app_info.py`` of the dataset scripts.
+        The application features of one task size, as ``app_info.py``.
 
         The run is the lower median of the timing runs sorted by their last
-        ``ExecutionTime`` (so all values come from one real run); the cells
-        per rank are rounded to two decimals first, as in the script.
+        ``ExecutionTime`` (so all values come from one real run); the cells per
+        rank are rounded to two decimals first, as in the script.  Keys:
+        ``cells``, ``ranks``, ``cellsPerRank``, ``totalTime``,
+        ``firstStepTime``, ``allStepsTime``, ``allStepsTime_m1``, ``lenSteps``,
+        ``avgOneSetepTime`` and ``CVOPTS``.  ``None`` without timing runs.
         """
+        records: list[dict[str, float | None]] = []
+        for run in self._with_tag(ids, TAG_TIMING):
+            get = partial(
+                self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
+            )
+            first, last = get(f"{SOLVER} first step time"), get(
+                f"{SOLVER} last step time"
+            )
+            n_steps, cells, ranks = (
+                get(f"{SOLVER} time steps"),
+                get("cells"),
+                get("ranks"),
+            )
+            if not (first and last and n_steps and cells and ranks):
+                continue
+            total = get(f"{SOLVER} total time")
+            per_rank = round(cells[0] / ranks[0], 2)
+            average = (last[0] - first[0]) / (n_steps[0] - 1)
+            records.append(
+                {
+                    "cells": int(cells[0]),
+                    "ranks": int(ranks[0]),
+                    "cellsPerRank": per_rank,
+                    "totalTime": total[0] if total else None,
+                    "firstStepTime": first[0],
+                    "allStepsTime": last[0],
+                    "allStepsTime_m1": last[0] - first[0],
+                    "lenSteps": int(n_steps[0]),
+                    "avgOneSetepTime": average,
+                    "CVOPTS": per_rank / average,
+                }
+            )
+        if not records:
+            return None
+        records.sort(key=lambda r: r["allStepsTime"] or 0.0)
+        return records[(len(records) - 1) // 2]
+
+    def _calc_cvopts(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
+        """``CVOPTS`` of :meth:`timing_record` per task size."""
 
         def cvopts(ids: list[int]) -> MetricValue:
-            records: list[tuple[float, float]] = []  # (last time, CVOPTS)
-            for run in self._with_tag(ids, TAG_TIMING):
-                get = partial(
-                    self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
-                )
-                first, last = get(f"{SOLVER} first step time"), get(
-                    f"{SOLVER} last step time"
-                )
-                n_steps, cells, ranks = (
-                    get(f"{SOLVER} time steps"),
-                    get("cells"),
-                    get("ranks"),
-                )
-                if not (first and last and n_steps and cells and ranks):
-                    continue
-                per_rank = round(cells[0] / ranks[0], 2)
-                average = (last[0] - first[0]) / (n_steps[0] - 1)
-                records.append((last[0], per_rank / average))
-            if not records:
-                return None
-            records.sort(key=lambda r: r[0])
-            return records[(len(records) - 1) // 2][1]
+            record = self.timing_record(ids)
+            return record["CVOPTS"] if record else None
 
         return self._per_size(repetition_ids, cvopts)
 
-    def _power(self, kind: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
+    def power_value(self, ids: list[int], kind: str) -> MetricValue:
         """
         Power or energy of the ``power`` run, as ``en_info.py``.
 
@@ -374,38 +396,34 @@ class OpenFOAMAnalyzer(DataRetriever):
         *kind*: ``sum`` (all nodes), ``mean`` (per node) or ``energy`` (sum of
         the node energies in kWh).
         """
+        for run in self._with_tag(ids, TAG_POWER):
+            get = partial(
+                self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
+            )
+            first, last = get(f"{SOLVER} first step time"), get(
+                f"{SOLVER} last step time"
+            )
+            traces = self._node_traces(run)
+            if not (first and last and traces):
+                continue
+            window = last[0] - first[0]
+            samples = int(window / POWER_SAMPLE_INTERVAL) - 1
+            averages = []
+            for trace in traces:
+                tail = trace[int(len(trace) - samples) :]
+                averages.append(sum(tail) / len(tail))
+            if kind == "sum":
+                return sum(averages)
+            if kind == "mean":
+                return sum(averages) / len(averages)
+            return sum((a / 1000.0) * (window / 3600.0) for a in averages)
+        return None
 
-        def value(ids: list[int]) -> MetricValue:
-            for run in self._with_tag(ids, TAG_POWER):
-                first = self._values(
-                    OpenFOAMlogs_metrics,
-                    OpenFOAMlogs_metrics_dict,
-                    run,
-                    f"{SOLVER} first step time",
-                )
-                last = self._values(
-                    OpenFOAMlogs_metrics,
-                    OpenFOAMlogs_metrics_dict,
-                    run,
-                    f"{SOLVER} last step time",
-                )
-                traces = self._node_traces(run)
-                if not (first and last and traces):
-                    continue
-                window = last[0] - first[0]
-                samples = int(window / POWER_SAMPLE_INTERVAL) - 1
-                averages = []
-                for trace in traces:
-                    tail = trace[int(len(trace) - samples) :]
-                    averages.append(sum(tail) / len(tail))
-                if kind == "sum":
-                    return sum(averages)
-                if kind == "mean":
-                    return sum(averages) / len(averages)
-                return sum((a / 1000.0) * (window / 3600.0) for a in averages)
-            return None
-
-        return lambda repetition_ids: self._per_size(repetition_ids, value)
+    def _power(self, kind: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """Analysis wrapper of :meth:`power_value`."""
+        return lambda repetition_ids: self._per_size(
+            repetition_ids, lambda ids: self.power_value(ids, kind)
+        )
 
     def _node_traces(self, run: int) -> list[list[float]]:
         """Power samples of every node of a run, in node order."""
@@ -424,20 +442,31 @@ class OpenFOAMAnalyzer(DataRetriever):
                 traces.append(values)
         return traces
 
-    def _volume(self, per_rank: bool) -> Callable[[RepetitionIDs], list[MetricValue]]:
+    def volume_value(self, ids: list[int], per_rank: bool) -> MetricValue:
         """MPI volume in GB (1e9 bytes) of the trace run: total or per rank."""
+        for run in self._with_tag(ids, TAG_TRACE):
+            values = self._values(
+                AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict, run, "Volume(Bytes)"
+            )
+            if values:
+                total = sum(values) / 1000 / 1000 / 1000
+                return total / len(values) if per_rank else total
+        return None
 
-        def volume(ids: list[int]) -> MetricValue:
-            for run in self._with_tag(ids, TAG_TRACE):
-                values = self._values(
-                    AMDuProfMPI_metrics, AMDuProfMPI_metrics_dict, run, "Volume(Bytes)"
-                )
-                if values:
-                    total = sum(values) / 1000 / 1000 / 1000
-                    return total / len(values) if per_rank else total
-            return None
+    def _volume(self, per_rank: bool) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """Analysis wrapper of :meth:`volume_value`."""
+        return lambda repetition_ids: self._per_size(
+            repetition_ids, lambda ids: self.volume_value(ids, per_rank)
+        )
 
-        return lambda repetition_ids: self._per_size(repetition_ids, volume)
+    def pcm_features(self, ids: list[int], names: list[str]) -> dict[str, float] | None:
+        """
+        System values of PCM counters from the top-down run (``uProf_info.py``).
+
+        The aggregate of the file when it has one, else the mean over the
+        cores; ``None`` when the run lacks one of the counters.
+        """
+        return self._pcm_means(self._with_tag(ids, TAG_TOPDOWN), names)
 
     def _mpi_ratio(
         self, reduce: Callable[[list[float]], float]

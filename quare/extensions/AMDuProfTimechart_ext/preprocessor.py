@@ -63,7 +63,8 @@ class AMDuProfTimechartPreprocessor(Preprocessor):
             if not nodes:
                 continue
             target = (
-                self._preprocessed_data_path / directory.relative_to(self._raw_data_path)
+                self._preprocessed_data_path
+                / directory.relative_to(self._raw_data_path)
             ) / "run.power.csv"
             if target.exists():
                 continue

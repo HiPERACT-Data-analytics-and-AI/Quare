@@ -107,9 +107,7 @@ def find_configurations(
         if match is None or not directory.is_dir():
             continue
         values = {k: int(v) for k, v in match.groupdict().items()}
-        name = (
-            f"{platform}_{values['nodes']}N_{values['ccx']}PCCX_{values['ranks']}"
-        )
+        name = f"{platform}_{values['nodes']}N_{values['ccx']}PCCX_{values['ranks']}"
         found[name] = (directory, values)
     return found
 

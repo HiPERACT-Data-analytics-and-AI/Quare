@@ -53,6 +53,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - PCM files with a `System (Aggregated)` row are loaded (processing unit
   `system`); analyses use the aggregate when present, as `uProf_info.py`
 - OpenFOAM logs with `Total time = <s>` (2026 runs) are parsed
+- `quare export-dataset`: builds the machine-learning input table of the
+  motorBike study (hardware, application, power, MPI volume and uProf PCM
+  features per configuration and mesh size) from the database. Output style
+  `legacy` is byte-identical to `build_dataset_power.py` (checked against a row
+  of the real dataset), `--style csv` writes a plain CSV; `--no-power` gives the
+  `build_dataset.py` columns. Hardware table: `quare/data/cpu_features.json`
 
 ### Fixed
 

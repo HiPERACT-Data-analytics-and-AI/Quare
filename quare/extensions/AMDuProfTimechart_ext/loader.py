@@ -28,7 +28,9 @@ class Loaders:
     """Loader functions for the files of this extension."""
 
     @staticmethod
-    def load_power(data_loader: DataLoader, context: MetricContext) -> list[MetricsBase]:
+    def load_power(
+        data_loader: DataLoader, context: MetricContext
+    ) -> list[MetricsBase]:
         """Return one metric row per power sample of ``power.csv``."""
         try:
             table = pd.read_csv(context.file_path, index_col=0)
@@ -41,7 +43,12 @@ class Loaders:
                     continue
                 instances.append(
                     data_loader.create_metric_instance(
-                        context, str(name), float(value), "W", int(str(sample)), "sample"
+                        context,
+                        str(name),
+                        float(value),
+                        "W",
+                        int(str(sample)),
+                        "sample",
                     )
                 )
         return instances

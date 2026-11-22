@@ -150,6 +150,18 @@ to `output_directory_path`:
 poetry run quare plot --config my_settings.json
 ```
 
+### Step 4 — Export the machine-learning dataset (OpenFOAM motorBike)
+
+```bash
+poetry run quare export-dataset --config my_settings.json --output dataset.csv
+```
+
+One row per run configuration (machine named `<platform>_<N>N_<C>PCCX_<R>`) and
+mesh size of `sizes_to_get`, with the hardware, application, power, MPI volume
+and AMD uProf counter features of the study. `--no-power` drops the power
+columns, `--power-feature` selects other power features and `--style csv`
+writes a plain CSV instead of the format of the original scripts.
+
 ## Expected data directory layout
 
 Quare discovers profiling runs by walking a tree structured as:
