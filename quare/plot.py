@@ -19,9 +19,8 @@ This module can also be executed directly::
 from __future__ import annotations
 
 from argparse import Namespace
-from importlib import util
 
-from .utils import close_db_session, discover_extensions
+from .utils import close_db_session, discover_extensions, import_extension_module
 
 
 def plot(_: Namespace) -> None:
@@ -45,18 +44,11 @@ def plot(_: Namespace) -> None:
     """
     try:
         for extension_path in discover_extensions():
-            path = extension_path / "plotter.py"
-            if not path.exists():
-                continue
-            spec = util.spec_from_file_location(path.stem, path)
-            if spec is not None:
-                module = util.module_from_spec(spec)
-                if spec.loader is not None:
-                    module.__package__ = "quare.extensions." + extension_path.stem
-                    spec.loader.exec_module(module)
-                    module.__extension_data_plotter__(
-                        extension_path.stem[: -len("_ext")]
-                    ).make_all()
+            module = import_extension_module(extension_path, "plotter")
+            if module is not None:
+                module.__extension_data_plotter__(
+                    extension_path.stem[: -len("_ext")]
+                ).make_all()
     finally:
         close_db_session()
 
