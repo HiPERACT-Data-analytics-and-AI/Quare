@@ -40,7 +40,7 @@ performance-profiling data from HPC applications.
 |---|---|---|
 | `AMDuProfPCM_ext` | AMD uProf Performance Counter Monitor | Stable |
 | `AMDuProfMPI_ext` | AMD uProf MPI profiler | Stable |
-| `OpenFOAMlogs_ext` | OpenFOAM solver logs | Work in progress |
+| `OpenFOAMlogs_ext` | OpenFOAM `checkMesh` and solver logs (cells, ranks, time steps, step times) | Work in progress |
 
 ## Database schema
 
@@ -103,6 +103,22 @@ export QUARE_SETTINGS=/absolute/path/to/my_settings.json
 
 Quare processes data in three sequential steps.
 
+### Step 0 — Import a measurement tree with a different layout (optional)
+
+If your measurements are not yet in the layout described below, an importer
+can convert them. The 2024 single-node OpenFOAM motorBike measurements are
+supported; `examples/motorbike_2024_import.json` shows the mapping file:
+
+```bash
+poetry run quare import-data --config my_settings.json --layout motorbike-2024 \
+    --source /path/to/motorBike --map examples/motorbike_2024_import.json
+```
+
+The runs are written below `raw_data_directory_path`. The date directory of a
+run may carry a tag after the timestamp (`20231228_174712_counters`); the
+importer uses the tags `counters`, `trace` and `topdown` for the three kinds
+of measurement campaign.
+
 ### Step 1 — Preprocess raw profiler output
 
 Splits and normalises the raw CSV files produced by the profiler into a
@@ -139,7 +155,7 @@ raw_data/
     └── <machine>/              e.g. ROME_128 (a trailing _<n> gives the core count)
         └── <use_case>/         e.g. motorBike
             └── <task_size>/    e.g. small
-                └── <date>/     e.g. 20260101_120000 (YYYYMMDD_HHMMSS)
+                └── <date>/     e.g. 20260101_120000 (YYYYMMDD_HHMMSS[_<tag>])
                     └── <profiler>/   e.g. AMDuProfPCM
                         └── *.csv
 ```

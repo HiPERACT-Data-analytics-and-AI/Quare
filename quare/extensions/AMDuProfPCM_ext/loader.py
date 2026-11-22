@@ -31,6 +31,35 @@ from .models import (
 )
 
 
+def _to_bool(value: object) -> bool:
+    """
+    Convert a CSV cell such as ``"True"``, ``"False"``, ``1`` or an empty cell
+    to a bool.  ``bool("False")`` would be ``True``, so strings are compared.
+
+    :param value: The raw cell value read by pandas.
+    :type value: object
+    :returns: ``True`` only for ``"true"``, ``"yes"``, ``"1"`` (any case) or a
+        non-zero number.
+    :rtype: bool
+    """
+    if isinstance(value, str):
+        return value.strip().lower() in ("true", "yes", "1")
+    if value is None or pd.isna(value):
+        return False
+    return bool(value)
+
+
+def _text(value: object) -> str:
+    """
+    Return *value* as text, using an empty string for a missing cell.
+
+    :param value: The raw cell value read by pandas.
+    :type value: object
+    :rtype: str
+    """
+    return "" if value is None or pd.isna(value) else str(value)
+
+
 class Loaders:
     """
     Collection of static loader functions, one per preprocessed CSV file type.
@@ -73,14 +102,14 @@ class Loaders:
         row = machine_csv.iloc[0]
         machine_uprof = AMDuProfPCM_machine_info(
             repetition=context.repetition_id,
-            system=row.get("System:", default=None),
+            system=_text(row.get("System:", default=None)),
             num_of_sockets=row.get("Number of Sockets :", default=None),
             num_of_ccds=row.get("Number of CCDs :", default=None),
             num_of_ccxs=row.get("Number of Core Complexes(CCX) :", default=None),
             num_of_cores=row.get("Number of Cores :", default=None),
             num_of_threads=row.get("Number of Threads :", default=None),
-            smt_enabled_in_hw=bool(row.get("SMT Enabled in HW:")),
-            smt_enabled_in_os=bool(row.get("SMT Enabled by OS :")),
+            smt_enabled_in_hw=_to_bool(row.get("SMT Enabled in HW:")),
+            smt_enabled_in_os=_to_bool(row.get("SMT Enabled by OS :")),
             num_of_threads_sharing_l3=row.get(
                 "Number of Threads sharing L3:", default=None
             ),

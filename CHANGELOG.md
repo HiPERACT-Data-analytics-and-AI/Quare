@@ -14,6 +14,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - End-to-end tests on a synthetic AMD uProf PCM data set (`tests/`) and a
   test step in CI
 - Łukasz Szustak added as author (`CITATION.cff`, package metadata)
+- `OpenFOAMlogs_ext`: parser, models and loader for `checkMesh` and
+  `simpleFoam`/`pimpleFoam` logs (cells, ranks, number of time steps, first and
+  last step time, total time) stored as run-level metrics
+- `quare import-data` with the `motorbike-2024` layout: converts the 2024
+  single-node motorBike measurements into the raw layout
+  (`examples/motorbike_2024_import.json`)
+- Date directories may carry a tag after the timestamp
+  (`YYYYMMDD_HHMMSS_<tag>`); the tag is part of the repetition name
+- Test data and tests for the import and loading of the 2024 measurements; the
+  loaded values equal the results of the original analysis scripts
 
 ### Fixed
 
@@ -24,6 +34,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   queried separately
 - `plot` wrote the analyses of all extensions into one folder and they
   overwrote each other; they now go to `analyses/<profiler>/`
+- A repetition can now be shared by several extensions: the second extension
+  used to skip a repetition that the first one had created
+- AMD uProf PCM machine info: `SMT Enabled in HW/OS` was always `True`
+  (`bool("False")`), and an empty `System:` value violated the NOT NULL
+  constraint
 - `repetition_name_contains` is optional, as the settings reference implies
 - README described the raw data layout in the wrong order
 

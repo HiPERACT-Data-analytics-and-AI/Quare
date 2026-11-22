@@ -332,9 +332,12 @@ class DataLoader:
         ``<preprocessed_root>/**/<dir_name_pattern>/**/*.<first_suffix>``
         the method:
 
-        1. Derives the repetition name from the path.
-        2. Skips the repetition if it already exists in the DB
-           (:meth:`record_exists`).
+        1. Derives the repetition name from the path.  The date directory is
+           ``YYYYMMDD_HHMMSS`` optionally followed by ``_<tag>``; the tag stays
+           part of the repetition name and lets analyses select runs.
+        2. Skips the repetition if this extension has already loaded metrics
+           for it.  A repetition created by another extension is reused, so
+           several profilers can share one run directory.
         3. Ensures :class:`~quare.models.ProfilingSession`,
            :class:`~quare.models.Machine`, :class:`~quare.models.UseCase`, and
            :class:`~quare.models.TaskSizesDict` rows exist.
@@ -365,9 +368,12 @@ class DataLoader:
                 + "."
                 + self.extract_from_path("session", input_path)
             )
-            if self.record_exists(
-                where_column=Repetition.name,
-                is_equal_to=repetition_name,
+            existing_id = self._db_session.execute(
+                select(Repetition.id).where(Repetition.name == repetition_name)
+            ).scalar_one_or_none()
+            if existing_id is not None and self.record_exists(
+                where_column=self._metrics_table.repetition,
+                is_equal_to=existing_id,
             ):
                 continue
 
@@ -424,7 +430,7 @@ class DataLoader:
                 machine=machine.id,
                 use_case=use_case.id,
                 task_size=in_memory_task_sizes.rows[task_size_name][0],
-                date=datetime.strptime(repetition_date, "%Y%m%d_%H%M%S"),
+                date=datetime.strptime(repetition_date[:15], "%Y%m%d_%H%M%S"),
                 file_dir=input_path.parent.resolve().as_posix(),
             )
             repetition = self.create_if_not_exists(
