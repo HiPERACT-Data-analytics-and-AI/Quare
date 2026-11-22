@@ -24,9 +24,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   (`YYYYMMDD_HHMMSS_<tag>`); the tag is part of the repetition name
 - Test data and tests for the import and loading of the 2024 measurements; the
   loaded values equal the results of the original analysis scripts
+- OpenFOAM analyses (`OpenFOAMlogs_ext/plotter.py`): FVOPS, L3 and L2 ratios,
+  top-down values (Backend Bound Memory, Frontend Bound, Retiring) and MPI
+  ratios (min/avg/max), selected by the run tags `counters`, `trace` and
+  `topdown`; plus a combined `Summary.png` (FVOPS and ratios); results equal
+  the original scripts to 1e-12
 
 ### Fixed
 
+- Plot file names no longer break on units that contain `/`
 - `quare create-db` failed on a clean install: extension modules are now
   imported as regular package modules, so SQLAlchemy can resolve the
   annotations of the ORM models

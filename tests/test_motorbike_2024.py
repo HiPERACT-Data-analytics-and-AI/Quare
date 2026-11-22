@@ -43,6 +43,21 @@ EXPECTED_FVOPS = [12630092.803030303, 18518148.167539265]
 EXPECTED_L3 = [15.795625000000001, 17.494374999999998]
 EXPECTED_MPI_MEAN_TIME = [2.493163359375, 3.370784375]
 EXPECTED_BACKEND_MEMORY = [23.426328125, 23.791171875]
+EXPECTED_FRONTEND = [13.3359375, 11.889765625]
+EXPECTED_RETIRING = [52.311171875, 52.246640625]
+EXPECTED_MPI_RATIO = {
+    "min": [59.48749999999999, 48.04750593824229],
+    "avg": [82.01195261101974, 80.06613717339668],
+    "max": [89.88125, 88.81828978622327],
+}
+EXPECTED_L2 = {
+    "L2 miss ratio (total)": [17.779421262754205, 19.21423495179479],
+    "L2 miss ratio from L1DC": [9.997724539219192, 9.972381140264353],
+    "L2 miss ratio from HWPF": [21.67532655899392, 24.824290299869933],
+    "L2 hit ratio (total)": [81.48669948431012, 79.97184118427934],
+    "L2 hit ratio from L1DC": [88.62399635926275, 88.35349948488634],
+    "L2 hit ratio from HWPF": [78.33064578054213, 75.1786928868895],
+}
 
 
 @pytest.fixture
@@ -232,3 +247,46 @@ def test_machine_info_flags_are_parsed(imported: Path) -> None:
         )
     ).all()
     assert rows == [(0, 0, 8)]
+
+
+def test_analyses_match_the_original_script(imported: Path) -> None:
+    """The registered analyses reproduce the numbers of the original script."""
+    from quare.data_retriever import DataRetrieversManager
+
+    _load(imported)
+    settings = utils.load_settings()
+    retriever = DataRetrieversManager.get_retriever("OpenFOAMlogs")
+    ids = retriever.get_repetitions(
+        settings["session_name_contains"],
+        settings["machine_name"],
+        settings["use_case_name"],
+        settings["sizes_to_get"],
+        "",
+    )
+    data = {
+        key.name: values
+        for key, values in retriever.get_analyses(
+            ids, retriever.discover_analysis_keys([])
+        ).items()
+    }
+    assert data["FVOPS"] == pytest.approx(EXPECTED_FVOPS, rel=1e-12)
+    assert data["L3 miss ratio"] == pytest.approx(EXPECTED_L3, rel=1e-12)
+    assert data["Backend Bound Memory"] == pytest.approx(
+        EXPECTED_BACKEND_MEMORY, rel=1e-12
+    )
+    assert data["Frontend Bound"] == pytest.approx(EXPECTED_FRONTEND, rel=1e-12)
+    assert data["Retiring"] == pytest.approx(EXPECTED_RETIRING, rel=1e-12)
+    for name, expected in EXPECTED_L2.items():
+        assert data[name] == pytest.approx(expected, rel=1e-12), name
+    for kind, expected in EXPECTED_MPI_RATIO.items():
+        assert data[f"MPI ratio ({kind})"] == pytest.approx(expected, rel=1e-12)
+
+
+def test_plot_writes_summary(imported: Path) -> None:
+    from quare.plot import plot
+
+    _load(imported)
+    plot(Namespace())
+    out = imported / "output/Motorbike2024/GENOA_128/motorBike/analyses/OpenFOAMlogs"
+    assert (out / "Summary.png").stat().st_size > 10_000
+    assert (out / "Plot FVOPS | cells-s | run.png").exists()

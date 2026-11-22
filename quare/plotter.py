@@ -37,6 +37,11 @@ from .data_retriever import DataRetrieversManager, MetricsData, UniqueMetricKey
 from .utils import divide_dict_into_chunks, load_settings
 
 
+def _safe_name(text: str) -> str:
+    """Make *text* usable as a file name (units such as ``cells/s``)."""
+    return text.replace("/", "-").replace("\\", "-")
+
+
 class Plotter:
     """
     Generates plots, CSV exports, and INFO tables for a single profiler extension.
@@ -286,7 +291,9 @@ class Plotter:
             one_key = list(chunked_metrics.keys())[0]
             if all(val is None for val in chunked_metrics[one_key]):
                 continue
-            png_filename: Path = metrics_parent_dir_path / f"Plot {one_key}.png"
+            png_filename: Path = (
+                metrics_parent_dir_path / f"Plot {_safe_name(str(one_key))}.png"
+            )
             self.make_data_plots(
                 x_range,
                 [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
@@ -312,7 +319,9 @@ class Plotter:
             one_key = list(chunked_analytics.keys())[0]
             if all(val is None for val in chunked_analytics[one_key]):
                 continue
-            png_filename = analytics_parent_dir_path / f"Plot {one_key}.png"
+            png_filename = (
+                analytics_parent_dir_path / f"Plot {_safe_name(str(one_key))}.png"
+            )
             self.make_data_plots(
                 x_range,
                 [f"{size}\n{label}" for size, label in zip(x_range, x_tick_labels)],
