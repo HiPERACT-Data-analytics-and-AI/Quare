@@ -36,6 +36,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   original scripts to 1e-12
 - Optional setting `compare_machines`: `Comparison.png` with one panel per
   machine
+- Optional setting `predicted_fvops` (`{machine: {label, cells_per_rank,
+  fvops}}`): predicted points drawn as red stars on the panel of that machine
+  in `Comparison.png`, as in `128_uProfAMD_AOCC_hipic.py`. The values are
+  input, not computed: in the script they are hard-coded and no script derives
+  them
 - With `compare_machines`: `Timing comparison.png` (all runs per machine and
   size, as `timingComp.py`) and the pairwise speed-up ranges `Speedup.csv` /
   `Speedup.png` (as `speddup.py`, computed from unrounded times); optional

@@ -66,7 +66,9 @@ def test_legacy_file_equals_the_original_row(database: Path) -> None:  # noqa: F
 
 
 def test_options_and_csv_style(database: Path) -> None:  # noqa: F811
-    header, rows = build_rows(["xsmall"], "Motorbike2026", "motorBike", with_power=False)
+    header, rows = build_rows(
+        ["xsmall"], "Motorbike2026", "motorBike", with_power=False
+    )
     assert "aggregateAllNodesPower" not in header
     header, rows = build_rows(
         ["xsmall"],

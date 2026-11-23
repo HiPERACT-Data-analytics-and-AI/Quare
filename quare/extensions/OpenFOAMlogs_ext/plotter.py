@@ -59,6 +59,7 @@ import statistics
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
+from typing import Any
 
 from matplotlib import pyplot as plt
 from sqlalchemy import select
@@ -561,6 +562,7 @@ class OpenFOAMPlotter(Plotter):
             self.make_comparison_plot(
                 entries,
                 use_case_dir.parent.parent / info["Use case"] / "Comparison.png",
+                settings.get("predicted_fvops", {}),
             )
 
     def _make_timing_outputs(self, machines: list[str], folder: Path) -> None:
@@ -590,6 +592,7 @@ class OpenFOAMPlotter(Plotter):
     def make_comparison_plot(
         entries: list[tuple[str, list[float], dict[str, list[MetricValue]]]],
         png_filename: Path,
+        predicted: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         """
         One panel per machine: FVOPS (left axis, blue) and the ratios in
@@ -597,6 +600,10 @@ class OpenFOAMPlotter(Plotter):
 
         :param entries: ``(title, x range, analyses)`` per machine.
         :param png_filename: Destination file; parent folders are created.
+        :param predicted: Optional ``{machine: {"label", "cells_per_rank",
+            "fvops"}}``. The points come from outside Quare (a model or an
+            earlier run) and are drawn as red stars on the panel of that
+            machine, as in the original ``128_uProfAMD_AOCC_hipic.py``.
         """
         fig, axes = plt.subplots(
             1, len(entries), figsize=(7 * len(entries), 5), squeeze=False
@@ -609,6 +616,15 @@ class OpenFOAMPlotter(Plotter):
             axis.semilogx(
                 xs, ys, "bo", linestyle="dashed", linewidth=0.4, label="FVOPS"
             )
+            if predicted and title in predicted:
+                extra = predicted[title]
+                axis.semilogx(
+                    extra["cells_per_rank"],
+                    extra["fvops"],
+                    "r*",
+                    markersize=8,
+                    label=extra.get("label", "predicted FVOPS"),
+                )
             axis.set_ylabel("FVOPS")
             axis.yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
             for name in (

@@ -86,7 +86,7 @@ def load_cpu_table(path: Path = CPU_FEATURES_PATH) -> dict:
 
 
 def hardware_key(platform: str, table: dict) -> str | None:
-    """Hardware key of a machine platform name (``GENOA_9654`` -> ``GENOA_9654_96c``)."""
+    """Hardware key of a platform name (``GENOA_9654`` -> ``GENOA_9654_96c``)."""
     for key in table["platforms"]:
         if key.startswith(platform + "_"):
             return key

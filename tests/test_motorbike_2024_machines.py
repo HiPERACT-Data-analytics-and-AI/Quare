@@ -169,6 +169,13 @@ def test_comparison_plot_for_several_machines(tmp_path: Path) -> None:
         "machine_name": "ROME_128",
         "compare_machines": machines,
         "machine_labels": {"ROME_128": "Rome (128c)"},
+        "predicted_fvops": {
+            "ROME_128": {
+                "label": "predicted FVOPS",
+                "cells_per_rank": [1309, 654, 327],
+                "fvops": [6771572, 7955368, 9010311],
+            }
+        },
         "use_case_name": mapping["use_case"],
         "sizes_to_get": ["xsmall"],
     }
@@ -193,3 +200,18 @@ def test_comparison_plot_for_several_machines(tmp_path: Path) -> None:
     rows = (folder / "Speedup.csv").read_text().splitlines()
     assert rows[0] == ",Rome (128c),GENOA_192"
     assert rows[1].startswith("Rome (128c),-,")
+
+
+def test_predicted_points_are_drawn(tmp_path: Path) -> None:
+    from quare.extensions.OpenFOAMlogs_ext.plotter import OpenFOAMPlotter
+
+    entries = [("M", [1000.0, 2000.0], {"FVOPS": [1.0e6, 2.0e6]})]
+    plain = tmp_path / "plain.png"
+    marked = tmp_path / "marked.png"
+    OpenFOAMPlotter.make_comparison_plot(entries, plain)
+    OpenFOAMPlotter.make_comparison_plot(
+        entries,
+        marked,
+        {"M": {"cells_per_rank": [500, 250], "fvops": [3.0e6, 4.0e6]}},
+    )
+    assert marked.read_bytes() != plain.read_bytes()
