@@ -16,6 +16,10 @@ size only (timing and counters, MPI trace, and top-down where measured; Rome
 has no top-down run), reduced in the same way.  For Bergamo the trace log is
 `log.simpleFoam.MPItrace1_Delay_22`, because `mpi.trace0` belongs to that run.
 
+`motorBike_2024/128_GENOA/Lik_AOCC_9554_Sumup03_06_2024_17_43_02` holds the
+LIKWID output (`prof.lik.L2/L3/NUMA_<size>.txt`, unchanged apart from trailing whitespace) of `xsmall` and
+`small`; of `log.simpleFoam.likL2` only the banner with the run date is kept.
+
 `motorBike_2026/192_GENOA_2026` is the `xsmall` size of one 2026 run
 configuration (2 nodes, 192 ranks, 4 ranks per CCX): timing, power-run and MPI
 trace logs, the top-down counter file (with a `System (Aggregated)` column),

@@ -42,6 +42,7 @@ performance-profiling data from HPC applications.
 | `AMDuProfMPI_ext` | AMD uProf MPI profiler | Stable |
 | `OpenFOAMlogs_ext` | OpenFOAM `checkMesh` and solver logs (cells, ranks, time steps, step times) | Work in progress |
 | `AMDuProfTimechart_ext` | AMD uProf Timechart (node power traces) | Work in progress |
+| `LIKWID_ext` | LIKWID `likwid-perfctr` statistics (L2, L3, NUMA groups: clock, data volume, bandwidth) | Work in progress |
 
 ## Database schema
 
@@ -119,7 +120,7 @@ poetry run quare import-data --config my_settings.json --layout motorbike-2024 \
 
 The runs are written below `raw_data_directory_path`. The date directory of a
 run may carry a tag after the timestamp (`20231228_174712_counters`); the
-importer uses the tags `counters`, `trace`, `topdown` and (2026) `power` for the
+importer uses the tags `counters`, `trace`, `topdown`, `likwid` and (2026) `power` for the
 kinds of measurement campaign. In the 2026 layout every run configuration
 becomes a machine `<platform>_<nodes>N_<ranks per CCX>PCCX_<ranks>`, so that
 the x axis is the number of cells per MPI rank.

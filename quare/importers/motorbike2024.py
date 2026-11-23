@@ -20,6 +20,12 @@ runs (the tag is appended to the date directory, ``<date>_<tag>``):
 ``topdown``
     Top-down counters (``prof.AMD.ALL_<size>_ipc_2.csv``); the solver logs of
     this variant are not used.
+``likwid``
+    LIKWID output of the L2, L3 and NUMA groups
+    (``prof.lik.<group>_<size>.txt``), imported as one run.  The run date is
+    taken from the banner of the solver log of the likwid run
+    (``log.simpleFoam.likL2``, ``.likL3`` or ``.NUMA``); the files carry no date
+    themselves.
 
 The result is written in the raw layout::
 
@@ -27,6 +33,7 @@ The result is written in the raw layout::
         OpenFOAMlogs/<run>.checkMesh.log, <run>.<solver>.log
         AMDuProfPCM/<counter file>
         AMDuProfMPI/mpi-summary.csv
+        LIKWID/<group>.txt
 
 The run date comes from the date and time in the OpenFOAM log banner (or the
 profile time of a counter file).  If two runs of the same kind get the same
@@ -48,12 +55,15 @@ from pathlib import Path
 COUNTERS = "counters"
 TRACE = "trace"
 TOPDOWN = "topdown"
-ROLES: tuple[str, ...] = (COUNTERS, TRACE, TOPDOWN)
+LIKWID = "likwid"
+ROLES: tuple[str, ...] = (COUNTERS, TRACE, TOPDOWN, LIKWID)
 
 SOLVER_LOG = re.compile(r"^log\.(?P<solver>simpleFoam|pimpleFoam)(?P<run>.*)$")
 PCM_COUNTER_RUN = "uProfALL1"
 PCM_COUNTER_FILE = "prof.AMD.ALL_{size}1.csv"
 PCM_TOPDOWN_FILE = "prof.AMD.ALL_{size}_ipc_2.csv"
+LIKWID_LOGS = ("log.simpleFoam.likL2", "log.simpleFoam.likL3", "log.simpleFoam.NUMA")
+LIKWID_FILE = re.compile(r"^prof\.lik\.(?P<group>\w+?)_(?P<size>\w+)\.txt$")
 MPI_TRACE_LOG = "log.simpleFoam.MPItrace0"
 MPI_SUMMARY = Path("mpi.trace0/AMDuProf-simpleFoam-HPC_MPI/mpi/lwt/mpi-summary.csv")
 
@@ -70,7 +80,7 @@ def load_mapping(path: Path) -> dict:
     and ``machines``.  ``machines`` maps the machine name used in Quare
     (a trailing ``_<cores>`` gives the core count) to an object with the key
     ``source`` (platform directory) and any of the roles ``counters``,
-    ``trace`` and ``topdown`` naming the variant directory.  The optional
+    ``trace``, ``topdown`` and ``likwid`` naming the variant directory.  The optional
     ``trace_logs`` maps a size name to the solver log of the traced run when it
     is not ``log.simpleFoam.MPItrace0``.
 
@@ -275,6 +285,37 @@ def _import_topdown(size_dir: Path, size: str, writer: _RunWriter) -> int:
     return 1
 
 
+def _import_likwid(size_dir: Path, size: str, writer: _RunWriter) -> int:
+    """
+    Import the LIKWID group files of the ``likwid`` variant as one run.
+
+    :param size_dir: Directory with the files of one size.
+    :type size_dir: pathlib.Path
+    :param size: Mesh size name.
+    :type size: str
+    :param writer: Run directory allocator.
+    :type writer: _RunWriter
+    :returns: ``1`` if at least one file was imported, else ``0``.
+    :rtype: int
+    """
+    files = []
+    for path in sorted(size_dir.glob("prof.lik.*.txt")):
+        match = LIKWID_FILE.match(path.name)
+        if match is not None and match.group("size") == size:
+            files.append((match.group("group"), path))
+    if not files:
+        return 0
+    start = None
+    for log_name in LIKWID_LOGS:
+        if (size_dir / log_name).exists():
+            start = log_start_time(size_dir / log_name)
+            break
+    run_dir = writer.run_dir(start, LIKWID, datetime(2024, 1, 1))
+    for group, path in files:
+        _copy(path, run_dir / "LIKWID" / f"{group}.txt")
+    return 1
+
+
 def import_motorbike_2024(
     source: Path,
     raw_data_path: Path,
@@ -329,8 +370,10 @@ def import_motorbike_2024(
                         writer,
                         machine.get("trace_logs", {}).get(size, MPI_TRACE_LOG),
                     )
-                else:
+                elif role == TOPDOWN:
                     counts[role] += _import_topdown(size_dir, size, writer)
+                else:
+                    counts[role] += _import_likwid(size_dir, size, writer)
     return counts
 
 

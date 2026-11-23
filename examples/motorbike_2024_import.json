@@ -6,33 +6,39 @@
         "ROME_128": {
             "source": "128_ROME",
             "counters": "C_AOCC_7742_ROME_Sumup",
+            "likwid": "Lik_AOCC_7742_ROME_Sumup_03_07_2024_05_22_51",
             "trace": "C_AOCC_7742_ROME_Sumup_Trace_12_31_2023_03_16_44"
         },
         "MILAN_128": {
             "source": "128_MILAN",
             "counters": "C_AOCC_7763_MILAN_Sumup",
+            "likwid": "Lik_AOCC_7763_MILAN_Sumup_03_07_2024_05_26_01/Lik_AOCC_7763_MILAN_Sumup_03_07_2024_05_26_01",
             "trace": "C_AOCC_7763_MILAN_Sumup_Trace_12_31_2023_03_19_31"
         },
         "MILANX_128": {
             "source": "128_MILAN_X",
             "counters": "C_AOCC_7773X_MILAN_X_Sumup",
+            "likwid": "Lik_AOCC_7773X_MILAN_X_Sumup",
             "trace": "C_AOCC_7773X_MILAN_X_Sumup_Trace_01_02_2024_10_15_43"
         },
         "GENOA_128": {
             "source": "128_GENOA",
             "counters": "C_AOCC_9554_Sumup",
+            "likwid": "Lik_AOCC_9554_Sumup03_06_2024_17_43_02",
             "trace": "C_AOCC_9554_Sumup_Trace_12_30_2023_00_45_41",
             "topdown": "Zen4_AOCC_9554_Sumup02_06_2024_15_04_14"
         },
         "GENOA_192": {
             "source": "192_GENOA",
             "counters": "D_AOCC_9654_Sumup_01_03_2024_16_32_43",
+            "likwid": "Lik_AOCC_9654_Sumup_03_06_2024_17_58_59",
             "trace": "D_AOCC_9654_Sumup_Trace_01_03_2024_18_02_34",
             "topdown": "Zen4_AOCC_9654_Sumup_02_26_2024_15_52_43"
         },
         "GENOAX_192": {
             "source": "192_GENOA_X",
             "counters": "D_AOCC_9684X_Sumup_01_03_2024_16_33_26",
+            "likwid": "Lik_AOCC_9684X_Sumup_03_06_2024_17_46_25",
             "trace": "D_AOCC_9684X_Sumup_Trace_01_03_2024_17_51_22",
             "topdown": "Zen4_AOCC_9684X_Sumup_02_06_2024_15_22_19"
         },

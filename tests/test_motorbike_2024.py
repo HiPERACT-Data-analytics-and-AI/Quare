@@ -33,6 +33,7 @@ MAPPING = {
             "counters": "C_AOCC_9554_Sumup",
             "trace": "C_AOCC_9554_Sumup_Trace_12_30_2023_00_45_41",
             "topdown": "Zen4_AOCC_9554_Sumup02_06_2024_15_04_14",
+            "likwid": "Lik_AOCC_9554_Sumup03_06_2024_17_43_02",
         }
     },
 }
@@ -49,6 +50,21 @@ EXPECTED_MPI_RATIO = {
     "min": [59.48749999999999, 48.04750593824229],
     "avg": [82.01195261101974, 80.06613717339668],
     "max": [89.88125, 88.81828978622327],
+}
+# Results of freqRange.py (clock) and of the UAP likwid.py row reading
+# (volume and bandwidth: sum, avg) on the same files.
+EXPECTED_CLOCK = {
+    "min": [3744.28, 3744.29],
+    "max": [3744.34, 3744.35],
+    "avg": [3744.33, 3744.34],
+}
+EXPECTED_LIKWID = {
+    "L2 data volume": ([3700.3492, 5783.233], [28.909, 45.1815]),
+    "L2 bandwidth": ([1015482.0, 1159134.0], [7933.456, 9055.7372]),
+    "L3 data volume": ([1025.9777, 1925.9445], [8.0155, 15.0464]),
+    "L3 bandwidth": ([296039.246, 398560.6313], [2312.8066, 3113.7549]),
+    "Memory data volume": ([1297.6629, 2226.5523], [10.138, 17.3949]),
+    "Memory bandwidth": ([324466.6071, 461235.6162], [2534.8954, 3603.4033]),
 }
 EXPECTED_L2 = {
     "L2 miss ratio (total)": [17.779421262754205, 19.21423495179479],
@@ -106,17 +122,25 @@ def test_import_creates_one_directory_per_run(imported: Path) -> None:
         "20231229_233032_trace",
         "20231229_233039_counters",
         "20240206_150427_topdown",
+        "20240306_174312_likwid",
     ]
     run = imported / "raw_data/Motorbike2024/GENOA_128/motorBike/xsmall"
     # the counter file belongs to the run uProfALL1 only
     assert (run / "20231228_174712_counters/AMDuProfPCM").is_dir()
     assert not (run / "20231228_174716_counters/AMDuProfPCM").exists()
     assert (run / "20231229_233032_trace/AMDuProfMPI/mpi-summary.csv").exists()
+    assert sorted(
+        p.name for p in (run / "20240306_174312_likwid/LIKWID").iterdir()
+    ) == [
+        "L2.txt",
+        "L3.txt",
+        "NUMA.txt",
+    ]
 
 
 def test_import_counts_and_unknown_machine(tmp_path: Path) -> None:
     counts = import_motorbike_2024(DATA, tmp_path, MAPPING)
-    assert counts == {"counters": 10, "trace": 2, "topdown": 2}
+    assert counts == {"counters": 10, "trace": 2, "topdown": 2, "likwid": 2}
     with pytest.raises(ValueError, match="not in the mapping"):
         import_motorbike_2024(DATA, tmp_path, MAPPING, ["NOPE_1"])
 
@@ -133,7 +157,7 @@ def test_machine_and_sizes(imported: Path) -> None:
     assert (machine.name, machine.num_of_cores) == ("GENOA_128", 128)
     sizes = {t.name: t.size for t in session.execute(select(TaskSizesDict)).scalars()}
     assert sizes == CELLS
-    assert len(session.execute(select(Repetition)).scalars().all()) == 14
+    assert len(session.execute(select(Repetition)).scalars().all()) == 16
 
 
 def _metric(session, table: str, repetition_id: int, name: str) -> list[float]:
@@ -232,7 +256,7 @@ def test_loading_twice_does_not_duplicate(imported: Path) -> None:
     _load(imported)
     create_db(Namespace())
     session = get_db_session()
-    assert len(session.execute(select(Repetition)).scalars().all()) == 14
+    assert len(session.execute(select(Repetition)).scalars().all()) == 16
     (run,) = _repetitions(session, "xsmall", "trace")
     assert len(_metric(session, "AMDuProfMPI", run, "MPI Time(seconds)")) == 128
 
@@ -280,6 +304,11 @@ def test_analyses_match_the_original_script(imported: Path) -> None:
         assert data[name] == pytest.approx(expected, rel=1e-12), name
     for kind, expected in EXPECTED_MPI_RATIO.items():
         assert data[f"MPI ratio ({kind})"] == pytest.approx(expected, rel=1e-12)
+    for kind, expected in EXPECTED_CLOCK.items():
+        assert data[f"Clock frequency ({kind})"] == pytest.approx(expected, rel=1e-12)
+    for name, (total, mean) in EXPECTED_LIKWID.items():
+        assert data[f"{name} (sum)"] == pytest.approx(total, rel=1e-12), name
+        assert data[f"{name} (avg)"] == pytest.approx(mean, rel=1e-12), name
 
 
 def test_plot_writes_summary(imported: Path) -> None:

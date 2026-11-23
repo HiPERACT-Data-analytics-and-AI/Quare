@@ -15,6 +15,9 @@ stamp of the repetition directory (see :mod:`quare.importers.motorbike2024`):
 ``topdown``
     The run with the Zen 4 top-down counters.
 
+``likwid``
+    The run with the LIKWID statistics of the L2, L3 and NUMA groups.
+
 ``power``
     The run with the AMD uProf power timecharts (2026 data): the node power
     traces and the log of the run, which gives the time stepping window.
@@ -43,6 +46,12 @@ Aggregate / average node power  mean of the last ``int(window/0.1) - 1``
                                 samples of each node trace [W]
 Aggregate energy                sum over nodes of power * window [kWh]
 MPI volume (aggregate/per rank) sum / mean of the per-rank volumes [GB]
+Clock frequency (min/max/avg)   mean over the LIKWID groups of the min / max
+                                / avg over threads of ``Clock [MHz]``,
+                                rounded to 2 decimals
+L2/L3 data volume, L2/L3        ``sum`` over all threads or ``avg`` per thread
+bandwidth, Memory data volume,  of the LIKWID metric (memory = NUMA group
+Memory bandwidth (sum/avg)      total)
 =============================== =========================================
 
 ``FVOPS`` follows the original analysis script: the window of a run is the
@@ -81,6 +90,7 @@ from ..AMDuProfTimechart_ext.models import (
     AMDuProfTimechart_metrics,
     AMDuProfTimechart_metrics_dict,
 )
+from ..LIKWID_ext.models import LIKWID_metrics, LIKWID_metrics_dict
 from .comparison import RunTimes, make_timing_plot, median_run, write_speedup
 from .models import OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict
 
@@ -89,7 +99,8 @@ TAG_TIMING = "counters"
 TAG_TRACE = "trace"
 TAG_TOPDOWN = "topdown"
 TAG_POWER = "power"
-_ALL_TAGS = (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN, TAG_POWER)
+TAG_LIKWID = "likwid"
+_ALL_TAGS = (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN, TAG_POWER, TAG_LIKWID)
 POWER_SAMPLE_INTERVAL = 0.1
 """Sampling interval of the uProf timechart in seconds."""
 
@@ -114,6 +125,24 @@ _L2_RATIOS: dict[str, tuple[str, str]] = {
         "L2 Access from HWPF (pti)",
     ),
 }
+# LIKWID analyses: name -> (group, LIKWID metric names tried in turn, unit)
+_LIKWID_METRICS: dict[str, tuple[str, list[str], str]] = {
+    "L2 data volume": ("L2", ["L2 data volume [GBytes]"], "GBytes"),
+    "L2 bandwidth": ("L2", ["L2 bandwidth [MBytes/s]"], "MBytes/s"),
+    "L3 data volume": (
+        "L3",
+        ["L3 data volume [GBytes]", "L3 access data volume [GBytes]"],
+        "GBytes",
+    ),
+    "L3 bandwidth": (
+        "L3",
+        ["L3 bandwidth [MBytes/s]", "L3 access bandwidth [MBytes/s]"],
+        "MBytes/s",
+    ),
+    "Memory data volume": ("NUMA", ["Total data volume [GBytes]"], "GBytes"),
+    "Memory bandwidth": ("NUMA", ["Total bandwidth [MBytes/s]"], "MBytes/s"),
+}
+_LIKWID_GROUPS = ("L2", "L3", "NUMA")
 _TOPDOWN = {
     "Backend Bound Memory": "Backend_Bound.Memory",
     "Frontend Bound": "Frontend_Bound",
@@ -152,6 +181,15 @@ class OpenFOAMAnalyzer(DataRetriever):
             ),
             UniqueMetricKey("MPI ratio (max)", "%", "rank"): self._mpi_ratio(max),
         }
+        for statistic in ("min", "max", "avg"):
+            analytics[
+                UniqueMetricKey(f"Clock frequency ({statistic})", "MHz", "thread")
+            ] = self._clock(statistic)
+        for name, (group, metrics, unit) in _LIKWID_METRICS.items():
+            for statistic in ("sum", "avg"):
+                analytics[UniqueMetricKey(f"{name} ({statistic})", unit, "thread")] = (
+                    self._likwid(group, metrics, statistic)
+                )
         for name in _L2_RATIOS:
             analytics[UniqueMetricKey(name, "%", "core")] = self._l2_ratio(name)
         for name, counter in _TOPDOWN.items():
@@ -458,6 +496,65 @@ class OpenFOAMAnalyzer(DataRetriever):
         """Analysis wrapper of :meth:`volume_value`."""
         return lambda repetition_ids: self._per_size(
             repetition_ids, lambda ids: self.volume_value(ids, per_rank)
+        )
+
+    def _likwid_value(self, run: int, name: str, statistic: str) -> float | None:
+        """Statistic (``sum``/``min``/``max``/``avg``) of one LIKWID metric."""
+        row = self._db_session.execute(
+            select(LIKWID_metrics.value)
+            .join(
+                LIKWID_metrics_dict,
+                LIKWID_metrics_dict.id == LIKWID_metrics.metric,
+            )
+            .where(
+                LIKWID_metrics.repetition == run,
+                LIKWID_metrics_dict.name == name,
+                LIKWID_metrics_dict.processing_unit == statistic,
+            )
+        ).first()
+        return None if row is None else row[0]
+
+    def clock_value(self, ids: list[int], statistic: str) -> MetricValue:
+        """
+        Clock frequency in MHz as in ``freqRange.py``.
+
+        The ``Clock [MHz]`` statistic of every LIKWID group (L2, L3, NUMA) is
+        averaged and rounded to two decimals.
+        """
+        for run in self._with_tag(ids, TAG_LIKWID):
+            values = [
+                self._likwid_value(run, f"{group} Clock [MHz]", statistic)
+                for group in _LIKWID_GROUPS
+            ]
+            found = [v for v in values if v is not None]
+            if found:
+                return round(sum(found) / len(found), 2)
+        return None
+
+    def _clock(self, statistic: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """Analysis wrapper of :meth:`clock_value`."""
+        return lambda repetition_ids: self._per_size(
+            repetition_ids, lambda ids: self.clock_value(ids, statistic)
+        )
+
+    def likwid_value(
+        self, ids: list[int], group: str, metrics: list[str], statistic: str
+    ) -> MetricValue:
+        """Statistic of the first of *metrics* that the LIKWID run of *group* has."""
+        for run in self._with_tag(ids, TAG_LIKWID):
+            for metric in metrics:
+                value = self._likwid_value(run, f"{group} {metric}", statistic)
+                if value is not None:
+                    return value
+        return None
+
+    def _likwid(
+        self, group: str, metrics: list[str], statistic: str
+    ) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """Analysis wrapper of :meth:`likwid_value`."""
+        return lambda repetition_ids: self._per_size(
+            repetition_ids,
+            lambda ids: self.likwid_value(ids, group, metrics, statistic),
         )
 
     def pcm_features(self, ids: list[int], names: list[str]) -> dict[str, float] | None:

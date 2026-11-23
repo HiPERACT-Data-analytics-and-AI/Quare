@@ -36,6 +36,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   original scripts to 1e-12
 - Optional setting `compare_machines`: `Comparison.png` with one panel per
   machine
+- `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
+  rows of the metric tables (sum/min/max/avg over threads); import role
+  `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as
+  `freqRange.py`) and data volume / bandwidth of L2, L3 and memory (sum/avg, as
+  the UAP `likwid.py` reads them), equal to the scripts to 1e-12 on the test
+  data
 - Optional setting `predicted_fvops` (`{machine: {label, cells_per_rank,
   fvops}}`): predicted points drawn as red stars on the panel of that machine
   in `Comparison.png`, as in `128_uProfAMD_AOCC_hipic.py`. The values are
