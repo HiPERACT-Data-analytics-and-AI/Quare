@@ -15,8 +15,9 @@ stamp of the repetition directory (see :mod:`quare.importers.motorbike2024`):
 ``topdown``
     The run with the Zen 4 top-down counters.
 
-``likwid``
-    The run with the LIKWID statistics of the L2, L3 and NUMA groups.
+``likwid``, ``likwid-pimpleFoam``
+    The run with the LIKWID statistics of the L2, L3 and NUMA groups, for
+    simpleFoam and (UAP) pimpleFoam.
 
 ``power``
     The run with the AMD uProf power timecharts (2026 data): the node power
@@ -61,6 +62,8 @@ Clock frequency (min/max/avg)   mean over the LIKWID groups of the min / max
 L2/L3 data volume, L2/L3        ``sum`` over all threads or ``avg`` per thread
 bandwidth, Memory data volume,  of the LIKWID metric (memory = NUMA group
 Memory bandwidth (sum/avg)      total)
+pimpleFoam <name of the         the same from the ``likwid-pimpleFoam`` run
+Clock / LIKWID analyses>        (UAP)
 =============================== =========================================
 
 ``FVOPS`` follows the original analysis script: the window of a run is the
@@ -211,15 +214,18 @@ class OpenFOAMAnalyzer(DataRetriever):
                 lambda times: (min(times) + max(times)) / 2.0
             ),
         }
-        for statistic in ("min", "max", "avg"):
-            analytics[
-                UniqueMetricKey(f"Clock frequency ({statistic})", "MHz", "thread")
-            ] = self._clock(statistic)
-        for name, (group, metrics, unit) in _LIKWID_METRICS.items():
-            for statistic in ("sum", "avg"):
-                analytics[UniqueMetricKey(f"{name} ({statistic})", unit, "thread")] = (
-                    self._likwid(group, metrics, statistic)
-                )
+        for solver, prefix in (("simpleFoam", ""), ("pimpleFoam", "pimpleFoam ")):
+            for statistic in ("min", "max", "avg"):
+                analytics[
+                    UniqueMetricKey(
+                        f"{prefix}Clock frequency ({statistic})", "MHz", "thread"
+                    )
+                ] = self._clock(statistic, solver)
+            for name, (group, metrics, unit) in _LIKWID_METRICS.items():
+                for statistic in ("sum", "avg"):
+                    analytics[
+                        UniqueMetricKey(f"{prefix}{name} ({statistic})", unit, "thread")
+                    ] = self._likwid(group, metrics, statistic, solver)
         for name in _L2_RATIOS:
             analytics[UniqueMetricKey(name, "%", "core")] = self._l2_ratio(name)
         for name, counter in _TOPDOWN.items():
@@ -623,14 +629,22 @@ class OpenFOAMAnalyzer(DataRetriever):
         ).first()
         return None if row is None else row[0]
 
-    def clock_value(self, ids: list[int], statistic: str) -> MetricValue:
+    def _likwid_runs(self, ids: list[int], solver: str) -> list[int]:
+        """The LIKWID runs of *solver*: ``likwid`` (simpleFoam, no label) or
+        ``likwid-pimpleFoam``."""
+        label = "" if solver == SOLVER else solver
+        return self._with_tag(ids, TAG_LIKWID, label)
+
+    def clock_value(
+        self, ids: list[int], statistic: str, solver: str = SOLVER
+    ) -> MetricValue:
         """
         Clock frequency in MHz as in ``freqRange.py``.
 
         The ``Clock [MHz]`` statistic of every LIKWID group (L2, L3, NUMA) is
         averaged and rounded to two decimals.
         """
-        for run in self._with_tag(ids, TAG_LIKWID):
+        for run in self._likwid_runs(ids, solver):
             values = [
                 self._likwid_value(run, f"{group} Clock [MHz]", statistic)
                 for group in _LIKWID_GROUPS
@@ -640,17 +654,24 @@ class OpenFOAMAnalyzer(DataRetriever):
                 return round(sum(found) / len(found), 2)
         return None
 
-    def _clock(self, statistic: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
+    def _clock(
+        self, statistic: str, solver: str = SOLVER
+    ) -> Callable[[RepetitionIDs], list[MetricValue]]:
         """Analysis wrapper of :meth:`clock_value`."""
         return lambda repetition_ids: self._per_size(
-            repetition_ids, lambda ids: self.clock_value(ids, statistic)
+            repetition_ids, lambda ids: self.clock_value(ids, statistic, solver)
         )
 
     def likwid_value(
-        self, ids: list[int], group: str, metrics: list[str], statistic: str
+        self,
+        ids: list[int],
+        group: str,
+        metrics: list[str],
+        statistic: str,
+        solver: str = SOLVER,
     ) -> MetricValue:
         """Statistic of the first of *metrics* that the LIKWID run of *group* has."""
-        for run in self._with_tag(ids, TAG_LIKWID):
+        for run in self._likwid_runs(ids, solver):
             for metric in metrics:
                 value = self._likwid_value(run, f"{group} {metric}", statistic)
                 if value is not None:
@@ -658,12 +679,12 @@ class OpenFOAMAnalyzer(DataRetriever):
         return None
 
     def _likwid(
-        self, group: str, metrics: list[str], statistic: str
+        self, group: str, metrics: list[str], statistic: str, solver: str = SOLVER
     ) -> Callable[[RepetitionIDs], list[MetricValue]]:
         """Analysis wrapper of :meth:`likwid_value`."""
         return lambda repetition_ids: self._per_size(
             repetition_ids,
-            lambda ids: self.likwid_value(ids, group, metrics, statistic),
+            lambda ids: self.likwid_value(ids, group, metrics, statistic, solver),
         )
 
     def pcm_features(self, ids: list[int], names: list[str]) -> dict[str, float] | None:
@@ -806,7 +827,8 @@ class OpenFOAMPlotter(Plotter):
         """
         The figures of the UAP scripts, each written only when the data exist:
         ``Solver timing comparison.png`` (simpleFoam and pimpleFoam),
-        ``LIKWID L2/L3/Memory.png``, ``Clock frequency.png`` and, with the
+        ``LIKWID L2/L3/Memory.png`` (a column per solver), ``Clock frequency
+        [pimpleFoam].png`` and, with the
         setting ``pti_sizes``, ``PTI.png``.
         """
         settings = load_settings()
@@ -818,20 +840,41 @@ class OpenFOAMPlotter(Plotter):
         def has(values: list[MetricValue]) -> bool:
             return any(v is not None for v in values)
 
-        clock = {m: d.get("Clock frequency (avg)", []) for m, _, d in entries}
-        if any(has(v) for v in clock.values()):
-            make_clock_plot(clock, sizes, labels, folder / "Clock frequency.png")
-        for group in ("L2", "L3", "Memory"):
-            series = {
-                m: {
-                    f"{stat} {quantity}": d.get(f"{group} {quantity} ({stat})", [])
-                    for stat, quantity, _ in LIKWID_ROWS
-                }
-                for m, _, d in entries
+        for solver, prefix, suffix in (
+            ("simpleFoam", "", ""),
+            ("pimpleFoam", "pimpleFoam ", " pimpleFoam"),
+        ):
+            clock = {
+                m: d.get(f"{prefix}Clock frequency (avg)", []) for m, _, d in entries
             }
-            if any(has(v) for rows in series.values() for v in rows.values()):
+            if any(has(v) for v in clock.values()):
+                make_clock_plot(
+                    clock, sizes, labels, folder / f"Clock frequency{suffix}.png"
+                )
+        for group in ("L2", "L3", "Memory"):
+            by_solver = {
+                solver: {
+                    m: {
+                        f"{stat} {quantity}": d.get(
+                            f"{prefix}{group} {quantity} ({stat})", []
+                        )
+                        for stat, quantity, _ in LIKWID_ROWS
+                    }
+                    for m, _, d in entries
+                }
+                for solver, prefix in (
+                    ("simpleFoam", ""),
+                    ("pimpleFoam", "pimpleFoam "),
+                )
+            }
+            by_solver = {
+                solver: series
+                for solver, series in by_solver.items()
+                if any(has(v) for rows in series.values() for v in rows.values())
+            }
+            if by_solver:
                 make_likwid_plot(
-                    series, sizes, labels, group, folder / f"LIKWID {group}.png"
+                    by_solver, sizes, labels, group, folder / f"LIKWID {group}.png"
                 )
 
         times: dict[str, dict[str, list[list[float]]]] = {

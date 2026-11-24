@@ -66,6 +66,26 @@ EXPECTED_LIKWID = {
         "bandwidth": ([272616.1203, 474637.2296], [2129.8134, 3708.1034]),
     },
 }
+# likwid.get_volume_bandwidth / get_clock of the original scripts for pimpleFoam
+EXPECTED_PIMPLE_CLOCK = {
+    "min": [2751.18, 2715.22],
+    "max": [2781.76, 2746.77],
+    "avg": [2767.23, 2731.46],
+}
+EXPECTED_PIMPLE_LIKWID = {
+    "L2": {
+        "data volume": ([28295.0504, 51752.0428], [221.0551, 404.3128]),
+        "bandwidth": ([838481.2085, 1006827.0], [6550.6344, 7865.8355]),
+    },
+    "L3": {
+        "data volume": ([9679.2918, 19991.5685], [75.6195, 156.1841]),
+        "bandwidth": ([290114.3507, 412079.0641], [2266.5184, 3219.3677]),
+    },
+    "Memory": {
+        "data volume": ([15282.8372, 38152.3555], [119.3972, 298.0653]),
+        "bandwidth": ([453670.9968, 779913.8283], [3544.3047, 6093.0768]),
+    },
+}
 
 
 @pytest.fixture
@@ -125,7 +145,13 @@ def _analyses() -> dict[str, list]:
 
 def test_import_counts_and_run_names(tmp_path: Path) -> None:
     counts = import_uap(DATA, tmp_path, MAPPING)
-    assert counts == {"counters": 6, "topdown": 2, "trace": 2, "likwid": 2}
+    assert counts == {
+        "counters": 6,
+        "topdown": 2,
+        "trace": 2,
+        "likwid": 2,
+        "likwid-pimpleFoam": 2,
+    }
     base = tmp_path / "UAP/ROME_128/UAP/uxlow"
     names = sorted(p.name.split("_", 2)[2] for p in base.iterdir())
     assert names == [
@@ -133,6 +159,7 @@ def test_import_counts_and_run_names(tmp_path: Path) -> None:
         "counters-1n2r",
         "counters-1n4r",
         "likwid",
+        "likwid-pimpleFoam",
         "topdown-1n5r",
         "trace-1n6r",
     ]
@@ -145,7 +172,7 @@ def test_import_counts_and_run_names(tmp_path: Path) -> None:
 
 def test_all_runs_are_loaded(imported: Path) -> None:
     _analyses()
-    assert len(get_db_session().execute(select(Repetition)).scalars().all()) == 12
+    assert len(get_db_session().execute(select(Repetition)).scalars().all()) == 14
 
 
 def test_analyses_match_the_original_scripts(imported: Path) -> None:
@@ -164,6 +191,20 @@ def test_analyses_match_the_original_scripts(imported: Path) -> None:
             name = f"{group} {metric}"
             assert data[f"{name} (sum)"] == pytest.approx(total, rel=1e-12), name
             assert data[f"{name} (avg)"] == pytest.approx(mean, rel=1e-12), name
+
+
+def test_pimplefoam_likwid_equals_the_scripts(imported: Path) -> None:
+    data = _analyses()
+    for kind, expected in EXPECTED_PIMPLE_CLOCK.items():
+        name = f"pimpleFoam Clock frequency ({kind})"
+        assert data[name] == pytest.approx(expected, rel=1e-12), name
+    for group, metrics in EXPECTED_PIMPLE_LIKWID.items():
+        for metric, (total, mean) in metrics.items():
+            name = f"pimpleFoam {group} {metric}"
+            assert data[f"{name} (sum)"] == pytest.approx(total, rel=1e-12), name
+            assert data[f"{name} (avg)"] == pytest.approx(mean, rel=1e-12), name
+            # the simpleFoam values are not touched by the second run
+            assert data[f"{group} {metric} (sum)"] != pytest.approx(total)
 
 
 def test_fvops_without_run_selection_uses_the_median(imported: Path) -> None:
@@ -270,6 +311,7 @@ def test_machine_figures_are_written(imported: Path) -> None:
         "LIKWID L3",
         "LIKWID Memory",
         "Clock frequency",
+        "Clock frequency pimpleFoam",
         "PTI",
     ):
         assert (folder / f"{name}.png").stat().st_size > 5_000, name

@@ -61,6 +61,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   without a `Total Time` line. Not reproduced: the PTI variant with the MPI
   volume, `mpi_profiling.py` (needs the special profiling runs) and the
   `mpi_summary.py` tables; `timing_comp.py` draws `high` three times, Quare once
+- UAP: the LIKWID files of pimpleFoam are imported as a second run
+  (`likwid-pimpleFoam`); analyses `pimpleFoam Clock frequency (min/max/avg)` and
+  `pimpleFoam L2/L3/Memory data volume / bandwidth (sum/avg)`, equal to the
+  `likwid.py` values to 1e-12 on the Rome test data. `LIKWID L2/L3/Memory.png`
+  gets a pimpleFoam column and `Clock frequency pimpleFoam.png` is written
 - `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
   rows of the metric tables (sum/min/max/avg over threads); import role
   `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as

@@ -26,7 +26,8 @@ The label (``1n2r``) is the run name without ``run_``; the settings
 stored as ``run.simpleFoam.log`` (from ``log.mySimpleFoam``) and
 ``run.pimpleFoam.log`` (from ``log.myPimpleFoam``), the mesh log as
 ``run.renumberMesh.log`` (UAP has no ``checkMesh`` log; the cells come from
-``Mesh region0 size:``).  The LIKWID files of pimpleFoam are not imported.
+``Mesh region0 size:``).  The LIKWID files of pimpleFoam form a
+second run, tagged ``likwid-pimpleFoam``.
 
 Authors: Marcin Lawenda, Łukasz Szustak
 """
@@ -47,7 +48,9 @@ LIKWID_RUNS = {"L2": "likL2", "L3": "likL3", "NUMA": "liknuma"}
 SOLVER_LOGS = {"log.mySimpleFoam": "simpleFoam", "log.myPimpleFoam": "pimpleFoam"}
 PCM_FILE = "prof.AMD.mySimpleFoam.csv"
 MPI_SUMMARY = Path("mpi.trace/AMDuProf-mySimpleFoam-HPC_MPI/mpi/lwt/mpi-summary.csv")
-LIKWID_FILE = "prof.mySimpleFoam.lik.{group}.txt"
+LIKWID_FILE = "prof.{solver}.lik.{group}.txt"
+LIKWID_SOLVERS = {"mySimpleFoam": "likwid", "myPimpleFoam": "likwid-pimpleFoam"}
+"""Solver name in the file names -> tag of the LIKWID run of that solver."""
 FALLBACK_TIME = datetime(2024, 1, 1)
 
 
@@ -74,18 +77,20 @@ def _import_run(
     return run_dir
 
 
-def _import_likwid(size_path: Path, writer: _RunWriter) -> bool:
-    """Import the LIKWID files of the L2, L3 and NUMA runs as one run."""
+def _import_likwid(
+    size_path: Path, writer: _RunWriter, solver: str = "mySimpleFoam"
+) -> bool:
+    """Import the LIKWID files of *solver* of the L2, L3 and NUMA runs as one run."""
     files = {
-        group: size_path / f"run_{run}" / LIKWID_FILE.format(group=group)
+        group: size_path / f"run_{run}" / LIKWID_FILE.format(solver=solver, group=group)
         for group, run in LIKWID_RUNS.items()
     }
     files = {group: path for group, path in files.items() if path.exists()}
     if not files:
         return False
-    first = size_path / f"run_{LIKWID_RUNS['L2']}" / "log.mySimpleFoam"
+    first = size_path / f"run_{LIKWID_RUNS['L2']}" / f"log.{solver}"
     start = log_start_time(first) if first.exists() else None
-    run_dir = writer.run_dir(start, "likwid", FALLBACK_TIME)
+    run_dir = writer.run_dir(start, LIKWID_SOLVERS[solver], FALLBACK_TIME)
     for group, path in files.items():
         _copy(path, run_dir / "LIKWID" / f"{group}.txt")
     return True
@@ -107,7 +112,7 @@ def import_uap(
     :param machines: Names of the machines to import; all of the mapping when
         ``None``.
     :returns: Number of runs imported per role (``counters``, ``topdown``,
-        ``trace``, ``likwid``).
+        ``trace``, ``likwid``, ``likwid-pimpleFoam``).
     :raises ValueError: If a requested machine is not in the mapping.
     """
     selected = machines or list(mapping["machines"])
@@ -115,7 +120,9 @@ def import_uap(
     if unknown:
         raise ValueError(f"not in the mapping: {', '.join(unknown)}")
 
-    counts = dict.fromkeys(("counters", "topdown", "trace", "likwid"), 0)
+    counts = dict.fromkeys(
+        ("counters", "topdown", "trace", *LIKWID_SOLVERS.values()), 0
+    )
     for machine_name in selected:
         platform = source / mapping["machines"][machine_name]["source"]
         used: set[str] = set()  # run names must be unique across the sizes
@@ -151,8 +158,9 @@ def import_uap(
                         run_dir / "AMDuProfMPI" / "mpi-summary.csv",
                     )
                     counts["trace"] += 1
-            if _import_likwid(size_path, writer):
-                counts["likwid"] += 1
+            for solver, role in LIKWID_SOLVERS.items():
+                if _import_likwid(size_path, writer, solver):
+                    counts[role] += 1
     return counts
 
 

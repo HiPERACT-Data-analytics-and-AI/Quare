@@ -31,4 +31,4 @@ the MPI summary and the power timecharts.  The solver logs are reduced as for
 runs. The solver logs keep the banner, the `ExecutionTime` lines and the
 `Total Time` line, `log.renumberMesh` keeps the `Mesh region0 size` line; the
 uProf profile (`1n4r`, `1n5r`), `mpi-summary.csv` and the LIKWID files of
-simpleFoam are unchanged. The Rome node has no top-down counters.
+simpleFoam and pimpleFoam are unchanged. The Rome node has no top-down counters.

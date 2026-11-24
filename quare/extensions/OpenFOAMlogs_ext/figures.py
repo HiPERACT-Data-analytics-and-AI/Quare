@@ -81,7 +81,7 @@ def make_solver_timing_plot(
 
 
 def make_likwid_plot(
-    data: dict[str, dict[str, list[float | None]]],
+    data: dict[str, dict[str, dict[str, list[float | None]]]],
     sizes: list[str],
     labels: dict[str, str],
     title: str,
@@ -90,40 +90,46 @@ def make_likwid_plot(
     """
     Data volume and bandwidth of one LIKWID group against the size.
 
-    :param data: ``{machine: {"<statistic> <quantity>": values per size}}``
-        with the keys of :data:`LIKWID_ROWS` (``sum data volume``, ...).
+    One column per solver, as in ``likwid.py``.
+
+    :param data: ``{solver: {machine: {"<statistic> <quantity>": values per
+        size}}}`` with the keys of :data:`LIKWID_ROWS` (``sum data volume``).
     :param sizes: Size names of the x axis.
     :param labels: Display name per machine.
     :param title: Group name used in the panel titles (``L2``).
     :param png_filename: Destination file; parent folders are created.
     """
     x = list(range(len(sizes)))
-    fig, axes = plt.subplots(4, 1, figsize=(7, 9), layout="constrained")
-    for axis, (statistic, quantity, pattern) in zip(axes, LIKWID_ROWS):
-        for index, (machine, series) in enumerate(data.items()):
-            values = series.get(f"{statistic} {quantity}", [])
-            points = [(i, v) for i, v in zip(x, values) if v is not None]
-            if not points:
-                continue
-            colour = f"C{index}"
-            axis.plot(
-                [p[0] for p in points],
-                [p[1] for p in points],
-                colour,
-                linestyle="dashed",
-                linewidth=0.4,
-            )
-            axis.plot(
-                [p[0] for p in points],
-                [p[1] for p in points],
-                colour + ".",
-                markersize=6,
-                label=labels.get(machine, machine),
-            )
-        axis.set_xticks(x)
-        axis.set_xticklabels(sizes, fontsize=8)
-        axis.set_title(pattern.format(title=title), fontsize=8)
-        axis.legend(loc="upper left", fontsize=6)
+    fig, axes = plt.subplots(
+        4, len(data), figsize=(7 * len(data), 9), squeeze=False, layout="constrained"
+    )
+    for column, (solver, per_machine) in enumerate(data.items()):
+        for row, (statistic, quantity, pattern) in enumerate(LIKWID_ROWS):
+            axis = axes[row][column]
+            for index, (machine, series) in enumerate(per_machine.items()):
+                values = series.get(f"{statistic} {quantity}", [])
+                points = [(i, v) for i, v in zip(x, values) if v is not None]
+                if not points:
+                    continue
+                colour = f"C{index}"
+                axis.plot(
+                    [p[0] for p in points],
+                    [p[1] for p in points],
+                    colour,
+                    linestyle="dashed",
+                    linewidth=0.4,
+                )
+                axis.plot(
+                    [p[0] for p in points],
+                    [p[1] for p in points],
+                    colour + ".",
+                    markersize=6,
+                    label=labels.get(machine, machine),
+                )
+            axis.set_xticks(x)
+            axis.set_xticklabels(sizes, fontsize=8)
+            axis.set_title(f"{solver}: " + pattern.format(title=title), fontsize=8)
+            axis.legend(loc="upper left", fontsize=6)
     _save(fig, png_filename)
 
 
