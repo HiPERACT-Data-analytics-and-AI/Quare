@@ -6,6 +6,7 @@ The expected numbers are the results of the original UAP scripts
 
 from __future__ import annotations
 
+import csv
 import json
 from argparse import Namespace
 from pathlib import Path
@@ -207,6 +208,31 @@ def test_pimplefoam_likwid_equals_the_scripts(imported: Path) -> None:
             assert data[f"{group} {metric} (sum)"] != pytest.approx(total)
 
 
+# mpi_summary.py on the test files (uxlow, ulow)
+EXPECTED_MPI_TIME = {
+    "min": [6.6852, 9.79331],
+    "avg": [10.06824390625, 14.758967265625],
+    "max": [12.28153, 17.30537],
+}
+EXPECTED_MPI_SHARE = {
+    "MPI_Isend": [5.62609, 4.99755],
+    "MPI_Irecv": [1.07149, 0.92435],
+    "MPI_Waitall": [17.04519, 23.44336],
+    "MPI_Scatter": [0.33444, 0.54413],
+    "MPI_Allreduce": [45.49732, 46.19599],
+}
+EXPECTED_MPI_VOLUME = [84.374559262, 168.007151042]
+
+
+def test_mpi_summary_analyses_equal_the_script(imported: Path) -> None:
+    data = _analyses()
+    for kind, expected in EXPECTED_MPI_TIME.items():
+        assert data[f"MPI time ({kind})"] == pytest.approx(expected, rel=1e-12)
+    for call, expected in EXPECTED_MPI_SHARE.items():
+        assert data[f"{call} share of MPI time"] == pytest.approx(expected, rel=1e-12)
+    assert data["MPI volume (aggregate)"] == pytest.approx(EXPECTED_MPI_VOLUME)
+
+
 def test_fvops_without_run_selection_uses_the_median(imported: Path) -> None:
     """Without the UAP settings FVOPS is the median over the timing runs."""
     settings_path = imported / "settings.json"
@@ -315,6 +341,14 @@ def test_machine_figures_are_written(imported: Path) -> None:
         "PTI",
     ):
         assert (folder / f"{name}.png").stat().st_size > 5_000, name
+    rows = {
+        name: list(csv.reader((folder / f"{name}.csv").open()))
+        for name in ("MPI time", "MPI calls", "MPI volume")
+    }
+    # the formats of mpi_summary.py: two decimals
+    assert rows["MPI time"][1][1:4] == ["6.69", "10.07", "12.28"]
+    assert rows["MPI calls"][-1][1:] == ["MPI_Allreduce", "45.50", "46.20"]
+    assert rows["MPI volume"][1][1:] == ["84.37", "168.01"]
 
 
 # rank MPI times of the trace run divided by the Total Time of its log

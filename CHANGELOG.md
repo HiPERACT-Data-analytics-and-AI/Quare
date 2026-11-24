@@ -59,13 +59,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the analyses on the right axis of `Comparison.png` (UAP: L2 hit ratios and
   `MPI ratio (mid-range)`). `Timing comparison.png` no longer fails for logs
   without a `Total Time` line. Not reproduced: the PTI variant with the MPI
-  volume, `mpi_profiling.py` (needs the special profiling runs) and the
-  `mpi_summary.py` tables; `timing_comp.py` draws `high` three times, Quare once
+  volume and `mpi_profiling.py` (needs the special profiling runs);
+  `timing_comp.py` draws `high` three times, Quare once
 - UAP: the LIKWID files of pimpleFoam are imported as a second run
   (`likwid-pimpleFoam`); analyses `pimpleFoam Clock frequency (min/max/avg)` and
   `pimpleFoam L2/L3/Memory data volume / bandwidth (sum/avg)`, equal to the
   `likwid.py` values to 1e-12 on the Rome test data. `LIKWID L2/L3/Memory.png`
   gets a pimpleFoam column and `Clock frequency pimpleFoam.png` is written
+- The tables of `mpi_summary.py`: analyses `MPI time (min/avg/max)` [s] and
+  `<MPI function> share of MPI time` [%] (Isend, Irecv, Waitall, Scatter,
+  Allreduce) next to `MPI volume (aggregate)`; with `compare_machines` the files
+  `MPI time.csv`, `MPI calls.csv` and `MPI volume.csv` (two decimals, as the
+  script) are written beside the figures
 - Settings for the quirks of the original scripts; the defaults still reproduce
   them: `median_of_even_runs` (`lower`/`average`) and `mpi_ratio_basis`
   (`last_step`/`total_time`). The UAP maximum MPI ratio passed 100% because the

@@ -10,6 +10,7 @@ Authors: Marcin Lawenda, Łukasz Szustak
 
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -243,3 +244,65 @@ def make_pti_plot(
         axis.legend(loc="upper left", fontsize=7)
         right.legend(loc="upper right", fontsize=5)
     _save(fig, png_filename)
+
+
+def write_mpi_tables(
+    data: dict[str, dict[str, list]],
+    sizes: list[str],
+    labels: dict[str, str],
+    calls: tuple[str, ...],
+    folder: Path,
+) -> None:
+    """
+    The tables of ``mpi_summary.py`` as CSV files in *folder*.
+
+    *data* maps a machine to its analyses.  ``MPI time.csv`` has min, avg and
+    max rank time [s] per size, ``MPI calls.csv`` the share of the selected
+    MPI functions in the MPI time [%] and ``MPI volume.csv`` the total volume
+    of all ranks [GB].  A table without any value is not written; a missing
+    value is left empty.  Numbers have two decimals as in the script.
+    """
+
+    def cell(values: list, index: int) -> str:
+        value = values[index] if index < len(values) else None
+        return "" if value is None else f"{value:.2f}"
+
+    def has(*names: str) -> bool:
+        return any(
+            v is not None for d in data.values() for n in names for v in d.get(n, [])
+        )
+
+    folder.mkdir(parents=True, exist_ok=True)
+    stats = ("min", "avg", "max")
+    if has(*(f"MPI time ({s})" for s in stats)):
+        rows = [["machine"] + [f"{size} {s}" for size in sizes for s in stats]]
+        for machine, d in data.items():
+            row = [labels.get(machine, machine)]
+            for i in range(len(sizes)):
+                row += [cell(d.get(f"MPI time ({s})", []), i) for s in stats]
+            rows.append(row)
+        _write_csv(folder / "MPI time.csv", rows)
+    names = [f"{c} share of MPI time" for c in calls]
+    if has(*names):
+        rows = [["machine", "function"] + list(sizes)]
+        for machine, d in data.items():
+            for call, name in zip(calls, names):
+                rows.append(
+                    [labels.get(machine, machine), call]
+                    + [cell(d.get(name, []), i) for i in range(len(sizes))]
+                )
+        _write_csv(folder / "MPI calls.csv", rows)
+    if has("MPI volume (aggregate)"):
+        rows = [["machine"] + list(sizes)]
+        for machine, d in data.items():
+            values = d.get("MPI volume (aggregate)", [])
+            rows.append(
+                [labels.get(machine, machine)]
+                + [cell(values, i) for i in range(len(sizes))]
+            )
+        _write_csv(folder / "MPI volume.csv", rows)
+
+
+def _write_csv(path: Path, rows: list[list[str]]) -> None:
+    with open(path, "w", newline="") as csv_file:
+        csv.writer(csv_file).writerows(rows)

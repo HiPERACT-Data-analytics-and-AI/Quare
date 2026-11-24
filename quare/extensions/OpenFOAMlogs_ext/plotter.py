@@ -55,6 +55,9 @@ CVOPTS                          cells per rank (rounded to 2 decimals) /
 Aggregate / average node power  mean of the last ``int(window/0.1) - 1``
                                 samples of each node trace [W]
 Aggregate energy                sum over nodes of power * window [kWh]
+MPI time (min/avg/max)          per-rank MPI time of the traced run [s]
+<MPI function> share of MPI     ``MPI Time(%)`` of Isend, Irecv, Waitall,
+time                            Scatter, Allreduce [%]
 MPI volume (aggregate/per rank) sum / mean of the per-rank volumes [GB]
 Clock frequency (min/max/avg)   mean over the LIKWID groups of the min / max
                                 / avg over threads of ``Clock [MHz]``,
@@ -124,6 +127,7 @@ from .figures import (
     make_pti_plot,
     make_solver_timing_plot,
     pti_series,
+    write_mpi_tables,
 )
 from .models import OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict
 
@@ -193,6 +197,10 @@ _TOPDOWN = {
 }
 
 
+MPI_CALLS = ("MPI_Isend", "MPI_Irecv", "MPI_Waitall", "MPI_Scatter", "MPI_Allreduce")
+"""MPI functions of the ``MPI calls.csv`` table (``mpi_summary.py``)."""
+
+
 class OpenFOAMAnalyzer(DataRetriever):
     """Data retriever with the OpenFOAM benchmark analyses (see module doc)."""
 
@@ -218,6 +226,11 @@ class OpenFOAMAnalyzer(DataRetriever):
                 False
             ),
             UniqueMetricKey("MPI volume (per rank)", "GB", "rank"): self._volume(True),
+            UniqueMetricKey("MPI time (min)", "s", "rank"): self._mpi_time(min),
+            UniqueMetricKey("MPI time (avg)", "s", "rank"): self._mpi_time(
+                statistics.fmean
+            ),
+            UniqueMetricKey("MPI time (max)", "s", "rank"): self._mpi_time(max),
             UniqueMetricKey("MPI ratio (min)", "%", "rank"): self._mpi_ratio(min),
             UniqueMetricKey("MPI ratio (avg)", "%", "rank"): self._mpi_ratio(
                 statistics.fmean
@@ -239,6 +252,10 @@ class OpenFOAMAnalyzer(DataRetriever):
                     analytics[
                         UniqueMetricKey(f"{prefix}{name} ({statistic})", unit, "thread")
                     ] = self._likwid(group, metrics, statistic, solver)
+        for function in MPI_CALLS:
+            analytics[
+                UniqueMetricKey(f"{function} share of MPI time", "%", "function")
+            ] = self._call_share(function)
         for name in _L2_RATIOS:
             analytics[UniqueMetricKey(name, "%", "core")] = self._l2_ratio(name)
         for name, counter in _TOPDOWN.items():
@@ -639,6 +656,50 @@ class OpenFOAMAnalyzer(DataRetriever):
             repetition_ids, lambda ids: self.volume_value(ids, per_rank)
         )
 
+    def _mpi_time(
+        self, reduce: Callable[[list[float]], float]
+    ) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """MPI time per rank in seconds, reduced over the ranks of the trace run."""
+
+        def time(ids: list[int]) -> MetricValue:
+            for run in self._with_tag(ids, TAG_TRACE):
+                times = self._values(
+                    AMDuProfMPI_metrics,
+                    AMDuProfMPI_metrics_dict,
+                    run,
+                    "MPI Time(seconds)",
+                )
+                if times:
+                    return reduce(times)
+            return None
+
+        return lambda repetition_ids: self._per_size(repetition_ids, time)
+
+    def _call_share(
+        self, function: str
+    ) -> Callable[[RepetitionIDs], list[MetricValue]]:
+        """Share of *function* in the MPI time [%] (``MPI Time(%)`` column)."""
+
+        def share(ids: list[int]) -> MetricValue:
+            for run in self._with_tag(ids, TAG_TRACE):
+                row = self._db_session.execute(
+                    select(AMDuProfMPI_metrics.value)
+                    .join(
+                        AMDuProfMPI_metrics_dict,
+                        AMDuProfMPI_metrics_dict.id == AMDuProfMPI_metrics.metric,
+                    )
+                    .where(
+                        AMDuProfMPI_metrics.repetition == run,
+                        AMDuProfMPI_metrics_dict.name == function,
+                        AMDuProfMPI_metrics_dict.unit == "MPI Time(%)",
+                    )
+                ).first()
+                if row is not None:
+                    return row[0]
+            return None
+
+        return lambda repetition_ids: self._per_size(repetition_ids, share)
+
     def _likwid_value(self, run: int, name: str, statistic: str) -> float | None:
         """Statistic (``sum``/``min``/``max``/``avg``) of one LIKWID metric."""
         row = self._db_session.execute(
@@ -858,8 +919,8 @@ class OpenFOAMPlotter(Plotter):
         The figures of the UAP scripts, each written only when the data exist:
         ``Solver timing comparison.png`` (simpleFoam and pimpleFoam),
         ``LIKWID L2/L3/Memory.png`` (a column per solver), ``Clock frequency
-        [pimpleFoam].png`` and, with the
-        setting ``pti_sizes``, ``PTI.png``.
+        [pimpleFoam].png``, the tables ``MPI time/calls/volume.csv`` and, with
+        the setting ``pti_sizes``, ``PTI.png``.
         """
         settings = load_settings()
         sizes = settings["sizes_to_get"]
@@ -924,6 +985,10 @@ class OpenFOAMPlotter(Plotter):
             make_solver_timing_plot(
                 times, sizes, labels, folder / "Solver timing comparison.png"
             )
+
+        write_mpi_tables(
+            {m: d for m, _, d in entries}, sizes, labels, MPI_CALLS, folder
+        )
 
         pti_sizes = settings.get("pti_sizes")
         if pti_sizes:
