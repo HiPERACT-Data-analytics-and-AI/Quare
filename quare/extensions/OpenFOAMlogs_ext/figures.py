@@ -201,13 +201,18 @@ def pti_series(
 def make_pti_plot(
     entries: list[tuple[str, list[float], list[float | None], dict[str, list]]],
     png_filename: Path,
+    mpi_volume: bool = False,
 ) -> None:
     """
     One panel per machine: FVOPS (left) and the PTI counters (right).
 
-    :param entries: ``(title, cells per rank, FVOPS, pti_series)`` per machine.
+    :param entries: ``(title, cells per rank, left values, pti_series)`` per
+        machine; the left values are FVOPS, or with *mpi_volume* the MPI
+        volume per cell, step and rank [B] (``pti.py --mpi``).
     :param png_filename: Destination file; parent folders are created.
+    :param mpi_volume: Left axis is the MPI volume instead of FVOPS.
     """
+    legend = "MPI volume per cell per step per core" if mpi_volume else "FVOPS"
     fig, axes = plt.subplots(
         1, len(entries), figsize=(7 * len(entries), 5), squeeze=False
     )
@@ -221,7 +226,7 @@ def make_pti_plot(
             "bo",
             linestyle="dashed",
             linewidth=0.4,
-            label="FVOPS",
+            label=legend,
         )
         colours = plt.get_cmap("rainbow")(np.linspace(0, 1, max(len(series), 1)))
         for colour, (name, row) in zip(colours, series.items()):
@@ -236,7 +241,7 @@ def make_pti_plot(
                 label=name,
             )
         axis.set_xlabel("Cells per rank")
-        axis.set_ylabel("FVOPS")
+        axis.set_ylabel("MPI volume traffic [B]" if mpi_volume else "FVOPS")
         axis.yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
         right.set_ylim(0, 35)
         right.set_ylabel("PTI")

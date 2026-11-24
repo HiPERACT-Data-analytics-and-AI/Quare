@@ -58,6 +58,8 @@ Aggregate energy                sum over nodes of power * window [kWh]
 MPI time (min/avg/max)          per-rank MPI time of the traced run [s]
 <MPI function> share of MPI     ``MPI Time(%)`` of Isend, Irecv, Waitall,
 time                            Scatter, Allreduce [%]
+MPI receive volume per cell     ``MPI_Recv`` + ``MPI_Irecv`` volume per time
+                                step, cell and rank [B] (``pti.py --mpi``)
 MPI volume (aggregate/per rank) sum / mean of the per-rank volumes [GB]
 Clock frequency (min/max/avg)   mean over the LIKWID groups of the min / max
                                 / avg over threads of ``Clock [MHz]``,
@@ -201,6 +203,10 @@ MPI_CALLS = ("MPI_Isend", "MPI_Irecv", "MPI_Waitall", "MPI_Scatter", "MPI_Allred
 """MPI functions of the ``MPI calls.csv`` table (``mpi_summary.py``)."""
 
 
+RECEIVES = ("MPI_Recv", "MPI_Irecv")
+"""MPI functions whose volume ``pti.py --mpi`` plots."""
+
+
 class OpenFOAMAnalyzer(DataRetriever):
     """Data retriever with the OpenFOAM benchmark analyses (see module doc)."""
 
@@ -226,6 +232,9 @@ class OpenFOAMAnalyzer(DataRetriever):
                 False
             ),
             UniqueMetricKey("MPI volume (per rank)", "GB", "rank"): self._volume(True),
+            UniqueMetricKey(
+                "MPI receive volume per cell", "B/cell/step/rank", "rank"
+            ): self._receive_volume,
             UniqueMetricKey("MPI time (min)", "s", "rank"): self._mpi_time(min),
             UniqueMetricKey("MPI time (avg)", "s", "rank"): self._mpi_time(
                 statistics.fmean
@@ -656,6 +665,48 @@ class OpenFOAMAnalyzer(DataRetriever):
             repetition_ids, lambda ids: self.volume_value(ids, per_rank)
         )
 
+    def _receive_volume(self, repetition_ids: RepetitionIDs) -> list[MetricValue]:
+        """
+        Volume of ``MPI_Recv`` and ``MPI_Irecv`` in bytes per time step, cell
+        and rank of the trace run (``pti.py --mpi``).
+        """
+
+        def volume(ids: list[int]) -> MetricValue:
+            for run in self._with_tag(ids, TAG_TRACE):
+                get = partial(
+                    self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
+                )
+                steps, cells = get(f"{SOLVER} time steps"), get("cells")
+                ranks = self._values(
+                    AMDuProfMPI_metrics,
+                    AMDuProfMPI_metrics_dict,
+                    run,
+                    "Volume(Bytes)",
+                )
+                sent = [self._function_value(run, f, "Volume(Bytes)") for f in RECEIVES]
+                if steps and cells and ranks and None not in sent:
+                    total = sum(v for v in sent if v is not None)
+                    return total / steps[0] / cells[0] / len(ranks)
+            return None
+
+        return self._per_size(repetition_ids, volume)
+
+    def _function_value(self, run: int, function: str, column: str) -> float | None:
+        """Value of *column* of the MPI function summary of one run."""
+        row = self._db_session.execute(
+            select(AMDuProfMPI_metrics.value)
+            .join(
+                AMDuProfMPI_metrics_dict,
+                AMDuProfMPI_metrics_dict.id == AMDuProfMPI_metrics.metric,
+            )
+            .where(
+                AMDuProfMPI_metrics.repetition == run,
+                AMDuProfMPI_metrics_dict.name == function,
+                AMDuProfMPI_metrics_dict.unit == column,
+            )
+        ).first()
+        return None if row is None else row[0]
+
     def _mpi_time(
         self, reduce: Callable[[list[float]], float]
     ) -> Callable[[RepetitionIDs], list[MetricValue]]:
@@ -682,20 +733,9 @@ class OpenFOAMAnalyzer(DataRetriever):
 
         def share(ids: list[int]) -> MetricValue:
             for run in self._with_tag(ids, TAG_TRACE):
-                row = self._db_session.execute(
-                    select(AMDuProfMPI_metrics.value)
-                    .join(
-                        AMDuProfMPI_metrics_dict,
-                        AMDuProfMPI_metrics_dict.id == AMDuProfMPI_metrics.metric,
-                    )
-                    .where(
-                        AMDuProfMPI_metrics.repetition == run,
-                        AMDuProfMPI_metrics_dict.name == function,
-                        AMDuProfMPI_metrics_dict.unit == "MPI Time(%)",
-                    )
-                ).first()
-                if row is not None:
-                    return row[0]
+                value = self._function_value(run, function, "MPI Time(%)")
+                if value is not None:
+                    return value
             return None
 
         return lambda repetition_ids: self._per_size(repetition_ids, share)
@@ -920,7 +960,7 @@ class OpenFOAMPlotter(Plotter):
         ``Solver timing comparison.png`` (simpleFoam and pimpleFoam),
         ``LIKWID L2/L3/Memory.png`` (a column per solver), ``Clock frequency
         [pimpleFoam].png``, the tables ``MPI time/calls/volume.csv`` and, with
-        the setting ``pti_sizes``, ``PTI.png``.
+        the setting ``pti_sizes``, ``PTI.png`` and ``PTI MPI volume.png``.
         """
         settings = load_settings()
         sizes = settings["sizes_to_get"]
@@ -993,6 +1033,7 @@ class OpenFOAMPlotter(Plotter):
         pti_sizes = settings.get("pti_sizes")
         if pti_sizes:
             panels = []
+            mpi_panels = []
             for machine, x_range, data in entries:
                 ids = retriever.get_repetitions(
                     settings["session_name_contains"],
@@ -1003,15 +1044,15 @@ class OpenFOAMPlotter(Plotter):
                 )
                 chosen = [sizes.index(s) for s in pti_sizes]
                 values = [retriever.pti_values(i) for i in ids.values()]
-                panels.append(
-                    (
-                        labels.get(machine, machine),
-                        [x_range[i] for i in chosen],
-                        [data.get("FVOPS", [])[i] for i in chosen],
-                        pti_series(values),
-                    )
-                )
+                title, x = labels.get(machine, machine), [x_range[i] for i in chosen]
+                series = pti_series(values)
+                fvops = data.get("FVOPS", [])
+                volume = data.get("MPI receive volume per cell", [])
+                panels.append((title, x, [fvops[i] for i in chosen], series))
+                mpi_panels.append((title, x, [volume[i] for i in chosen], series))
             make_pti_plot(panels, folder / "PTI.png")
+            if any(v is not None for p in mpi_panels for v in p[2]):
+                make_pti_plot(mpi_panels, folder / "PTI MPI volume.png", True)
 
     @staticmethod
     def make_comparison_plot(

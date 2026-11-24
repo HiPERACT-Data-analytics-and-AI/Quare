@@ -58,9 +58,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   thousand instructions against FVOPS). The setting `comparison_series` chooses
   the analyses on the right axis of `Comparison.png` (UAP: L2 hit ratios and
   `MPI ratio (mid-range)`). `Timing comparison.png` no longer fails for logs
-  without a `Total Time` line. Not reproduced: the PTI variant with the MPI
-  volume and `mpi_profiling.py` (needs the special profiling runs);
-  `timing_comp.py` draws `high` three times, Quare once
+  without a `Total Time` line. Not reproduced: `mpi_profiling.py` (needs the
+  special profiling runs); `timing_comp.py` draws `high` three times, Quare once
 - UAP: the LIKWID files of pimpleFoam are imported as a second run
   (`likwid-pimpleFoam`); analyses `pimpleFoam Clock frequency (min/max/avg)` and
   `pimpleFoam L2/L3/Memory data volume / bandwidth (sum/avg)`, equal to the
@@ -71,6 +70,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Allreduce) next to `MPI volume (aggregate)`; with `compare_machines` the files
   `MPI time.csv`, `MPI calls.csv` and `MPI volume.csv` (two decimals, as the
   script) are written beside the figures
+- The PTI variant with the MPI volume (`pti.py --mpi`): analysis `MPI receive
+  volume per cell` (`MPI_Recv` + `MPI_Irecv` bytes per step, cell and rank of the
+  trace run) and, with `pti_sizes`, `PTI MPI volume.png`
 - Settings for the quirks of the original scripts; the defaults still reproduce
   them: `median_of_even_runs` (`lower`/`average`) and `mpi_ratio_basis`
   (`last_step`/`total_time`). The UAP maximum MPI ratio passed 100% because the

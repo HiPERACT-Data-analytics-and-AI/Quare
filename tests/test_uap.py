@@ -231,6 +231,10 @@ def test_mpi_summary_analyses_equal_the_script(imported: Path) -> None:
     for call, expected in EXPECTED_MPI_SHARE.items():
         assert data[f"{call} share of MPI time"] == pytest.approx(expected, rel=1e-12)
     assert data["MPI volume (aggregate)"] == pytest.approx(EXPECTED_MPI_VOLUME)
+    # pti.py --mpi: (MPI_Recv + MPI_Irecv) / steps / cells / cores
+    assert data["MPI receive volume per cell"] == pytest.approx(
+        [15.067317387913358, 7.792616644565948], rel=1e-12
+    )
 
 
 def test_fvops_without_run_selection_uses_the_median(imported: Path) -> None:
@@ -339,6 +343,7 @@ def test_machine_figures_are_written(imported: Path) -> None:
         "Clock frequency",
         "Clock frequency pimpleFoam",
         "PTI",
+        "PTI MPI volume",
     ):
         assert (folder / f"{name}.png").stat().st_size > 5_000, name
     rows = {
