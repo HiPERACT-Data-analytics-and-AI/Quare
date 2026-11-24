@@ -47,6 +47,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and, checked on the full files, on `uxlow`/`ulow` of all seven platforms
   (Bergamo has no LIKWID runs); run names stay unique across the sizes when a
   log has no date
+  Also checked on `mlow`, `low`, `mid` and `high` of all seven platforms: equal
+  except the Genoa 128 `high` clock (0.03 MHz). There `run_likL2` also holds an
+  `L3` file and the script's `glob(...)[0]` takes whichever the file system lists
+  first; Quare reads the file of the run's own group
 - `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
   rows of the metric tables (sum/min/max/avg over threads); import role
   `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as
