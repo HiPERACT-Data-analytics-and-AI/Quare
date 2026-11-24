@@ -315,3 +315,57 @@ def test_machine_figures_are_written(imported: Path) -> None:
         "PTI",
     ):
         assert (folder / f"{name}.png").stat().st_size > 5_000, name
+
+
+# rank MPI times of the trace run divided by the Total Time of its log
+EXPECTED_MPI_TOTAL_TIME = {
+    "min": [36.68286394943057, 37.41742988929501],
+    "mid-range": [52.03688566950751, 51.76814371200549],
+    "max": [67.39090738958447, 66.11885753471596],
+}
+
+
+def _change_settings(path: Path, **values: str) -> None:
+    settings = json.loads((path / "settings.json").read_text())
+    settings.update(values)
+    (path / "settings.json").write_text(json.dumps(settings))
+    utils._settings_cache = None
+
+
+def test_mpi_ratio_basis_total_time(imported: Path) -> None:
+    _change_settings(imported, mpi_ratio_basis="total_time")
+    data = _analyses()
+    for kind, expected in EXPECTED_MPI_TOTAL_TIME.items():
+        key = "MPI ratio (mid-range)" if kind == "mid-range" else f"MPI ratio ({kind})"
+        assert data[key] == pytest.approx(expected, rel=1e-12), kind
+        assert all(value < 100 for value in data[key])
+
+
+def test_unknown_basis_is_rejected(imported: Path) -> None:
+    _change_settings(imported, mpi_ratio_basis="wall")
+    with pytest.raises(ValueError, match="mpi_ratio_basis"):
+        _analyses()
+
+
+def test_median_of_even_runs() -> None:
+    from quare.extensions.OpenFOAMlogs_ext.comparison import median_run
+
+    assert median_run([4.0, 1.0, 3.0, 2.0]) == 2.0
+    assert median_run([4.0, 1.0, 3.0, 2.0], "average") == 2.5
+    assert median_run([5.0, 1.0, 3.0], "average") == 3.0
+    assert median_run([]) is None
+    with pytest.raises(ValueError):
+        median_run([1.0], "upper")
+
+
+def test_average_median_equals_the_scripts_for_odd_runs(imported: Path) -> None:
+    """The three timing runs of the subset: the setting changes nothing."""
+    _change_settings(imported, median_of_even_runs="average")
+    del_keys = json.loads((imported / "settings.json").read_text())
+    for key in ("fvops_time_run", "fvops_steps_run"):
+        del_keys.pop(key)
+    (imported / "settings.json").write_text(json.dumps(del_keys))
+    utils._settings_cache = None
+    with_average = _analyses()["FVOPS"]
+    _change_settings(imported, median_of_even_runs="lower")
+    assert with_average == pytest.approx(_analyses()["FVOPS"], rel=1e-12)

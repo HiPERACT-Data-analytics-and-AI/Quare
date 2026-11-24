@@ -66,6 +66,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `pimpleFoam L2/L3/Memory data volume / bandwidth (sum/avg)`, equal to the
   `likwid.py` values to 1e-12 on the Rome test data. `LIKWID L2/L3/Memory.png`
   gets a pimpleFoam column and `Clock frequency pimpleFoam.png` is written
+- Settings for the quirks of the original scripts; the defaults still reproduce
+  them: `median_of_even_runs` (`lower`/`average`) and `mpi_ratio_basis`
+  (`last_step`/`total_time`). The UAP maximum MPI ratio passed 100% because the
+  profiler's MPI times cover the whole run (`Total Time`), while the scripts
+  divide by the last `ExecutionTime`; with `total_time` it is below 100% on
+  the test data. Not setting `fvops_time_run`/`fvops_steps_run` gives the
+  median FVOPS: up to 7.9% (Milan `mlow`) away from the UAP value on the full
+  data, within 2% in most cases. `MPI ratio (avg)` is the true mean, next to the
+  UAP `MPI ratio (mid-range)`
 - `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
   rows of the metric tables (sum/min/max/avg over threads); import role
   `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as

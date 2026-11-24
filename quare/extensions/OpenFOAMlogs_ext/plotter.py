@@ -66,6 +66,19 @@ pimpleFoam <name of the         the same from the ``likwid-pimpleFoam`` run
 Clock / LIKWID analyses>        (UAP)
 =============================== =========================================
 
+Two settings replace behaviour of the original scripts that looks like a
+flaw; the defaults reproduce the scripts:
+
+``median_of_even_runs`` (``lower``/``average``)
+    The median of an even number of runs is the lower middle value in the
+    scripts; ``average`` takes the mean of the two (FVOPS and the timing
+    outputs; the run chosen for ``CVOPTS`` stays the lower median).
+``mpi_ratio_basis`` (``last_step``/``total_time``)
+    The MPI ratios divide by the last ``ExecutionTime`` of the traced run.
+    The MPI times of the profiler cover the whole run, so the ratio can pass
+    100% (the UAP maximum does); ``total_time`` divides by the ``Total Time``
+    line of the log instead.
+
 ``FVOPS`` follows the original analysis script: the window of a run is the
 last minus the first ``ExecutionTime`` of its time stepping, the value of a
 task size is the median of the windows of its timing runs (the lower median
@@ -354,11 +367,23 @@ class OpenFOAMAnalyzer(DataRetriever):
                         steps = counted[0] - 1
             if not windows or steps <= 0:
                 return None
-            windows.sort()
-            median = windows[(len(windows) - 1) // 2]
-            return cells / (median / steps) if median > 0 else None
+            median = median_run(windows, self._median_mode())
+            return cells / (median / steps) if median else None
 
         return self._per_size(repetition_ids, fvops)
+
+    @staticmethod
+    def _mpi_basis() -> str:
+        """Metric of the run time of the MPI ratios (setting ``mpi_ratio_basis``)."""
+        basis = load_settings().get("mpi_ratio_basis", "last_step")
+        if basis not in ("last_step", "total_time"):
+            raise ValueError("mpi_ratio_basis must be 'last_step' or 'total_time'")
+        return "total time" if basis == "total_time" else "last step time"
+
+    @staticmethod
+    def _median_mode() -> str:
+        """Setting ``median_of_even_runs``: ``lower`` (scripts) or ``average``."""
+        return load_settings().get("median_of_even_runs", "lower")
 
     def run_times(self, ids: list[int]) -> RunTimes:
         """
@@ -394,7 +419,8 @@ class OpenFOAMAnalyzer(DataRetriever):
 
     def _timing(self, key: str) -> Callable[[RepetitionIDs], list[MetricValue]]:
         return lambda repetition_ids: self._per_size(
-            repetition_ids, lambda ids: median_run(self.run_times(ids)[key])
+            repetition_ids,
+            lambda ids: median_run(self.run_times(ids)[key], self._median_mode()),
         )
 
     def _counter_runs(self, ids: list[int]) -> list[int]:
@@ -708,12 +734,14 @@ class OpenFOAMAnalyzer(DataRetriever):
                     "MPI Time(seconds)",
                 )
                 # the run time of the traced run is the LAST cumulative
-                # ExecutionTime, not the time stepping window (as in the script)
+                # ExecutionTime, not the time stepping window (as in the
+                # script); with mpi_ratio_basis "total_time" it is the Total
+                # Time of the run, which the MPI times of the profiler cover
                 last = self._values(
                     OpenFOAMlogs_metrics,
                     OpenFOAMlogs_metrics_dict,
                     run,
-                    f"{SOLVER} last step time",
+                    f"{SOLVER} {self._mpi_basis()}",
                 )
                 if times and last and last[0] > 0:
                     return reduce(times) / last[0] * 100.0
@@ -811,7 +839,9 @@ class OpenFOAMPlotter(Plotter):
                 settings.get("repetition_name_contains", ""),
             )
             runs[machine] = [retriever.run_times(i) for i in ids.values()]
-            times[machine] = [median_run(r["steps"]) for r in runs[machine]]
+            times[machine] = [
+                median_run(r["steps"], retriever._median_mode()) for r in runs[machine]
+            ]
         labels = settings.get("machine_labels", {})
         make_timing_plot(
             runs, settings["sizes_to_get"], labels, folder / "Timing comparison.png"

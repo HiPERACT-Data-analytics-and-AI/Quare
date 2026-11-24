@@ -23,11 +23,27 @@ Time``), ``all_steps`` (last ``ExecutionTime``), ``pct`` (last
 Every list is sorted on its own, as in the original script."""
 
 
-def median_run(values: list[float]) -> float | None:
-    """Lower median of *values*; the middle one for the usual five runs."""
+MEDIAN_MODES = ("lower", "average")
+"""Values of the setting ``median_of_even_runs``."""
+
+
+def median_run(values: list[float], even: str = "lower") -> float | None:
+    """
+    Median of *values*.
+
+    The middle one for an odd number of runs (the usual five).  For an even
+    number the original scripts take the lower of the two middle values
+    (``even="lower"``); ``even="average"`` gives their mean, the statistical
+    median.
+    """
+    if even not in MEDIAN_MODES:
+        raise ValueError(f"median_of_even_runs must be one of {MEDIAN_MODES}")
     if not values:
         return None
-    return sorted(values)[(len(values) - 1) // 2]
+    ordered = sorted(values)
+    if even == "average" and len(ordered) % 2 == 0:
+        return (ordered[len(ordered) // 2 - 1] + ordered[len(ordered) // 2]) / 2
+    return ordered[(len(ordered) - 1) // 2]
 
 
 def speedup_ranges(

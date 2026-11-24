@@ -126,7 +126,12 @@ importer uses the tags `counters`, `trace`, `topdown`, `likwid` and (2026) `powe
 kinds of measurement campaign; a tag may carry a label (`counters-1n2r` for
 the UAP run `run_1n2r`). The settings `fvops_time_run` and `fvops_steps_run`
 make FVOPS use the time of one labelled run and the step count of another, as
-the UAP scripts do (`1n2r` and `1n4r`). In the 2026 layout every run configuration
+the UAP scripts do (`1n2r` and `1n4r`); without them FVOPS is the median of all
+timing runs, which differs from the UAP value by up to 8% (mostly within 2%) on the
+UAP data. The settings `median_of_even_runs` (`lower`, as the scripts, or `average`)
+and `mpi_ratio_basis` (`last_step`, as the scripts, or `total_time`, which keeps the
+MPI ratios below 100%) replace two other quirks of the scripts; the defaults
+reproduce them. In the 2026 layout every run configuration
 becomes a machine `<platform>_<nodes>N_<ranks per CCX>PCCX_<ranks>`, so that
 the x axis is the number of cells per MPI rank.
 
