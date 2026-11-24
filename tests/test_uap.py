@@ -199,3 +199,77 @@ def test_dateless_runs_get_unique_names_across_sizes(tmp_path: Path) -> None:
     first = _RunWriter(tmp_path / "uxlow", used).run_dir(None, "trace-1n6r", fallback)
     second = _RunWriter(tmp_path / "ulow", used).run_dir(None, "trace-1n6r", fallback)
     assert first.name != second.name
+
+
+# timing_comp.py (sorted windows of the five runs) and pti.get_metrics on the
+# full files of the subset, mean over cores
+EXPECTED_WINDOWS = {
+    "simpleFoam": [
+        [9.97, 11.27, 11.34, 11.37, 11.48],
+        [16.48, 17.19, 17.3, 17.43, 17.84],
+    ],
+    "pimpleFoam": [
+        [25.08, 25.49, 26.46, 27.26, 28.34],
+        [37.94, 40.22, 40.86, 41.07, 42.33],
+    ],
+}
+EXPECTED_PTI = {
+    "L2 Access (pti)": [12.453984375, 16.505703125],
+    "L2 Miss (pti)": [2.696015625, 3.787109375],
+    "L2 Hit from DC Miss (pti)": [4.453671875, 7.857734375],
+}
+
+
+def test_solver_times_and_pti_equal_the_scripts(imported: Path) -> None:
+    from quare.data_retriever import DataRetrieversManager
+    from quare.extensions.OpenFOAMlogs_ext.plotter import OpenFOAMAnalyzer
+
+    _analyses()
+    retriever = DataRetrieversManager.get_retriever("OpenFOAMlogs")
+    assert isinstance(retriever, OpenFOAMAnalyzer)
+    ids = retriever.get_repetitions("UAP", "ROME_128", "UAP", ["uxlow", "ulow"], "")
+    for solver, expected in EXPECTED_WINDOWS.items():
+        found = [retriever.solver_times(i, solver) for i in ids.values()]
+        for per_size, wanted in zip(found, expected):
+            assert per_size == pytest.approx(wanted, abs=1e-6), solver
+    values = [retriever.pti_values(i) for i in ids.values()]
+    for name, expected in EXPECTED_PTI.items():
+        assert [v[name] for v in values] == pytest.approx(expected, rel=1e-12), name
+
+
+def test_pti_series_keeps_the_counters_above_two() -> None:
+    from quare.extensions.OpenFOAMlogs_ext.figures import pti_series
+
+    series = pti_series(
+        [
+            {"DC Access (pti)": 540.0, "A (pti)": 3.0, "B (pti)": 1.0},
+            {"DC Access (pti)": 551.0, "A (pti)": 4.0, "B (pti)": 2.0},
+        ]
+    )
+    assert series == {"A (pti)": [3.0, 4.0]}
+
+
+def test_machine_figures_are_written(imported: Path) -> None:
+    from quare.plot import plot
+
+    settings_path = imported / "settings.json"
+    settings = json.loads(settings_path.read_text())
+    settings["compare_machines"] = ["ROME_128"]
+    settings["pti_sizes"] = ["uxlow", "ulow"]
+    settings["comparison_series"] = ["L3 miss ratio", "MPI ratio (mid-range)"]
+    settings_path.write_text(json.dumps(settings))
+    utils._settings_cache = None
+    preprocess(Namespace())
+    create_db(Namespace())
+    plot(Namespace())
+    folder = imported / "output/UAP/UAP"
+    for name in (
+        "Comparison",
+        "Solver timing comparison",
+        "LIKWID L2",
+        "LIKWID L3",
+        "LIKWID Memory",
+        "Clock frequency",
+        "PTI",
+    ):
+        assert (folder / f"{name}.png").stat().st_size > 5_000, name

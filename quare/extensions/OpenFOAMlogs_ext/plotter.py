@@ -101,6 +101,14 @@ from ..AMDuProfTimechart_ext.models import (
 )
 from ..LIKWID_ext.models import LIKWID_metrics, LIKWID_metrics_dict
 from .comparison import RunTimes, make_timing_plot, median_run, write_speedup
+from .figures import (
+    LIKWID_ROWS,
+    make_clock_plot,
+    make_likwid_plot,
+    make_pti_plot,
+    make_solver_timing_plot,
+    pti_series,
+)
 from .models import OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict
 
 SOLVER = "simpleFoam"
@@ -152,6 +160,16 @@ _LIKWID_METRICS: dict[str, tuple[str, list[str], str]] = {
     "Memory bandwidth": ("NUMA", ["Total bandwidth [MBytes/s]"], "MBytes/s"),
 }
 _LIKWID_GROUPS = ("L2", "L3", "NUMA")
+DEFAULT_SERIES = (
+    "L2 miss ratio (total)",
+    "L2 miss ratio from L1DC",
+    "L2 miss ratio from HWPF",
+    "L3 miss ratio",
+    "MPI ratio (avg)",
+    "Backend Bound Memory",
+    "Frontend Bound",
+)
+"""Analyses on the right axis of the comparison figure."""
 _TOPDOWN = {
     "Backend Bound Memory": "Backend_Bound.Memory",
     "Frontend Bound": "Frontend_Bound",
@@ -340,7 +358,8 @@ class OpenFOAMAnalyzer(DataRetriever):
         """
         Times of all timing runs of one task size (see :data:`RunTimes`).
 
-        A run counts only with a ``Total Time`` line; the lists are sorted
+        A run counts with its time-stepping window; the lists derived from the
+        ``Total Time`` line only have the runs that have one. The lists are sorted
         independently of each other, as in the original script.
         """
         steps, total, all_steps, pct, delay = [], [], [], [], []
@@ -351,13 +370,14 @@ class OpenFOAMAnalyzer(DataRetriever):
             first = get(f"{SOLVER} first step time")
             last = get(f"{SOLVER} last step time")
             whole = get(f"{SOLVER} total time")
-            if not (first and last and whole):
+            if not (first and last):
                 continue
             steps.append(last[0] - first[0])
-            total.append(whole[0])
             all_steps.append(last[0])
-            pct.append(last[0] / whole[0] * 100.0)
-            delay.append(whole[0] - last[0])
+            if whole:  # the UAP logs have no "Total Time" line
+                total.append(whole[0])
+                pct.append(last[0] / whole[0] * 100.0)
+                delay.append(whole[0] - last[0])
         return {
             "steps": sorted(steps),
             "total": sorted(total),
@@ -400,6 +420,62 @@ class OpenFOAMAnalyzer(DataRetriever):
             return found[counter] if found else None
 
         return lambda repetition_ids: self._per_size(repetition_ids, mean)
+
+    def solver_times(self, ids: list[int], solver: str) -> list[float]:
+        """
+        Sorted time-stepping windows of *solver* in all runs of one task size.
+
+        Unlike :meth:`run_times` this takes every run that has a log of the
+        solver (timing, trace and top-down runs), as ``timing_comp.py`` does
+        with its five runs.
+        """
+        windows = []
+        runs = [
+            run
+            for tag in (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN)
+            for run in self._with_tag(ids, tag)
+        ]
+        for run in runs:
+            get = partial(
+                self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
+            )
+            first, last = get(f"{solver} first step time"), get(
+                f"{solver} last step time"
+            )
+            if first and last:
+                windows.append(last[0] - first[0])
+        return sorted(windows)
+
+    def pti_values(self, ids: list[int]) -> dict[str, float]:
+        """
+        The ``(pti)`` counters of the first counter run of one task size that
+        has any, as in :meth:`_pcm_means`.
+        """
+        for run in self._counter_runs(ids):
+            names = [
+                row[0]
+                for row in self._db_session.execute(
+                    select(AMDuProfPCM_metrics_dict.name)
+                    .join(
+                        AMDuProfPCM_metrics,
+                        AMDuProfPCM_metrics.metric == AMDuProfPCM_metrics_dict.id,
+                    )
+                    .where(
+                        AMDuProfPCM_metrics.repetition == run,
+                        AMDuProfPCM_metrics_dict.name.like("%(pti)"),
+                    )
+                    .distinct()
+                    .order_by(AMDuProfPCM_metrics_dict.id)
+                )
+            ]
+            found = {}
+            for name in names:
+                value = self._pcm_means([run], [name])
+                if value:
+                    found.update(value)
+            if found:
+                return found
+        return {}
 
     def timing_record(self, ids: list[int]) -> dict[str, float | None] | None:
         """
@@ -689,11 +765,14 @@ class OpenFOAMPlotter(Plotter):
             for machine in machines:
                 x, values, _ = self._collect(machine)
                 entries.append((machine, x, values))
+            folder = use_case_dir.parent.parent / info["Use case"]
             self.make_comparison_plot(
                 entries,
-                use_case_dir.parent.parent / info["Use case"] / "Comparison.png",
+                folder / "Comparison.png",
                 settings.get("predicted_fvops", {}),
+                settings.get("comparison_series"),
             )
+            self._make_machine_figures(machines, entries, folder)
 
     def _make_timing_outputs(self, machines: list[str], folder: Path) -> None:
         """``Timing comparison.png``, ``Speedup.csv`` and ``Speedup.png``."""
@@ -718,11 +797,93 @@ class OpenFOAMPlotter(Plotter):
         )
         write_speedup(times, labels, folder / "Speedup.csv", folder / "Speedup.png")
 
+    def _make_machine_figures(
+        self,
+        machines: list[str],
+        entries: list[tuple[str, list[float], dict[str, list[MetricValue]]]],
+        folder: Path,
+    ) -> None:
+        """
+        The figures of the UAP scripts, each written only when the data exist:
+        ``Solver timing comparison.png`` (simpleFoam and pimpleFoam),
+        ``LIKWID L2/L3/Memory.png``, ``Clock frequency.png`` and, with the
+        setting ``pti_sizes``, ``PTI.png``.
+        """
+        settings = load_settings()
+        sizes = settings["sizes_to_get"]
+        labels = settings.get("machine_labels", {})
+        retriever = DataRetrieversManager.get_retriever(self._profiler_name)
+        assert isinstance(retriever, OpenFOAMAnalyzer)
+
+        def has(values: list[MetricValue]) -> bool:
+            return any(v is not None for v in values)
+
+        clock = {m: d.get("Clock frequency (avg)", []) for m, _, d in entries}
+        if any(has(v) for v in clock.values()):
+            make_clock_plot(clock, sizes, labels, folder / "Clock frequency.png")
+        for group in ("L2", "L3", "Memory"):
+            series = {
+                m: {
+                    f"{stat} {quantity}": d.get(f"{group} {quantity} ({stat})", [])
+                    for stat, quantity, _ in LIKWID_ROWS
+                }
+                for m, _, d in entries
+            }
+            if any(has(v) for rows in series.values() for v in rows.values()):
+                make_likwid_plot(
+                    series, sizes, labels, group, folder / f"LIKWID {group}.png"
+                )
+
+        times: dict[str, dict[str, list[list[float]]]] = {
+            "simpleFoam": {},
+            "pimpleFoam": {},
+        }
+        for machine in machines:
+            ids = retriever.get_repetitions(
+                settings["session_name_contains"],
+                machine,
+                settings["use_case_name"],
+                sizes,
+                settings.get("repetition_name_contains", ""),
+            )
+            for solver in times:
+                times[solver][machine] = [
+                    retriever.solver_times(i, solver) for i in ids.values()
+                ]
+        if any(t for per_size in times["pimpleFoam"].values() for t in per_size):
+            make_solver_timing_plot(
+                times, sizes, labels, folder / "Solver timing comparison.png"
+            )
+
+        pti_sizes = settings.get("pti_sizes")
+        if pti_sizes:
+            panels = []
+            for machine, x_range, data in entries:
+                ids = retriever.get_repetitions(
+                    settings["session_name_contains"],
+                    machine,
+                    settings["use_case_name"],
+                    pti_sizes,
+                    settings.get("repetition_name_contains", ""),
+                )
+                chosen = [sizes.index(s) for s in pti_sizes]
+                values = [retriever.pti_values(i) for i in ids.values()]
+                panels.append(
+                    (
+                        labels.get(machine, machine),
+                        [x_range[i] for i in chosen],
+                        [data.get("FVOPS", [])[i] for i in chosen],
+                        pti_series(values),
+                    )
+                )
+            make_pti_plot(panels, folder / "PTI.png")
+
     @staticmethod
     def make_comparison_plot(
         entries: list[tuple[str, list[float], dict[str, list[MetricValue]]]],
         png_filename: Path,
         predicted: dict[str, dict[str, Any]] | None = None,
+        series: list[str] | None = None,
     ) -> None:
         """
         One panel per machine: FVOPS (left axis, blue) and the ratios in
@@ -734,6 +895,9 @@ class OpenFOAMPlotter(Plotter):
             "fvops"}}``. The points come from outside Quare (a model or an
             earlier run) and are drawn as red stars on the panel of that
             machine, as in the original ``128_uProfAMD_AOCC_hipic.py``.
+        :param series: Analyses drawn on the right axis (default: the L2 and
+            L3 miss ratios, ``MPI ratio (avg)`` and the top-down values). The
+            UAP scripts use ``MPI ratio (mid-range)`` and the L2 hit ratios.
         """
         fig, axes = plt.subplots(
             1, len(entries), figsize=(7 * len(entries), 5), squeeze=False
@@ -757,15 +921,7 @@ class OpenFOAMPlotter(Plotter):
                 )
             axis.set_ylabel("FVOPS")
             axis.yaxis.get_major_formatter().set_scientific(False)  # pyright: ignore
-            for name in (
-                "L2 miss ratio (total)",
-                "L2 miss ratio from L1DC",
-                "L2 miss ratio from HWPF",
-                "L3 miss ratio",
-                "MPI ratio (avg)",
-                "Backend Bound Memory",
-                "Frontend Bound",
-            ):
+            for name in series or DEFAULT_SERIES:
                 xs, ys = _points(x_range, data, name)
                 if ys:
                     right.semilogx(

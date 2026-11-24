@@ -141,7 +141,7 @@ def make_timing_plot(
             axis.set_ylim(0, 100 if key == "pct" else None)
             if key == "steps":
                 top = max(
-                    (max(runs[n][row].get("steps", [0])) for n in names), default=0
+                    (max(runs[n][row].get("steps") or [0]) for n in names), default=0
                 )
                 axis.set_ylim(0, top * 1.3 if top else None)
     png_filename.parent.mkdir(parents=True, exist_ok=True)

@@ -51,6 +51,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   except the Genoa 128 `high` clock (0.03 MHz). There `run_likL2` also holds an
   `L3` file and the script's `glob(...)[0]` takes whichever the file system lists
   first; Quare reads the file of the run's own group
+- UAP figures in the folder of `compare_machines`: `Solver timing comparison.png`
+  (simpleFoam and pimpleFoam, all runs of a size, as `timing_comp.py`),
+  `LIKWID L2/L3/Memory.png` and `Clock frequency.png` (as `likwid.py`) and,
+  with the setting `pti_sizes`, `PTI.png` (as `pti.py`: counters above 2 per
+  thousand instructions against FVOPS). The setting `comparison_series` chooses
+  the analyses on the right axis of `Comparison.png` (UAP: L2 hit ratios and
+  `MPI ratio (mid-range)`). `Timing comparison.png` no longer fails for logs
+  without a `Total Time` line. Not reproduced: the PTI variant with the MPI
+  volume, `mpi_profiling.py` (needs the special profiling runs) and the
+  `mpi_summary.py` tables; `timing_comp.py` draws `high` three times, Quare once
 - `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
   rows of the metric tables (sum/min/max/avg over threads); import role
   `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as
