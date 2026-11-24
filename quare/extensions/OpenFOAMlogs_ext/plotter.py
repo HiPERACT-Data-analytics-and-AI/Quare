@@ -840,10 +840,7 @@ class OpenFOAMPlotter(Plotter):
         def has(values: list[MetricValue]) -> bool:
             return any(v is not None for v in values)
 
-        for solver, prefix, suffix in (
-            ("simpleFoam", "", ""),
-            ("pimpleFoam", "pimpleFoam ", " pimpleFoam"),
-        ):
+        for prefix, suffix in (("", ""), ("pimpleFoam ", " pimpleFoam")):
             clock = {
                 m: d.get(f"{prefix}Clock frequency (avg)", []) for m, _, d in entries
             }

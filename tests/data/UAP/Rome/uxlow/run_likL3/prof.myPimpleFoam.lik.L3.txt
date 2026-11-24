@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
-CPU name:	AMD EPYC 7742 64-Core Processor                
+CPU name:	AMD EPYC 7742 64-Core Processor
 CPU type:	AMD K17 (Zen2) architecture
 CPU clock:	2.25 GHz
 --------------------------------------------------------------------------------
