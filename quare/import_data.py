@@ -4,7 +4,7 @@ into the raw data layout used by ``preprocess-data``.
 
 Usage::
 
-    quare import-data --layout motorbike-2024|motorbike-2026 --source DIR --map FILE
+    quare import-data --layout motorbike-2024|motorbike-2026|uap --source DIR --map FILE
 """
 
 from __future__ import annotations
@@ -12,10 +12,14 @@ from __future__ import annotations
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from .importers import motorbike2024, motorbike2026
+from .importers import motorbike2024, motorbike2026, uap
 from .utils import load_settings
 
-IMPORTERS = {"motorbike-2024": motorbike2024, "motorbike-2026": motorbike2026}
+IMPORTERS = {
+    "motorbike-2024": motorbike2024,
+    "motorbike-2026": motorbike2026,
+    "uap": uap,
+}
 """Available importers, by the name given to ``--layout``."""
 
 

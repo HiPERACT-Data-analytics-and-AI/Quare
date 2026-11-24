@@ -4,7 +4,8 @@ Loader for the OpenFOAM logs extension.
 Parses ``<run>.checkMesh.log`` and ``<run>.<solver>.log`` files and stores the
 values below as metrics with processing unit ``"run"``:
 
-* from ``checkMesh``: ``cells`` and ``ranks``
+* from ``checkMesh``: ``cells`` and ``ranks``; from ``renumberMesh`` (UAP
+  runs have no ``checkMesh`` log): ``cells`` from ``Mesh region0 size:``
 * from a solver log (``simpleFoam`` or ``pimpleFoam``): ``<solver> time
   steps`` (number of ``ExecutionTime`` entries), ``<solver> first step time``
   and ``<solver> last step time`` (first and last cumulative ``ExecutionTime``,
@@ -41,6 +42,7 @@ PROCESSING_UNIT = "run"
 """Processing unit stored for all metrics of this extension."""
 
 _CELLS = re.compile(r"^\s*cells:\s+(\d+)")
+_REGION_SIZE = re.compile(r"^\s*Mesh region0 size:\s*(\d+)")
 _RANKS = re.compile(r"^nProcs\s*:\s*(\d+)")
 _EXECUTION_TIME = re.compile(r"^ExecutionTime = ([0-9.eE+-]+) s")
 _TOTAL_TIME = re.compile(r"^Total [Tt]ime(?::|\s*=)\s*([0-9.eE+-]+)")
@@ -60,7 +62,7 @@ def parse_check_mesh(path: Path) -> dict[str, float]:
     values: dict[str, float] = {}
     with path.open(errors="replace") as log:
         for line in log:
-            if match := _CELLS.match(line):
+            if match := (_CELLS.match(line) or _REGION_SIZE.match(line)):
                 values["cells"] = float(match.group(1))
             elif match := _RANKS.match(line):
                 values["ranks"] = float(match.group(1))
@@ -197,4 +199,7 @@ class ExtensionDataLoaderImpl(ExtensionDataLoader):
             OpenFOAMlogs_metrics,
             OpenFOAMlogs_metrics_dict,
         )
+        data_loader.walk_through_data("OpenFOAMlogs", file_suffixes)
+        # runs without a checkMesh log (UAP) are found through renumberMesh
+        file_suffixes[0] = ("renumberMesh.log", Loaders.load_mesh)
         data_loader.walk_through_data("OpenFOAMlogs", file_suffixes)

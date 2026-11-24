@@ -25,3 +25,10 @@ configuration (2 nodes, 192 ranks, 4 ranks per CCX): timing, power-run and MPI
 trace logs, the top-down counter file (with a `System (Aggregated)` column),
 the MPI summary and the power timecharts.  The solver logs are reduced as for
 2024 and also lose the `MCW rank` binding lines of the banner.
+
+`UAP/Rome` holds the sizes `uxlow` and `ulow` of the UAP measurements on a
+2x64-core AMD EPYC 7742 (Rome) node: the runs `1n1r` to `1n6r` and the LIKWID
+runs. The solver logs keep the banner, the `ExecutionTime` lines and the
+`Total Time` line, `log.renumberMesh` keeps the `Mesh region0 size` line; the
+uProf profile (`1n4r`, `1n5r`), `mpi-summary.csv` and the LIKWID files of
+simpleFoam are unchanged. The Rome node has no top-down counters.

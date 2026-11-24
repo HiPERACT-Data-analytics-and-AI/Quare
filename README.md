@@ -110,8 +110,10 @@ Quare processes data in three sequential steps.
 If your measurements are not yet in the layout described below, an importer
 can convert them. The 2024 single-node (`--layout motorbike-2024`) and the
 2026 multi-node OpenFOAM motorBike measurements with power
-(`--layout motorbike-2026`) are supported; `examples/motorbike_2024_import.json`
-and `examples/motorbike_2026_import.json` show the mapping files:
+(`--layout motorbike-2026`) are supported, as are the UAP simpleFoam /
+pimpleFoam measurements (`--layout uap`); `examples/motorbike_2024_import.json`,
+`examples/motorbike_2026_import.json` and `examples/uap_import.json` show the
+mapping files:
 
 ```bash
 poetry run quare import-data --config my_settings.json --layout motorbike-2024 \
@@ -121,7 +123,10 @@ poetry run quare import-data --config my_settings.json --layout motorbike-2024 \
 The runs are written below `raw_data_directory_path`. The date directory of a
 run may carry a tag after the timestamp (`20231228_174712_counters`); the
 importer uses the tags `counters`, `trace`, `topdown`, `likwid` and (2026) `power` for the
-kinds of measurement campaign. In the 2026 layout every run configuration
+kinds of measurement campaign; a tag may carry a label (`counters-1n2r` for
+the UAP run `run_1n2r`). The settings `fvops_time_run` and `fvops_steps_run`
+make FVOPS use the time of one labelled run and the step count of another, as
+the UAP scripts do (`1n2r` and `1n4r`). In the 2026 layout every run configuration
 becomes a machine `<platform>_<nodes>N_<ranks per CCX>PCCX_<ranks>`, so that
 the x axis is the number of cells per MPI rank.
 

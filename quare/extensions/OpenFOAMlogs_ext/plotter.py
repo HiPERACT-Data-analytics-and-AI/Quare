@@ -22,6 +22,12 @@ stamp of the repetition directory (see :mod:`quare.importers.motorbike2024`):
     The run with the AMD uProf power timecharts (2026 data): the node power
     traces and the log of the run, which gives the time stepping window.
 
+A tag may carry a label (``counters-1n2r``).  The settings
+``fvops_time_run`` and ``fvops_steps_run`` select the labelled timing run whose
+window, and the one whose step count, FVOPS uses; the UAP scripts take the time
+of run ``1n2r`` and the steps of run ``1n4r``.  Without them FVOPS uses the
+median of all timing runs.
+
 Repetition names without a tag are treated as timing and counter runs.  In the
 2026 data the PCM file belongs to the ``topdown`` run, so the cache ratios look
 in the timing runs first and then in the top-down run.
@@ -40,6 +46,9 @@ Backend Bound Memory,           system aggregate of the top-down value
 Frontend Bound, Retiring
 MPI ratio (min/avg/max)         per-rank MPI time / last cumulative
                                 ``ExecutionTime`` of the traced run
+MPI ratio (mid-range)           (min + max) / 2 of the rank times over the
+                                same run time: what the UAP scripts plot
+                                as the "avg" ratio
 CVOPTS                          cells per rank (rounded to 2 decimals) /
                                 average step time of the lower median run
 Aggregate / average node power  mean of the last ``int(window/0.1) - 1``
@@ -180,6 +189,9 @@ class OpenFOAMAnalyzer(DataRetriever):
                 statistics.fmean
             ),
             UniqueMetricKey("MPI ratio (max)", "%", "rank"): self._mpi_ratio(max),
+            UniqueMetricKey("MPI ratio (mid-range)", "%", "rank"): self._mpi_ratio(
+                lambda times: (min(times) + max(times)) / 2.0
+            ),
         }
         for statistic in ("min", "max", "avg"):
             analytics[
@@ -198,10 +210,15 @@ class OpenFOAMAnalyzer(DataRetriever):
 
     # -- helpers -----------------------------------------------------------
 
-    def _with_tag(self, repetition_ids: list[int], tag: str) -> list[int]:
+    def _with_tag(
+        self, repetition_ids: list[int], tag: str, label: str | None = None
+    ) -> list[int]:
         """Return the repetitions of *repetition_ids* that carry *tag*.
 
-        Repetitions without any known tag count as timing (``counters``) runs.
+        The tag is the text after the time stamp of the run directory; it is
+        ``<role>`` or ``<role>-<label>`` (``counters-1n2r``).  Repetitions
+        without a known role count as timing (``counters``) runs.  With
+        *label*, only the runs with that label are returned.
         """
         if not repetition_ids:
             return []
@@ -213,8 +230,11 @@ class OpenFOAMAnalyzer(DataRetriever):
         selected = []
         for row in rows:
             run = row.name.rpartition(".")[0]  # drop the session suffix
-            tagged = [t for t in _ALL_TAGS if run.endswith(f"_{t}")]
-            if (tagged[0] if tagged else TAG_TIMING) == tag:
+            text = run.split("_", 2)[2] if run.count("_") >= 2 else ""
+            role, _, run_label = text.partition("-")
+            if (role if role in _ALL_TAGS else TAG_TIMING) != tag:
+                continue
+            if label is None or run_label == label:
                 selected.append(row.id)
         return selected
 
@@ -283,7 +303,10 @@ class OpenFOAMAnalyzer(DataRetriever):
         def fvops(ids: list[int]) -> MetricValue:
             windows: list[float] = []
             steps = cells = 0.0
-            for run in self._with_tag(ids, TAG_TIMING):
+            settings = load_settings()
+            time_run = settings.get("fvops_time_run")
+            steps_run = settings.get("fvops_steps_run")
+            for run in self._with_tag(ids, TAG_TIMING, time_run):
                 get = partial(
                     self._values, OpenFOAMlogs_metrics, OpenFOAMlogs_metrics_dict, run
                 )
@@ -295,6 +318,16 @@ class OpenFOAMAnalyzer(DataRetriever):
                     continue
                 windows.append(last[0] - first[0])
                 steps, cells = n_steps[0] - 1, n_cells[0]
+            if steps_run:
+                for run in self._with_tag(ids, TAG_TIMING, steps_run):
+                    counted = self._values(
+                        OpenFOAMlogs_metrics,
+                        OpenFOAMlogs_metrics_dict,
+                        run,
+                        f"{SOLVER} time steps",
+                    )
+                    if counted:
+                        steps = counted[0] - 1
             if not windows or steps <= 0:
                 return None
             windows.sort()

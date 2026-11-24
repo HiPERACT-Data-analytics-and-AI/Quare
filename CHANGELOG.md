@@ -36,6 +36,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   original scripts to 1e-12
 - Optional setting `compare_machines`: `Comparison.png` with one panel per
   machine
+- UAP data: `quare import-data --layout uap` (`examples/uap_import.json`)
+  imports the runs `1n1r`/`1n2r`/`1n4r` (timing, uProf PCM of `1n4r`), `1n5r`
+  (top-down), `1n6r` (MPI trace) and the LIKWID runs of simpleFoam as tagged
+  runs (`counters-1n2r`, ...); the mesh size is read from `log.renumberMesh`
+  when there is no `checkMesh` log. Settings `fvops_time_run` /
+  `fvops_steps_run` reproduce the UAP FVOPS (time of `1n2r`, steps of `1n4r`);
+  analysis `MPI ratio (mid-range)` is the UAP "avg" ratio, (min + max) / 2.
+  Results equal the UAP scripts to 1e-12 on the Rome `uxlow`/`ulow` test data
 - `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
   rows of the metric tables (sum/min/max/avg over threads); import role
   `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as
