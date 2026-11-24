@@ -44,6 +44,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `fvops_steps_run` reproduce the UAP FVOPS (time of `1n2r`, steps of `1n4r`);
   analysis `MPI ratio (mid-range)` is the UAP "avg" ratio, (min + max) / 2.
   Results equal the UAP scripts to 1e-12 on the Rome `uxlow`/`ulow` test data
+  and, checked on the full files, on `uxlow`/`ulow` of all seven platforms
+  (Bergamo has no LIKWID runs); run names stay unique across the sizes when a
+  log has no date
 - `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
   rows of the metric tables (sum/min/max/avg over threads); import role
   `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as

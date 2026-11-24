@@ -186,3 +186,16 @@ def test_plot_writes_summary(imported: Path) -> None:
     plot(Namespace())
     out = imported / "output/UAP/ROME_128/UAP/analyses/OpenFOAMlogs"
     assert (out / "Summary.png").stat().st_size > 10_000
+
+
+def test_dateless_runs_get_unique_names_across_sizes(tmp_path: Path) -> None:
+    """Runs without a date in the log must not share a repetition name."""
+    from datetime import datetime
+
+    from quare.importers.motorbike2024 import _RunWriter
+
+    used: set[str] = set()
+    fallback = datetime(2024, 1, 1)
+    first = _RunWriter(tmp_path / "uxlow", used).run_dir(None, "trace-1n6r", fallback)
+    second = _RunWriter(tmp_path / "ulow", used).run_dir(None, "trace-1n6r", fallback)
+    assert first.name != second.name

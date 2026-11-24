@@ -163,9 +163,15 @@ def profile_time(counter_path: Path) -> datetime | None:
 class _RunWriter:
     """Creates run directories below one ``<session>/<machine>/<use_case>/<size>``."""
 
-    def __init__(self, size_path: Path) -> None:
+    def __init__(self, size_path: Path, used: set[str] | None = None) -> None:
+        """
+        :param size_path: Directory of the size the runs are written to.
+        :param used: Run directory names already taken; share one set between
+            writers when the names must be unique across several sizes (the
+            repetition name is the directory name plus the session).
+        """
         self._size_path = size_path
-        self._used: set[str] = set()
+        self._used: set[str] = set() if used is None else used
 
     def run_dir(self, start: datetime | None, tag: str, fallback: datetime) -> Path:
         """

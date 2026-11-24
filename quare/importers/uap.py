@@ -118,6 +118,7 @@ def import_uap(
     counts = dict.fromkeys(("counters", "topdown", "trace", "likwid"), 0)
     for machine_name in selected:
         platform = source / mapping["machines"][machine_name]["source"]
+        used: set[str] = set()  # run names must be unique across the sizes
         for size in mapping["sizes"]:
             size_path = platform / size
             target = (
@@ -127,7 +128,7 @@ def import_uap(
                 / mapping["use_case"]
                 / size
             )
-            writer = _RunWriter(target)
+            writer = _RunWriter(target, used)
             for label in TIMING_RUNS:
                 counter = PCM_FILE if label == PCM_RUN else None
                 if _import_run(
