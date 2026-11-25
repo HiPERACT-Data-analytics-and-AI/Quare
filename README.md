@@ -34,13 +34,19 @@ Support for other HPC application frameworks is planned for future releases.
 Quare is a Python framework for ingesting, storing, and visualising
 performance-profiling data from HPC applications.
 
+The OpenFOAM analyses reproduce the analysis scripts of Łukasz Szustak for the
+motorBike benchmark (2024 single-node and 2026 multi-node runs) and for the UAP
+measurements (simpleFoam and pimpleFoam on seven AMD EPYC platforms). Their
+results are taken from the database, and on the UAP data they equal the values
+of the original scripts (see the changelog for the known differences).
+
 ## Supported profilers
 
 | Extension | Profiler | Status |
 |---|---|---|
 | `AMDuProfPCM_ext` | AMD uProf Performance Counter Monitor | Stable |
 | `AMDuProfMPI_ext` | AMD uProf MPI profiler | Stable |
-| `OpenFOAMlogs_ext` | OpenFOAM `checkMesh` and solver logs (cells, ranks, time steps, step times) | Work in progress |
+| `OpenFOAMlogs_ext` | OpenFOAM `checkMesh`, `renumberMesh` and solver logs (cells, ranks, time steps, step times, per-step MPI profiling) and the benchmark analyses built on them | Work in progress |
 | `AMDuProfTimechart_ext` | AMD uProf Timechart (node power traces) | Work in progress |
 | `LIKWID_ext` | LIKWID `likwid-perfctr` statistics (L2, L3, NUMA groups: clock, data volume, bandwidth) | Work in progress |
 
@@ -94,6 +100,9 @@ Key fields:
 | `metric_names` | Specific metric names to plot (empty = all) |
 | `analyses_names` | Specific derived analyses to plot (empty = all) |
 
+The OpenFOAM analyses read further optional fields; see "Comparing machines"
+below.
+
 You can also point Quare at a settings file without editing the command line
 every time by setting the environment variable:
 
@@ -103,7 +112,7 @@ export QUARE_SETTINGS=/absolute/path/to/my_settings.json
 
 ## Quickstart
 
-Quare processes data in three sequential steps.
+Quare processes data in a few sequential steps.
 
 ### Step 0 — Import a measurement tree with a different layout (optional)
 
@@ -172,6 +181,26 @@ mesh size of `sizes_to_get`, with the hardware, application, power, MPI volume
 and AMD uProf counter features of the study. `--no-power` drops the power
 columns, `--power-feature` selects other power features and `--style csv`
 writes a plain CSV instead of the format of the original scripts.
+
+## Comparing machines
+
+With the setting `compare_machines` (a list of machine names) `quare plot`
+also writes, to `<output>/<session>/<use case>/`, the figures and tables of the
+analysis scripts. Each file is written only when its data exist:
+
+| Output | Content |
+|---|---|
+| `Comparison.png` | per machine: FVOPS and the chosen ratios against cells per rank |
+| `Timing comparison.png`, `Speedup.csv`, `Speedup.png` | solver times and speed-up between machines |
+| `Solver timing comparison.png` | simpleFoam and pimpleFoam times of all runs (UAP) |
+| `LIKWID L2/L3/Memory.png`, `Clock frequency [pimpleFoam].png` | LIKWID data volume, bandwidth and clock (UAP) |
+| `PTI.png`, `PTI MPI volume.png` | per-thousand-instruction counters against FVOPS or MPI volume (setting `pti_sizes`) |
+| `MPI time.csv`, `MPI calls.csv`, `MPI volume.csv` | MPI time per rank, share of selected MPI calls, total volume |
+| `MPI profile <machine>.png` | MPI time step by step (machines with a profiling run) |
+
+Optional settings: `machine_labels` (display names), `comparison_series`
+(analyses on the right axis of `Comparison.png`), `predicted_fvops` (points of
+a prediction model), `pti_sizes`, and the quirk switches described in Step 0.
 
 ## Expected data directory layout
 

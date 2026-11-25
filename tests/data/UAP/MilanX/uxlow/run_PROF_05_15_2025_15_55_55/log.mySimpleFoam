@@ -97,7 +97,7 @@ surfaceFieldValue pollutionMassFlow:
     weight field  = (phi)
 
 
---> FOAM Warning : 
+--> FOAM Warning :
 cellZone(H007_sample_point_zone):
     Region has no cells
 
@@ -106,7 +106,7 @@ cellZone(H007_sample_point_zone):
     in file functionObjects/volRegion/volRegion.C at line 122.
 --> loading function object 'H007_point_sampling'
 
---> FOAM Warning : 
+--> FOAM Warning :
 cellZone(H011_sample_point_zone):
     Region has no cells
 
@@ -115,7 +115,7 @@ cellZone(H011_sample_point_zone):
     in file functionObjects/volRegion/volRegion.C at line 122.
 --> loading function object 'H011_point_sampling'
 
---> FOAM Warning : 
+--> FOAM Warning :
 cellZone(GYOR1_sample_point_zone):
     Region has no cells
 
@@ -124,11 +124,11 @@ cellZone(GYOR1_sample_point_zone):
     in file functionObjects/volRegion/volRegion.C at line 122.
 --> loading function object 'GYOR1_point_sampling'
 
---> FOAM Warning : 
+--> FOAM Warning :
     From virtual void Foam::probes::findElements(const fvMesh &)
     in file probes/probes.C at line 230
     Did not find location (1227 857 20) in any cell. Skipping location.
---> FOAM Warning : 
+--> FOAM Warning :
     From virtual void Foam::probes::findElements(const fvMesh &)
     in file probes/probes.C at line 230
     Did not find location (1142 801 20) in any cell. Skipping location.
