@@ -50,9 +50,48 @@ of the original scripts (see the changelog for the known differences).
 | `AMDuProfTimechart_ext` | AMD uProf Timechart (node power traces) | Work in progress |
 | `LIKWID_ext` | LIKWID `likwid-perfctr` statistics (L2, L3, NUMA groups: clock, data volume, bandwidth) | Work in progress |
 
-## Database schema
+## System overview
 
-![Database schema](docs/source/db_diagram.png)
+```mermaid
+flowchart LR
+    src[("Measurement trees<br/>motorBike 2024 / 2026, UAP")]
+    raw[("raw_data/<br/>session / machine / use case /<br/>size / date_tag / profiler")]
+    pre[("preprocessed_data/")]
+    db[("SQLite database")]
+    out[("output/<br/>plots, CSV, INFO tables")]
+    ds[("dataset.csv")]
+
+    subgraph cli["quare CLI"]
+        imp["import-data<br/>importers/: motorbike2024,<br/>motorbike2026, uap"]
+        prep["preprocess-data<br/>preprocessor.py"]
+        cdb["create-db<br/>data_loader.py, models.py"]
+        plot["plot<br/>data_retriever.py, plotter.py"]
+        exp["export-dataset<br/>export_dataset.py"]
+    end
+
+    subgraph ext["extensions/ (one per profiler: preprocessor, models, loader, plotter)"]
+        e1["AMDuProfPCM"]
+        e2["AMDuProfMPI"]
+        e3["AMDuProfTimechart"]
+        e4["LIKWID"]
+        e5["OpenFOAMlogs<br/>benchmark analyses<br/>and comparison figures"]
+    end
+
+    cfg["settings.json"]
+
+    src --> imp --> raw --> prep --> pre --> cdb --> db
+    db --> plot --> out
+    db --> exp --> ds
+    ext -. used by .-> prep
+    ext -. used by .-> cdb
+    ext -. used by .-> plot
+    cfg -.-> cli
+```
+
+Every command reads the settings file. The extensions are discovered at run
+time; each brings the preprocessing, the database tables, the loader and the
+plotter (with its analyses) of one profiler. The database schema is in
+[docs/source/db_diagram.png](docs/source/db_diagram.png).
 
 ## Prerequisites
 
