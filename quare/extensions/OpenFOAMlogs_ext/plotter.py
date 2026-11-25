@@ -19,6 +19,10 @@ stamp of the repetition directory (see :mod:`quare.importers.motorbike2024`):
     The run with the LIKWID statistics of the L2, L3 and NUMA groups, for
     simpleFoam and (UAP) pimpleFoam.
 
+``profile``, ``profile-end``
+    The runs with the built-in OpenFOAM MPI profiling (UAP MilanX) and its
+    control run: per-step execution and MPI reduce / all-all / other times.
+
 ``power``
     The run with the AMD uProf power timecharts (2026 data): the node power
     traces and the log of the run, which gives the time stepping window.
@@ -126,6 +130,7 @@ from .figures import (
     LIKWID_ROWS,
     make_clock_plot,
     make_likwid_plot,
+    make_mpi_profile_plot,
     make_pti_plot,
     make_solver_timing_plot,
     pti_series,
@@ -139,7 +144,8 @@ TAG_TRACE = "trace"
 TAG_TOPDOWN = "topdown"
 TAG_POWER = "power"
 TAG_LIKWID = "likwid"
-_ALL_TAGS = (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN, TAG_POWER, TAG_LIKWID)
+TAG_PROFILE = "profile"
+_ALL_TAGS = (TAG_TIMING, TAG_TRACE, TAG_TOPDOWN, TAG_POWER, TAG_LIKWID, TAG_PROFILE)
 POWER_SAMPLE_INTERVAL = 0.1
 """Sampling interval of the uProf timechart in seconds."""
 
@@ -503,6 +509,31 @@ class OpenFOAMAnalyzer(DataRetriever):
             if first and last:
                 windows.append(last[0] - first[0])
         return sorted(windows)
+
+    def mpi_profile(self, ids: list[int]) -> dict[str, list[float]] | None:
+        """
+        Per-step series of the MPI profiling run (tag ``profile``, no label) of
+        one task size: ``steps`` (cumulative ``ExecutionTime``), ``reduce``,
+        ``all-all`` and ``other`` average MPI times in seconds, or ``None``.
+        """
+        for run in self._with_tag(ids, TAG_PROFILE, ""):
+            series = {
+                key: self._values(
+                    OpenFOAMlogs_metrics,
+                    OpenFOAMlogs_metrics_dict,
+                    run,
+                    f"{SOLVER} {name}",
+                )
+                for key, name in (
+                    ("steps", "execution time"),
+                    ("reduce", "mpi reduce"),
+                    ("all-all", "mpi all-all"),
+                    ("other", "mpi other"),
+                )
+            }
+            if series["reduce"]:
+                return series
+        return None
 
     def pti_values(self, ids: list[int]) -> dict[str, float]:
         """
@@ -959,8 +990,9 @@ class OpenFOAMPlotter(Plotter):
         The figures of the UAP scripts, each written only when the data exist:
         ``Solver timing comparison.png`` (simpleFoam and pimpleFoam),
         ``LIKWID L2/L3/Memory.png`` (a column per solver), ``Clock frequency
-        [pimpleFoam].png``, the tables ``MPI time/calls/volume.csv`` and, with
-        the setting ``pti_sizes``, ``PTI.png`` and ``PTI MPI volume.png``.
+        [pimpleFoam].png``, ``MPI profile <machine>.png`` (machines with a
+        profiling run), the tables ``MPI time/calls/volume.csv`` and, with the
+        setting ``pti_sizes``, ``PTI.png`` and ``PTI MPI volume.png``.
         """
         settings = load_settings()
         sizes = settings["sizes_to_get"]
@@ -1029,6 +1061,22 @@ class OpenFOAMPlotter(Plotter):
         write_mpi_tables(
             {m: d for m, _, d in entries}, sizes, labels, MPI_CALLS, folder
         )
+
+        for machine in machines:
+            ids = retriever.get_repetitions(
+                settings["session_name_contains"],
+                machine,
+                settings["use_case_name"],
+                sizes,
+                settings.get("repetition_name_contains", ""),
+            )
+            profiles = [retriever.mpi_profile(i) for i in ids.values()]
+            if any(profiles):
+                make_mpi_profile_plot(
+                    profiles,
+                    sizes,
+                    folder / f"MPI profile {labels.get(machine, machine)}.png",
+                )
 
         pti_sizes = settings.get("pti_sizes")
         if pti_sizes:

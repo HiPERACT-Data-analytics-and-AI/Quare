@@ -19,6 +19,9 @@ Source run                Tag                    Used for
 ``run_1n6r``              ``trace-1n6r``         MPI trace
 ``run_likL2``, ``L3``,    ``likwid``             LIKWID groups L2, L3, NUMA
 ``liknuma``                                      (one run)
+``run_PROF_*``            ``profile``            OpenFOAM MPI profiling per
+                                                 step (MilanX)
+``run_PROFend_*``         ``profile-end``        control run of the profiling
 ========================  =====================  ============================
 
 The label (``1n2r``) is the run name without ``run_``; the settings
@@ -51,6 +54,8 @@ MPI_SUMMARY = Path("mpi.trace/AMDuProf-mySimpleFoam-HPC_MPI/mpi/lwt/mpi-summary.
 LIKWID_FILE = "prof.{solver}.lik.{group}.txt"
 LIKWID_SOLVERS = {"mySimpleFoam": "likwid", "myPimpleFoam": "likwid-pimpleFoam"}
 """Solver name in the file names -> tag of the LIKWID run of that solver."""
+PROFILE_RUNS = {"run_PROF_*": "profile", "run_PROFend_*": "profile-end"}
+"""Glob of the source run -> tag (the runs carry a date in their name)."""
 FALLBACK_TIME = datetime(2024, 1, 1)
 
 
@@ -112,7 +117,7 @@ def import_uap(
     :param machines: Names of the machines to import; all of the mapping when
         ``None``.
     :returns: Number of runs imported per role (``counters``, ``topdown``,
-        ``trace``, ``likwid``, ``likwid-pimpleFoam``).
+        ``trace``, ``likwid``, ``likwid-pimpleFoam``, ``profile``).
     :raises ValueError: If a requested machine is not in the mapping.
     """
     selected = machines or list(mapping["machines"])
@@ -121,7 +126,7 @@ def import_uap(
         raise ValueError(f"not in the mapping: {', '.join(unknown)}")
 
     counts = dict.fromkeys(
-        ("counters", "topdown", "trace", *LIKWID_SOLVERS.values()), 0
+        ("counters", "topdown", "trace", *LIKWID_SOLVERS.values(), "profile"), 0
     )
     for machine_name in selected:
         platform = source / mapping["machines"][machine_name]["source"]
@@ -161,6 +166,10 @@ def import_uap(
             for solver, role in LIKWID_SOLVERS.items():
                 if _import_likwid(size_path, writer, solver):
                     counts[role] += 1
+            for pattern, tag in PROFILE_RUNS.items():
+                for profile_path in sorted(size_path.glob(pattern)):
+                    if _import_run(profile_path, tag, writer):
+                        counts["profile"] += 1
     return counts
 
 

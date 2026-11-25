@@ -12,6 +12,12 @@ values below as metrics with processing unit ``"run"``:
   in seconds) and ``<solver> total time`` (the first ``Total Time: <s>`` or
   ``Total time = <s>`` line, if any).
 
+A log with the built-in OpenFOAM MPI profiling (UAP MilanX ``PROF`` runs) also
+yields per-step series with the processing unit ``"step"`` (index = step):
+``<solver> execution time`` (cumulative ``ExecutionTime``) and the average
+MPI times ``<solver> mpi reduce``, ``<solver> mpi all-all`` and
+``<solver> mpi other`` in seconds.
+
 The time stepping window used by the analysis scripts is
 ``last step time - first step time``.
 
@@ -45,6 +51,7 @@ _CELLS = re.compile(r"^\s*cells:\s+(\d+)")
 _REGION_SIZE = re.compile(r"^\s*Mesh region0 size:\s*(\d+)")
 _RANKS = re.compile(r"^nProcs\s*:\s*(\d+)")
 _EXECUTION_TIME = re.compile(r"^ExecutionTime = ([0-9.eE+-]+) s")
+_PROFILE = re.compile(r"^\s*(reduce|all-all|other)\s*: avg = ([0-9.eE+-]+)s")
 _TOTAL_TIME = re.compile(r"^Total [Tt]ime(?::|\s*=)\s*([0-9.eE+-]+)")
 
 
@@ -98,6 +105,48 @@ def parse_solver_log(path: Path) -> dict[str, float]:
     if total is not None:
         values["total time"] = total
     return values
+
+
+def parse_mpi_profile(path: Path) -> dict[str, list[float]]:
+    """
+    Read the per-step series of a log with the built-in MPI profiling.
+
+    :param path: Path to the solver log.
+    :returns: ``{"execution time", "mpi reduce", "mpi all-all", "mpi other"}``
+        with one value per occurrence in the log; empty when the log has no
+        profiling lines.
+    """
+    series: dict[str, list[float]] = {
+        "execution time": [],
+        "mpi reduce": [],
+        "mpi all-all": [],
+        "mpi other": [],
+    }
+    with path.open(errors="replace") as log:
+        for line in log:
+            if match := _EXECUTION_TIME.match(line):
+                series["execution time"].append(float(match.group(1)))
+            elif match := _PROFILE.match(line):
+                series[f"mpi {match.group(1)}"].append(float(match.group(2)))
+    if not any(series[name] for name in series if name != "execution time"):
+        return {}
+    return series
+
+
+def _series(
+    data_loader: DataLoader,
+    context: MetricContext,
+    series: dict[str, list[float]],
+    prefix: str,
+) -> list[MetricsBase]:
+    """Metric instances of per-step series (processing unit ``"step"``)."""
+    return [
+        data_loader.create_metric_instance(
+            context, prefix + name, value, "s", index, "step"
+        )
+        for name, values in series.items()
+        for index, value in enumerate(values)
+    ]
 
 
 def _metrics(
@@ -169,11 +218,11 @@ class Loaders:
         def load(data_loader: DataLoader, context: MetricContext) -> list[MetricsBase]:
             if not context.file_path.exists():
                 return []
+            prefix = f"{solver} "
             return _metrics(
-                data_loader,
-                context,
-                parse_solver_log(context.file_path),
-                prefix=f"{solver} ",
+                data_loader, context, parse_solver_log(context.file_path), prefix
+            ) + _series(
+                data_loader, context, parse_mpi_profile(context.file_path), prefix
             )
 
         return load

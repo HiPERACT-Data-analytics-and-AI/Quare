@@ -92,7 +92,11 @@ EXPECTED_PIMPLE_LIKWID = {
 @pytest.fixture
 def imported(tmp_path: Path):
     """Import the subset, write settings (with the UAP FVOPS runs) and reset."""
-    import_uap(DATA, tmp_path / "raw_data", MAPPING)
+    yield from _prepare(tmp_path, MAPPING, "ROME_128")
+
+
+def _prepare(tmp_path: Path, mapping: dict, machine: str):
+    import_uap(DATA, tmp_path / "raw_data", mapping)
     settings = {
         "raw_data_directory_path": "raw_data",
         "preprocessed_data_directory_path": "preprocessed_data",
@@ -102,7 +106,7 @@ def imported(tmp_path: Path):
         "metric_names": [],
         "analyses_names": [],
         "session_name_contains": "UAP",
-        "machine_name": "ROME_128",
+        "machine_name": machine,
         "use_case_name": "UAP",
         "sizes_to_get": ["uxlow", "ulow"],
         "fvops_time_run": "1n2r",
@@ -152,6 +156,7 @@ def test_import_counts_and_run_names(tmp_path: Path) -> None:
         "trace": 2,
         "likwid": 2,
         "likwid-pimpleFoam": 2,
+        "profile": 0,
     }
     base = tmp_path / "UAP/ROME_128/UAP/uxlow"
     names = sorted(p.name.split("_", 2)[2] for p in base.iterdir())
@@ -408,3 +413,63 @@ def test_average_median_equals_the_scripts_for_odd_runs(imported: Path) -> None:
     with_average = _analyses()["FVOPS"]
     _change_settings(imported, median_of_even_runs="lower")
     assert with_average == pytest.approx(_analyses()["FVOPS"], rel=1e-12)
+
+
+MILANX = {**MAPPING, "machines": {"MILANX_128": {"source": "MilanX"}}}
+
+
+@pytest.fixture
+def milanx(tmp_path: Path):
+    """The MilanX profiling runs (30 steps of ``uxlow`` and ``ulow``)."""
+    yield from _prepare(tmp_path, MILANX, "MILANX_128")
+
+
+# parse_profile of mpi_profiling.py on the test logs:
+# (steps, reduce entries, sum of reduce, sum of all-all, last step time)
+EXPECTED_PROFILE = {
+    "uxlow": (30, 29, 5.098046875, 3.49, 0.87),
+    "ulow": (30, 29, 10.097265625, 7.05328125, 1.64),
+}
+
+
+def test_mpi_profile_runs_equal_the_script(milanx: Path) -> None:
+    from quare.extensions.OpenFOAMlogs_ext.plotter import TAG_TIMING, OpenFOAMAnalyzer
+
+    preprocess(Namespace())
+    create_db(Namespace())
+    retriever = data_retriever.DataRetrieversManager.get_retriever("OpenFOAMlogs")
+    assert isinstance(retriever, OpenFOAMAnalyzer)
+    ids = retriever.get_repetitions("UAP", "MILANX_128", "UAP", ["uxlow", "ulow"], "")
+    for size, (
+        steps,
+        reduce_n,
+        reduce_sum,
+        all_all_sum,
+        last,
+    ) in EXPECTED_PROFILE.items():
+        # the profiling runs are not timing runs
+        assert retriever._with_tag(ids[size], TAG_TIMING) == []
+        profile = retriever.mpi_profile(ids[size])
+        assert profile is not None
+        assert (len(profile["steps"]), len(profile["reduce"])) == (steps, reduce_n)
+        assert sum(profile["reduce"]) == pytest.approx(reduce_sum, rel=1e-12)
+        assert sum(profile["all-all"]) == pytest.approx(all_all_sum, rel=1e-12)
+        assert profile["steps"][-1] == pytest.approx(last)
+        assert profile["steps"] == sorted(profile["steps"])
+
+
+def test_mpi_profile_plot_is_written(milanx: Path) -> None:
+    from quare.extensions.OpenFOAMlogs_ext.plotter import OpenFOAMPlotter
+
+    _change_settings(milanx, compare_machines=["MILANX_128"])
+    preprocess(Namespace())
+    create_db(Namespace())
+    OpenFOAMPlotter("OpenFOAMlogs").make_all()
+    assert (milanx / "output/UAP/UAP/MPI profile MILANX_128.png").stat().st_size > 5_000
+
+
+def test_profile_runs_are_imported_and_do_not_count_as_timing(tmp_path: Path) -> None:
+    counts = import_uap(DATA, tmp_path / "raw_data", MILANX)
+    assert counts["profile"] == 4
+    names = sorted(p.name for p in (tmp_path / "raw_data").rglob("*_profile*"))
+    assert len(names) == 4 and sum(n.endswith("profile-end") for n in names) == 2

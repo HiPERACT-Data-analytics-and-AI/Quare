@@ -32,3 +32,8 @@ runs. The solver logs keep the banner, the `ExecutionTime` lines and the
 `Total Time` line, `log.renumberMesh` keeps the `Mesh region0 size` line; the
 uProf profile (`1n4r`, `1n5r`), `mpi-summary.csv` and the LIKWID files of
 simpleFoam and pimpleFoam are unchanged. The Rome node has no top-down counters.
+
+`UAP/MilanX` holds the MPI profiling runs (`run_PROF_*` and the control run
+`run_PROFend_*`) of `uxlow` and `ulow` of the MilanX node: `log.mySimpleFoam`
+cut after 30 steps (banner kept, the `MCW rank` binding lines removed) and the
+`Mesh region0 size` line of `log.renumberMesh`.

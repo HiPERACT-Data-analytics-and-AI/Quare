@@ -251,6 +251,52 @@ def make_pti_plot(
     _save(fig, png_filename)
 
 
+def make_mpi_profile_plot(
+    profiles: list[dict[str, list[float]] | None],
+    sizes: list[str],
+    png_filename: Path,
+) -> None:
+    """
+    MPI time step by step, one panel per size (``mpi_profiling.py``).
+
+    :param profiles: Per size the series of the profiling run (``steps``,
+        ``reduce``, ``all-all``, ``other``), or ``None`` without one.
+    :param sizes: Size names, titles of the panels.
+    :param png_filename: Destination file; parent folders are created.
+
+    As in the script the last two entries of each series are dropped, the
+    total MPI time is ``reduce + all-all + other`` and its share of the run
+    time is taken at the step before the last one.
+    """
+    fig, axes = plt.subplots(
+        nrows=len(sizes), ncols=1, figsize=(6, 3.3 * len(sizes)), layout="constrained"
+    )
+    for axis, size, profile in zip(np.atleast_1d(axes), sizes, profiles):
+        axis.set_title(f"size:{size}", x=0.5, y=0.9, fontsize=12)
+        axis.set_ylabel("Incremental time [s]")
+        axis.set_xlabel("Subsequent time steps")
+        if not profile:
+            continue
+        total = [
+            a + b + c
+            for a, b, c in zip(profile["reduce"], profile["all-all"], profile["other"])
+        ]
+        steps, reduce_, all_all, total = (
+            v[:-2]
+            for v in (profile["steps"], profile["reduce"], profile["all-all"], total)
+        )
+        percent = f"{total[-2] / steps[-2] * 100.0:2.0f}%" if len(total) > 1 else ""
+        for values, label in (
+            (steps, "Iterations runtime"),
+            (reduce_, "MPI Reduce"),
+            (all_all, "MPI All-All"),
+            (total, f"Total MPI (around {percent} of runtime"),
+        ):
+            axis.plot(values, linestyle="dashed", linewidth=1, label=label)
+        axis.legend(loc="upper left", fontsize=8)
+    _save(fig, png_filename)
+
+
 def write_mpi_tables(
     data: dict[str, dict[str, list]],
     sizes: list[str],

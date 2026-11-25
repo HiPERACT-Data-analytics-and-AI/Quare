@@ -58,8 +58,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   thousand instructions against FVOPS). The setting `comparison_series` chooses
   the analyses on the right axis of `Comparison.png` (UAP: L2 hit ratios and
   `MPI ratio (mid-range)`). `Timing comparison.png` no longer fails for logs
-  without a `Total Time` line. Not reproduced: `mpi_profiling.py` (needs the
-  special profiling runs); `timing_comp.py` draws `high` three times, Quare once
+  without a `Total Time` line. Not reproduced: `timing_comp.py` draws `high` three times, Quare once
 - UAP: the LIKWID files of pimpleFoam are imported as a second run
   (`likwid-pimpleFoam`); analyses `pimpleFoam Clock frequency (min/max/avg)` and
   `pimpleFoam L2/L3/Memory data volume / bandwidth (sum/avg)`, equal to the
@@ -73,6 +72,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The PTI variant with the MPI volume (`pti.py --mpi`): analysis `MPI receive
   volume per cell` (`MPI_Recv` + `MPI_Irecv` bytes per step, cell and rank of the
   trace run) and, with `pti_sizes`, `PTI MPI volume.png`
+- UAP: the MilanX MPI profiling runs (`run_PROF_*`, tag `profile`, and the
+  control run `run_PROFend_*`, tag `profile-end`) are imported; the OpenFOAM log
+  loader stores the per-step `ExecutionTime` and the average MPI reduce, all-all
+  and other times of the built-in profiling (processing unit `step`). With
+  `compare_machines` the file `MPI profile <machine>.png` is written for
+  machines that have such a run (as `mpi_profiling.py`, the last two steps are
+  dropped as there). The control run is imported but not drawn; the script
+  only prints its last step time
 - Settings for the quirks of the original scripts; the defaults still reproduce
   them: `median_of_even_runs` (`lower`/`average`) and `mpi_ratio_basis`
   (`last_step`/`total_time`). The UAP maximum MPI ratio passed 100% because the
