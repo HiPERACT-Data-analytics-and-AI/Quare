@@ -1,0 +1,12 @@
+{
+    "session": "Motorbike2026",
+    "use_case": "motorBike",
+    "sizes": ["xsmall", "small", "smid", "mid", "high", "mhigh", "uhigh", "xhigh"],
+    "platforms": {
+        "GENOA_9654": {"source": "192_GENOA_2026", "prefix": "Genoa_192"},
+        "GENOAX_9684X": {"source": "192_GENOA_X_2026", "prefix": "GenoaX_192"},
+        "TURIN_9655": {"source": "192_TURIN_2026", "prefix": "Turin_192"},
+        "TURIN_9755": {"source": "256_TURIN_2026", "prefix": "Turin_256"},
+        "TURIN_9965": {"source": "384_TURIN_2026", "prefix": "Turin_384"}
+    }
+}

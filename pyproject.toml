@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "QUality AnalyzeR of application Efficiency — performance profiling analytics framework"
 authors = [
     {name = "Marcin Lawenda", email = "lawenda@man.poznan.pl"},
+    {name = "Łukasz Szustak"},
     {name = "Filip Depta"}
 ]
 license = "MIT"
@@ -40,6 +41,7 @@ pylint = "^3.0"
 sphinx = "^7.3.7"
 sphinx-rtd-theme = "^2.0.0"
 sphinx-autodoc-typehints = "^2.2.2"
+pytest = "^8.0"
 
 [build-system]
 requires = ["poetry-core"]

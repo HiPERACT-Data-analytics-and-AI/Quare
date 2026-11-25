@@ -1,0 +1,1320 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2212                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _66908158ae-20221220 OPENFOAM=2212 version=v2212
+Arch   : "LSB;label=32;scalar=64"
+Exec   : mySimpleFoam -parallel
+Date   : May 16 2025
+Time   : 16:40:41
+Host   : milanx
+PID    : 446963
+I/O    : uncollated
+Case   : /home/lszustak/128_MilanX_UAP/uxlow/run_PROFend_05_16_2025_16_40_29
+nProcs : 128
+Hosts  :
+(
+    (milanx 128)
+)
+Pstream initialized with:
+    floatTransfer      : 0
+    nProcsSimpleSum    : 0
+    commsType          : nonBlocking
+    polling iterations : 0
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Overriding OptimisationSwitches according to controlDict
+    fileHandler (unregistered)
+Overriding fileHandler to collated
+I/O    : collated [unthreaded] (maxThreadFileBufferSize = 0).
+         Writing may be slow for large file sizes.
+Create mesh for time = 0
+
+
+SIMPLE: convergence criteria
+    field p	 tolerance 1e-05
+    field U	 tolerance 1e-05
+    field "(k|omega|epsilon)"	 tolerance 1e-05
+
+Reading field p
+
+Reading field U
+
+TableBasedVelocity:
+  Time mode steady with steadyTime = 0 and delay = 0
+  Interpolation mode: linear
+  Time: 24 values from 0 to 82800
+  Height: 20 values from 11 to 1500
+
+Steady: Boundary values are fixed at time index 0
+Reading/calculating face flux field phi
+
+Selecting incompressible transport model Newtonian
+Selecting turbulence model type RAS
+Selecting RAS turbulence model kEpsilon
+RAS
+{
+    RASModel        kEpsilon;
+    turbulence      on;
+    printCoeffs     on;
+    epsilonMin      1e-07;
+    kMin            1e-06;
+    Cmu             0.09;
+    C1              1.44;
+    C2              1.92;
+    C3              0;
+    sigmak          1;
+    sigmaEps        1.3;
+}
+
+No MRF models present
+
+Creating finite volume options from "constant/fvOptions"
+
+Selecting finite volume options type atmAmbientTurbSource
+    Source: atmAmbientTurbSource1
+    - selecting all cells
+    - selected 36248 cell(s) with volume 2.326417233e+10
+    Applying atmAmbientTurbSource to: epsilon and k
+Selecting finite volume options type atmLengthScaleTurbSource
+    Source: atmLengthScaleTurbSource1
+    - selecting all cells
+    - selected 36248 cell(s) with volume 2.326417233e+10
+    Applying atmLengthScaleTurbSource to: epsilon
+
+Starting time loop
+
+surfaceFieldValue pollutionMassFlow:
+    operation     = weightedSum
+    weight field  = (phi)
+
+
+--> FOAM Warning :
+cellZone(H007_sample_point_zone):
+    Region has no cells
+
+
+    From void Foam::functionObjects::volRegion::calculateCache()
+    in file functionObjects/volRegion/volRegion.C at line 122.
+--> loading function object 'H007_point_sampling'
+
+--> FOAM Warning :
+cellZone(H011_sample_point_zone):
+    Region has no cells
+
+
+    From void Foam::functionObjects::volRegion::calculateCache()
+    in file functionObjects/volRegion/volRegion.C at line 122.
+--> loading function object 'H011_point_sampling'
+
+--> FOAM Warning :
+cellZone(GYOR1_sample_point_zone):
+    Region has no cells
+
+
+    From void Foam::functionObjects::volRegion::calculateCache()
+    in file functionObjects/volRegion/volRegion.C at line 122.
+--> loading function object 'GYOR1_point_sampling'
+
+--> FOAM Warning :
+    From virtual void Foam::probes::findElements(const fvMesh &)
+    in file probes/probes.C at line 230
+    Did not find location (1227 857 20) in any cell. Skipping location.
+--> FOAM Warning :
+    From virtual void Foam::probes::findElements(const fvMesh &)
+    in file probes/probes.C at line 230
+    Did not find location (1142 801 20) in any cell. Skipping location.
+Time = 1
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity linear
+  Time 0  Velocity (6.39725 -11.8835 0)  @ Height 1500
+TableBasedVelocity: adjusting to planar velocity for timeSteady
+TableBasedVelocity: log profile for Uref = (3.7506 -1.7477 0), Zref = 11, z0 = 10
+     ( (3.7506 -1.7477 0)) @ 11
+     ( (4.631981452 -2.158405051 0)) @ 15
+     ( (5.553643147 -2.58787984 0)) @ 20
+     ( (7.007917404 -3.265540779 0)) @ 30
+     ( (9.057601849 -4.22065023 0)) @ 50
+     ( (9.836855709 -4.58376599 0)) @ 60
+     ( (10.51187611 -4.898311169 0)) @ 70
+     ( (11.10728629 -5.17575968 0)) @ 80
+     ( (11.63989886 -5.42394583 0)) @ 90
+     ( (12.56156055 -5.853420619 0)) @ 110
+     ( (14.01583481 -6.531081559 0)) @ 150
+     ( (16.47014665 -7.67473879 0)) @ 250
+     ( (17.35929927 -8.08906504 0)) @ 300
+     ( (19.87594414 -9.261768136 0)) @ 500
+     ( (20.7810587 -9.683532314 0)) @ 600
+     ( (21.89247998 -10.20143104 0)) @ 750
+     ( (22.80304366 -10.62573439 0)) @ 900
+     ( (23.33009806 -10.87133056 0)) @ 1000
+     ( (24.4481007 -11.39229606 0)) @ 1250
+     ( (25.36307128 -11.81865293 0)) @ 1500
+TableBasedVelocity: outflow = 72800430.28
+                    inflow = 72861557.25
+                    totalFlow = -61126.97206
+                    outflow correction factor = 1.000839651
+TableBasedVelocity: total flow = -7.450580597e-09 after correction.
+smoothSolver:  Solving for Ux, Initial residual = 0.9991514594, Final residual = 0.09804752228, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.9989267115, Final residual = 0.09759954515, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.989682886, Final residual = 0.07906328307, No Iterations 3
+GAMG:  Solving for p, Initial residual = 1, Final residual = 0.09179683694, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03174997071, Final residual = 0.002691158987, No Iterations 3
+time step continuity errors : sum local = 1.279762228e-05, global = -1.094112162e-05, cumulative = -1.094112162e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.9971470274, Final residual = 0.06077418208, No Iterations 3
+smoothSolver:  Solving for k, Initial residual = 1, Final residual = 0.004138896592, No Iterations 1
+ExecutionTime = 0.16 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.7832509803, Final residual = 0.06352481116, No Iterations 2
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.78564289 in cell 103 at location (4672.722014 820.0000392 489.75147) on processor 24
+    min(k) = 0.2847209702 in cell 105 at location (3641.71615 3719.7043 38.6863775) on processor 28
+    max(k) = 1.779803386 in cell 103 at location (4672.722014 820.0000392 489.75147) on processor 24
+    min(p) = -14.27668248 in cell 43 at location (4414.970702 2108.7577 296.43786) on processor 25
+    max(p) = 180.5442837 in cell 101 at location (-2930.94665 1464.3788 167.562125) on processor 71
+    min(epsilon) = 0.0002919078084 in cell 151 at location (1837.4557 1464.378799 296.4378637) on processor 56
+    max(epsilon) = 232.5361088 in cell 76 at location (4930.473593 691.1242829 425.3135946) on processor 24
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.09999999958 in cell 138 at location (1193.077046 820.0000796 425.3135946) on processor 40
+    max(no2) = 0.1000000013 in cell 10 at location (806.4499429 691.1242829 425.3136054) on processor 41
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    total faces   = 3715
+    total area    = 61702276.62
+
+    weightedSum(inlet) of no2 = -25453.61388
+
+Time = 2
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.7219377277, Final residual = 0.0538529877, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 0.7117037901, Final residual = 0.04299307417, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 0.6807296291, Final residual = 0.03021589772, No Iterations 3
+GAMG:  Solving for p, Initial residual = 0.004916308164, Final residual = 0.0002877476003, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.001045174312, Final residual = 6.307489224e-05, No Iterations 3
+time step continuity errors : sum local = 6.335108363e-05, global = 3.800171214e-05, cumulative = 2.706059053e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.5809005895, Final residual = 9.960024133e-05, No Iterations 1
+bounding epsilon, min: -0.004239275303 max: 113.5442085 average: 1.699299452
+smoothSolver:  Solving for k, Initial residual = 0.2162757685, Final residual = 0.0004523530466, No Iterations 1
+ExecutionTime = 0.18 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.997722105, Final residual = 0.09701787964, No Iterations 2
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 37.88867278 in cell 67 at location (4801.597649 -597.6331708 296.4378575) on processor 21
+    min(k) = 0.1365363712 in cell 42 at location (4930.473598 -2015.266452 425.3136) on processor 20
+    max(k) = 4.085319441 in cell 232 at location (2352.958847 433.3727467 425.3136017) on processor 16
+    min(p) = -11.83681989 in cell 9 at location (4930.473601 1335.503051 296.4378575) on processor 24
+    max(p) = 159.5579882 in cell 123 at location (-2930.94665 1593.25455 167.562125) on processor 71
+    min(epsilon) = 1e-07 in cell 157 at location (435.932165 1480.4883 87.014785) on processor 77
+    max(epsilon) = 113.5442085 in cell 267 at location (1450.8285 -211.0059729 425.3135988) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.09999999991 in cell 138 at location (1193.077046 820.0000796 425.3135946) on processor 40
+    max(no2) = 0.1000000007 in cell 10 at location (935.3256058 562.2485208 425.3135983) on processor 41
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 88407.83808
+
+Time = 3
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.2674379532, Final residual = 0.02219715187, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.2628838978, Final residual = 0.02186494809, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.2932538584, Final residual = 0.02407657457, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.06508769854, Final residual = 0.005233354092, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.005174758516, Final residual = 0.00029641235, No Iterations 3
+time step continuity errors : sum local = 6.866360886e-05, global = 2.852594408e-05, cumulative = 5.55865346e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.5843209677, Final residual = 0.0001305699007, No Iterations 1
+bounding epsilon, min: -0.05228005964 max: 109.34796 average: 0.7881691447
+smoothSolver:  Solving for k, Initial residual = 0.1114361017, Final residual = 0.0004314027841, No Iterations 1
+ExecutionTime = 0.2 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.9624279435, Final residual = 0.08445597373, No Iterations 5
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 43.06073367 in cell 191 at location (3770.591902 -855.3847133 425.3136) on processor 21
+    min(k) = 0.0411998379 in cell 42 at location (4930.473598 -2015.266452 425.3136) on processor 20
+    max(k) = 6.378764326 in cell 59 at location (3126.213248 -1113.136248 425.3136) on processor 22
+    min(p) = -81.7040739 in cell 67 at location (4801.597649 -597.6331708 296.4378575) on processor 21
+    max(p) = 82.06812388 in cell 149 at location (-2930.946651 1851.006251 296.4378575) on processor 71
+    min(epsilon) = 1e-07 in cell 145 at location (1225.29595 207.84021 199.781065) on processor 8
+    max(epsilon) = 109.34796 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.09999999995 in cell 184 at location (983.6540075 288.3875475 87.0147925) on processor 8
+    max(no2) = 0.1 in cell 250 at location (2224.083152 -82.13022433 425.3136) on processor 5
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 66363.24789
+
+Time = 4
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.1761428257, Final residual = 0.008363385324, No Iterations 3
+smoothSolver:  Solving for Uy, Initial residual = 0.1890731997, Final residual = 0.01030671404, No Iterations 3
+smoothSolver:  Solving for Uz, Initial residual = 0.3518270991, Final residual = 0.02704175716, No Iterations 3
+GAMG:  Solving for p, Initial residual = 0.6774394845, Final residual = 0.03689004987, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03161101636, Final residual = 0.001318789555, No Iterations 3
+time step continuity errors : sum local = 2.461332186e-05, global = 8.518892662e-06, cumulative = 6.410542727e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.598019024, Final residual = 0.0001607640727, No Iterations 1
+bounding epsilon, min: -0.06182391784 max: 32.82031762 average: 0.2870008447
+smoothSolver:  Solving for k, Initial residual = 0.05020374034, Final residual = 0.0004466489674, No Iterations 1
+ExecutionTime = 0.22 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.5199080217, Final residual = 0.04410261646, No Iterations 12
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 22.70519141 in cell 191 at location (3770.591902 -855.3847133 425.3136) on processor 21
+    min(k) = 0.01240829481 in cell 62 at location (-353.4318133 3397.515048 425.3136) on processor 89
+    max(k) = 4.762279434 in cell 80 at location (-997.8106017 3010.887852 425.3136) on processor 66
+    min(p) = -103.1770985 in cell 191 at location (3770.591902 -855.3847133 425.3136) on processor 21
+    max(p) = 63.48175506 in cell 249 at location (677.574225 3719.7043 296.437855) on processor 90
+    min(epsilon) = 1e-07 in cell 157 at location (1869.674656 14.526584 135.3431874) on processor 6
+    max(epsilon) = 32.82031762 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.09999999999 in cell 273 at location (403.71323 -323.77224 22.5769108) on processor 125
+    max(no2) = 0.1 in cell 105 at location (4930.473602 562.248505 38.68637917) on processor 19
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 19818.4987
+
+Time = 5
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.1081379451, Final residual = 0.006529639389, No Iterations 3
+smoothSolver:  Solving for Uy, Initial residual = 0.1209710709, Final residual = 0.008715102632, No Iterations 3
+smoothSolver:  Solving for Uz, Initial residual = 0.4044056927, Final residual = 0.02253932102, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.677470841, Final residual = 0.03137395592, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.0341830434, Final residual = 0.002920806272, No Iterations 2
+time step continuity errors : sum local = 4.240322346e-05, global = -3.238994024e-06, cumulative = 6.086643324e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.6083469886, Final residual = 0.0001970664926, No Iterations 1
+bounding epsilon, min: -0.01171274545 max: 9.851741093 average: 0.09406336769
+smoothSolver:  Solving for k, Initial residual = 0.0192233971, Final residual = 0.000389872912, No Iterations 1
+ExecutionTime = 0.24 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.2904000177, Final residual = 0.02577685567, No Iterations 9
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 22.11091509 in cell 239 at location (-2802.0709 -211.0059729 425.3135988) on processor 112
+    min(k) = 0.003738135918 in cell 65 at location (4930.473601 -2015.266449 296.4378575) on processor 20
+    max(k) = 6.13208402 in cell 64 at location (-1126.686398 3139.763548 425.3136) on processor 66
+    min(p) = -137.3925196 in cell 191 at location (3770.591902 -855.3847133 425.3136) on processor 21
+    max(p) = 40.41744171 in cell 249 at location (677.574225 3719.7043 296.437855) on processor 90
+    min(epsilon) = 1e-07 in cell 25 at location (1547.485301 852.2190492 199.7810625) on processor 51
+    max(epsilon) = 9.851741093 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 144 at location (1942.16715 441.42747 14.5221758) on processor 38
+    max(no2) = 0.1 in cell 179 at location (1990.49565 715.28845 30.631645) on processor 54
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -7535.251517
+
+Time = 6
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.06800253529, Final residual = 0.004900448691, No Iterations 3
+smoothSolver:  Solving for Uy, Initial residual = 0.07826446153, Final residual = 0.006631667555, No Iterations 3
+smoothSolver:  Solving for Uz, Initial residual = 0.3296317989, Final residual = 0.01788538524, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6688219473, Final residual = 0.03493874066, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.0438475999, Final residual = 0.004025361958, No Iterations 2
+time step continuity errors : sum local = 4.760253449e-05, global = -7.674386374e-06, cumulative = 5.319204687e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.6130735638, Final residual = 0.0002392995208, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.007587441392, Final residual = 0.0003813019448, No Iterations 1
+ExecutionTime = 0.25 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.2809491024, Final residual = 0.02699016219, No Iterations 12
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.78564289 in cell 50 at location (4672.722017 -726.5090033 489.75147) on processor 21
+    min(k) = 0.001125260056 in cell 245 at location (-224.5560671 -2015.266448 296.4378637) on processor 122
+    max(k) = 7.021720111 in cell 269 at location (-1513.313602 3655.266448 425.3136) on processor 69
+    min(p) = -116.4101622 in cell 191 at location (3770.591902 -855.3847133 425.3136) on processor 21
+    max(p) = 40.61329275 in cell 99 at location (-2157.69225 -1499.76355 38.6863775) on processor 114
+    min(epsilon) = 6.984733048e-05 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 2.957528947 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 46 at location (3222.87005 -178.78704 70.905315) on processor 18
+    max(no2) = 0.1 in cell 270 at location (653.4100499 908.6021501 30.63164525) on processor 99
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -17853.82471
+
+Time = 7
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.0479297657, Final residual = 0.004090249073, No Iterations 3
+smoothSolver:  Solving for Uy, Initial residual = 0.05482214495, Final residual = 0.005250400809, No Iterations 3
+smoothSolver:  Solving for Uz, Initial residual = 0.2261389162, Final residual = 0.01290420751, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6086239641, Final residual = 0.02559661894, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.0416840242, Final residual = 0.003357521949, No Iterations 2
+time step continuity errors : sum local = 3.130273635e-05, global = -7.76312553e-06, cumulative = 4.542892134e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.6261111921, Final residual = 0.0003243970188, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.004787644918, Final residual = 0.000145388664, No Iterations 2
+ExecutionTime = 0.27 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.9595939567, Final residual = 0.07988960013, No Iterations 7
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.93133025 in cell 220 at location (3770.591902 -726.5089217 425.3136) on processor 21
+    min(k) = 0.0003386613439 in cell 206 at location (-482.3075617 -2015.266453 296.4378533) on processor 122
+    max(k) = 5.058610625 in cell 269 at location (-1513.313602 3655.266448 425.3136) on processor 69
+    min(p) = -73.41929802 in cell 191 at location (3770.591902 -855.3847133 425.3136) on processor 21
+    max(p) = 59.42721436 in cell 118 at location (-2286.568 -1242.01195 38.6863775) on processor 115
+    min(epsilon) = 2.033982941e-05 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.8880035551 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 7 at location (4930.4736 -211.005975 167.562125) on processor 19
+    max(no2) = 0.1 in cell 185 at location (1974.386151 38.690789 30.631645) on processor 6
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -18060.26902
+
+Time = 8
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.03554236392, Final residual = 0.003374065898, No Iterations 3
+smoothSolver:  Solving for Uy, Initial residual = 0.0421480278, Final residual = 0.002335648183, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.215547845, Final residual = 0.01480732882, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6005707898, Final residual = 0.01711334227, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03745762224, Final residual = 0.002098766487, No Iterations 2
+time step continuity errors : sum local = 1.443500909e-05, global = 5.789810968e-07, cumulative = 4.600790243e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.6715852404, Final residual = 0.0004807140561, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.005177209941, Final residual = 0.0002494192915, No Iterations 2
+ExecutionTime = 0.3 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3422918664, Final residual = 0.1164174664, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.91135485 in cell 220 at location (3770.591902 -726.5089217 425.3136) on processor 21
+    min(k) = 0.0001018560408 in cell 181 at location (162.0711955 1979.881948 296.4378608) on processor 67
+    max(k) = 3.552138434 in cell 269 at location (-1513.313602 3655.266448 425.3136) on processor 69
+    min(p) = -51.329076 in cell 0 at location (3770.5919 -855.384715 489.75147) on processor 22
+    max(p) = 52.40347599 in cell 69 at location (-2415.44375 -1113.13625 38.6863775) on processor 115
+    min(epsilon) = 5.165631554e-06 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.2667535483 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 9 at location (1700.52525 1359.66725 14.5221758) on processor 63
+    max(no2) = 0.1 in cell 279 at location (830.61415 22.581319 14.5221758) on processor 10
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 1346.951601
+
+Time = 9
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.02893958882, Final residual = 0.002887945753, No Iterations 3
+smoothSolver:  Solving for Uy, Initial residual = 0.03631055711, Final residual = 0.002134360135, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.2089386422, Final residual = 0.01419365574, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6510619492, Final residual = 0.02622468622, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.04272971994, Final residual = 0.003253247824, No Iterations 2
+time step continuity errors : sum local = 2.07221513e-05, global = 2.504232279e-06, cumulative = 4.851213471e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.7821243894, Final residual = 0.0007469353669, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.005361424502, Final residual = 0.0004105738356, No Iterations 2
+ExecutionTime = 0.32 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.2939202007, Final residual = 0.1837604974, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.85695062 in cell 220 at location (3899.467648 -726.5089217 425.3136) on processor 21
+    min(k) = 3.066840556e-05 in cell 206 at location (-482.3075617 -2015.266453 296.4378533) on processor 122
+    max(k) = 3.799803121 in cell 34 at location (3126.21325 1464.378798 296.43786) on processor 26
+    min(p) = -35.9303532 in cell 0 at location (3770.5919 -855.384715 489.75147) on processor 22
+    max(p) = 43.57067934 in cell 267 at location (-2544.31945 1206.62735 167.562125) on processor 70
+    min(epsilon) = 1.398239745e-06 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.08032652555 in cell 231 at location (1708.579952 304.4970083 425.3136) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 168 at location (1313.89805 973.04005 30.631645) on processor 42
+    max(no2) = 0.1 in cell 234 at location (1297.788542 1263.010475 30.63165333) on processor 81
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 5825.889129
+
+Time = 10
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.02605683684, Final residual = 0.001448254034, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.03341893815, Final residual = 0.002018996184, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1949538897, Final residual = 0.01175327802, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.642999094, Final residual = 0.02515971559, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03999067048, Final residual = 0.003107598173, No Iterations 2
+time step continuity errors : sum local = 1.790622434e-05, global = 2.466351232e-06, cumulative = 5.097848594e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.6015073444, Final residual = 0.0007924114956, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.005305538078, Final residual = 0.0002486645999, No Iterations 3
+ExecutionTime = 0.34 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.2940343278, Final residual = 0.1851317473, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.92568267 in cell 278 at location (-2415.443748 1206.627352 425.3136) on processor 70
+    min(k) = 9.25529739e-06 in cell 206 at location (-482.3075617 -2015.266453 296.4378533) on processor 122
+    max(k) = 4.290139287 in cell 5 at location (3255.088998 1335.50305 296.43786) on processor 26
+    min(p) = -36.51163923 in cell 52 at location (-2028.81655 -1499.76355 38.6863775) on processor 114
+    max(p) = 31.7751432 in cell 100 at location (-2930.94665 1335.50305 38.6863775) on processor 71
+    min(epsilon) = 8.026200917e-07 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.05611028065 in cell 17 at location (3126.213251 1335.503051 296.4378575) on processor 26
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 247 at location (1684.415753 747.5074413 30.63164208) on processor 49
+    max(no2) = 0.1 in cell 273 at location (508.4248308 1021.368432 30.63165083) on processor 102
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 5737.762008
+
+Time = 11
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.02284623202, Final residual = 0.001340494338, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.03047844235, Final residual = 0.001829028572, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.202436688, Final residual = 0.01236192305, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6210252971, Final residual = 0.01719798896, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03164792255, Final residual = 0.001711439872, No Iterations 2
+time step continuity errors : sum local = 8.55132065e-06, global = -2.941429497e-07, cumulative = 5.068434299e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.2008999832, Final residual = 0.0005128340054, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.006039056938, Final residual = 0.000387685288, No Iterations 3
+ExecutionTime = 0.37 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.2946934359, Final residual = 0.1893534419, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.99787777 in cell 261 at location (-2157.692248 1206.627352 425.3136) on processor 70
+    min(k) = 2.802914837e-06 in cell 68 at location (4801.597649 -1886.390751 296.4378575) on processor 20
+    max(k) = 4.917057506 in cell 5 at location (3255.088998 1335.50305 296.43786) on processor 26
+    min(p) = -35.05237636 in cell 4 at location (-2157.692242 -1242.011975 38.68636917) on processor 114
+    max(p) = 35.22234511 in cell 278 at location (-1384.43785 3719.7043 425.313595) on processor 69
+    min(epsilon) = 1.395932667e-06 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.06434972412 in cell 5 at location (3255.088998 1335.50305 296.43786) on processor 26
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 224 at location (-514.5264925 2463.165996 70.90531917) on processor 66
+    max(no2) = 0.1 in cell 66 at location (25.1407095 151.4570745 30.63164483) on processor 120
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -684.2992271
+
+Time = 12
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01987260211, Final residual = 0.001194998575, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.02742515884, Final residual = 0.001685215387, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1979278917, Final residual = 0.01274918106, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6166656094, Final residual = 0.01879198179, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03263291023, Final residual = 0.00222369604, No Iterations 2
+time step continuity errors : sum local = 9.658754456e-06, global = -1.569767316e-06, cumulative = 4.911457568e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.06178819133, Final residual = 0.0005228509872, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.008245185976, Final residual = 0.0006348756091, No Iterations 3
+bounding k, min: 8.577359044e-07 max: 5.373028509 average: 0.3816569506
+ExecutionTime = 0.41 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3054679453, Final residual = 0.1890522045, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.90244583 in cell 261 at location (-2157.692248 1206.627352 425.3136) on processor 70
+    min(k) = 1e-06 in cell 152 at location (3641.716149 46.74552233 296.4378625) on processor 18
+    max(k) = 5.373028509 in cell 240 at location (3383.96475 1335.50305 296.437865) on processor 24
+    min(p) = -24.40085917 in cell 4 at location (-2286.568 -1113.13625 38.6863775) on processor 114
+    max(p) = 34.17321344 in cell 278 at location (-1384.43785 3719.7043 425.313595) on processor 69
+    min(epsilon) = 8.32979674e-07 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.1603204939 in cell 272 at location (2868.461848 2237.633452 425.3136) on processor 26
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 13 at location (4801.59765 2237.63345 38.6863775) on processor 25
+    max(no2) = 0.1 in cell 257 at location (476.2058376 989.1495474 30.63164775) on processor 102
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -3651.933736
+
+Time = 13
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.018402118, Final residual = 0.001174613472, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.02536869168, Final residual = 0.001608558102, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1574609533, Final residual = 0.01062753015, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.6025501908, Final residual = 0.02132386835, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03474781301, Final residual = 0.002498707576, No Iterations 2
+time step continuity errors : sum local = 9.913317108e-06, global = -1.245821082e-06, cumulative = 4.78687546e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.02303880801, Final residual = 0.0009039508768, No Iterations 1
+smoothSolver:  Solving for k, Initial residual = 0.01275526993, Final residual = 0.001104239872, No Iterations 3
+bounding k, min: 3.04652757e-07 max: 5.263083767 average: 0.3869190014
+ExecutionTime = 0.43 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.2980614412, Final residual = 0.1921283972, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.8222036 in cell 126 at location (4286.094697 -726.5089592 425.3136042) on processor 21
+    min(k) = 1e-06 in cell 152 at location (3641.716149 46.74552233 296.4378625) on processor 18
+    max(k) = 5.263083767 in cell 241 at location (3383.964749 1206.627349 296.4378625) on processor 24
+    min(p) = -23.15123402 in cell 163 at location (903.10675 3171.9824 70.905315) on processor 90
+    max(p) = 33.24076124 in cell 252 at location (-1642.18935 1464.3788 38.6863775) on processor 64
+    min(epsilon) = 7.712123881e-07 in cell 179 at location (3383.964749 -1886.390749 167.5621175) on processor 23
+    max(epsilon) = 0.6881764207 in cell 197 at location (3641.716152 1206.62735 296.43786) on processor 24
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 161 at location (1483.04745 -1660.8582 70.905315) on processor 2
+    max(no2) = 0.1 in cell 257 at location (476.2058376 989.1495474 30.63164775) on processor 102
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -2898.299634
+
+Time = 14
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01704717498, Final residual = 0.001140967947, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.02312635787, Final residual = 0.001520095102, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1444937572, Final residual = 0.009833777869, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.5799731341, Final residual = 0.0202687751, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03352884589, Final residual = 0.001904067756, No Iterations 2
+time step continuity errors : sum local = 7.536204354e-06, global = 1.031983602e-06, cumulative = 4.89007382e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.02772874241, Final residual = 0.001916061092, No Iterations 2
+smoothSolver:  Solving for k, Initial residual = 0.03520619279, Final residual = 0.003264208705, No Iterations 3
+bounding k, min: 3.011161747e-07 max: 4.576269913 average: 0.399912463
+ExecutionTime = 0.45 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3085683114, Final residual = 0.1915618912, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.81183161 in cell 115 at location (935.3256017 3268.639252 425.3136) on processor 90
+    min(k) = 1e-06 in cell 186 at location (3770.5919 175.6212646 296.4378621) on processor 18
+    max(k) = 4.576269913 in cell 241 at location (3383.964749 1206.627349 296.4378625) on processor 24
+    min(p) = -25.19377148 in cell 163 at location (903.10675 3171.9824 70.905315) on processor 90
+    max(p) = 31.69083701 in cell 154 at location (-1771.06505 1464.3788 38.6863775) on processor 70
+    min(epsilon) = 6.873021649e-07 in cell 31 at location (2352.958849 2237.633449 296.4378625) on processor 27
+    max(epsilon) = 0.2095818927 in cell 197 at location (3641.716152 1206.62735 296.43786) on processor 24
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 71 at location (1708.57995 -1757.515 38.6863775) on processor 2
+    max(no2) = 0.1 in cell 5 at location (1402.500041 320.6064662 54.79586381) on processor 34
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 2400.824436
+
+Time = 15
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01534282107, Final residual = 0.001080998116, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.02118292198, Final residual = 0.001452666875, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1530162071, Final residual = 0.01064778201, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.527146555, Final residual = 0.01866203996, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03404559998, Final residual = 0.002252186471, No Iterations 2
+time step continuity errors : sum local = 7.975736239e-06, global = 2.967050704e-06, cumulative = 5.18677889e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.08198953866, Final residual = 0.006666458591, No Iterations 2
+smoothSolver:  Solving for k, Initial residual = 0.06185389693, Final residual = 0.003115860904, No Iterations 4
+bounding k, min: 3.04111459e-07 max: 3.78806337 average: 0.4182621106
+ExecutionTime = 0.49 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3102829589, Final residual = 0.1975337572, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.81396213 in cell 82 at location (935.3256204 3139.763542 425.3136063) on processor 90
+    min(k) = 1e-06 in cell 0 at location (4930.473598 -211.0059767 425.3136) on processor 19
+    max(k) = 3.78806337 in cell 157 at location (548.6984608 1335.503051 425.3136025) on processor 76
+    min(p) = -25.40044784 in cell 163 at location (903.10675 3171.9824 70.905315) on processor 90
+    max(p) = 26.3996213 in cell 233 at location (-2028.81655 1206.62735 38.6863775) on processor 70
+    min(epsilon) = 2.647812102e-07 in cell 14 at location (2481.834601 2108.757701 296.4378625) on processor 27
+    max(epsilon) = 0.07002609946 in cell 197 at location (3641.716152 1206.62735 296.43786) on processor 24
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 275 at location (605.0816062 1279.119898 14.52219038) on processor 78
+    max(no2) = 0.1 in cell 208 at location (282.8922321 940.8211063 30.63164708) on processor 100
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 6902.597888
+
+Time = 16
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01357758227, Final residual = 0.0009603888847, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01941205224, Final residual = 0.001349300556, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1472441775, Final residual = 0.01032775541, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.5011889003, Final residual = 0.01801266316, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03279344221, Final residual = 0.002484082541, No Iterations 2
+time step continuity errors : sum local = 8.254953893e-06, global = 3.261679652e-06, cumulative = 5.512946855e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.1239591932, Final residual = 0.01103877964, No Iterations 3
+smoothSolver:  Solving for k, Initial residual = 0.07527788105, Final residual = 0.004005863646, No Iterations 4
+bounding k, min: 5.774603819e-07 max: 4.249098808 average: 0.4432864085
+ExecutionTime = 0.51 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3134094257, Final residual = 0.1949535973, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80517326 in cell 82 at location (935.3256204 3139.763542 425.3136063) on processor 90
+    min(k) = 1e-06 in cell 3 at location (4930.473598 -82.13022433 425.3136) on processor 19
+    max(k) = 4.249098808 in cell 170 at location (677.5742267 1206.627352 425.3136) on processor 79
+    min(p) = -26.45475647 in cell 161 at location (-1287.78105 1625.47345 70.905315) on processor 64
+    max(p) = 19.22192832 in cell 246 at location (-2157.69225 1206.62735 38.6863775) on processor 70
+    min(epsilon) = 5.240970047e-07 in cell 166 at location (4028.343276 175.6212717 296.4378517) on processor 19
+    max(epsilon) = 0.04473082224 in cell 170 at location (677.5742267 1206.627352 425.3136) on processor 79
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 40 at location (1813.29145 1037.47785 30.631645) on processor 59
+    max(no2) = 0.1 in cell 149 at location (411.767965 1359.66725 14.5221758) on processor 77
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 7588.027751
+
+Time = 17
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01254182626, Final residual = 0.0009325500747, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01822274914, Final residual = 0.001354507058, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1352561199, Final residual = 0.009930724117, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.4732842983, Final residual = 0.01670651331, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03303507882, Final residual = 0.002042159923, No Iterations 2
+time step continuity errors : sum local = 6.484155648e-06, global = 1.268504469e-06, cumulative = 5.639797302e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.1466885167, Final residual = 0.007448158125, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.07101110697, Final residual = 0.003980186039, No Iterations 4
+ExecutionTime = 0.54 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3129668082, Final residual = 0.1999853209, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80046903 in cell 82 at location (935.3256204 3139.763542 425.3136063) on processor 90
+    min(k) = 7.351661625e-06 in cell 123 at location (4414.970694 433.3727554 425.3135988) on processor 19
+    max(k) = 4.521735046 in cell 12 at location (806.4499483 948.8758517 425.3136) on processor 85
+    min(p) = -26.49427298 in cell 163 at location (903.10675 3171.9824 70.905315) on processor 90
+    max(p) = 16.6560619 in cell 2 at location (-353.431815 3719.7043 38.6863775) on processor 89
+    min(epsilon) = 1.084559633e-06 in cell 19 at location (4930.473597 175.6212667 425.3136) on processor 19
+    max(epsilon) = 0.0517826321 in cell 51 at location (1837.455699 -1628.639251 296.4378625) on processor 2
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 74 at location (1748.8537 1085.80635 30.631645) on processor 60
+    max(no2) = 0.1 in cell 277 at location (1628.032688 -323.7722358 22.57690663) on processor 4
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 2951.070657
+
+Time = 18
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01210858502, Final residual = 0.0009455347505, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.0174074998, Final residual = 0.001349330366, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1299280515, Final residual = 0.009984519242, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.4495831316, Final residual = 0.01657321331, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03332342833, Final residual = 0.0017459963, No Iterations 2
+time step continuity errors : sum local = 5.600042546e-06, global = 4.089579375e-07, cumulative = 5.680693096e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.1269363078, Final residual = 0.01257041075, No Iterations 3
+smoothSolver:  Solving for k, Initial residual = 0.07061617531, Final residual = 0.004104113964, No Iterations 4
+ExecutionTime = 0.57 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3154528961, Final residual = 0.1969753785, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80579883 in cell 82 at location (935.3256204 3139.763542 425.3136063) on processor 90
+    min(k) = 0.0002213222113 in cell 32 at location (4930.473599 304.4970058 425.3136) on processor 19
+    max(k) = 4.913445316 in cell 39 at location (1966.3315 -1757.515 296.437865) on processor 3
+    min(p) = -28.11533045 in cell 163 at location (903.10675 3171.9824 70.905315) on processor 90
+    max(p) = 19.59989341 in cell 2 at location (-353.431815 3719.7043 38.6863775) on processor 89
+    min(epsilon) = 8.850587511e-06 in cell 19 at location (4930.473597 175.6212667 425.3136) on processor 19
+    max(epsilon) = 0.06432227723 in cell 39 at location (1966.3315 -1757.515 296.437865) on processor 3
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 247 at location (1684.415753 747.5074413 30.63164208) on processor 49
+    max(no2) = 0.1 in cell 55 at location (1692.4705 159.51181 54.79585) on processor 7
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 951.4067934
+
+Time = 19
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01170059642, Final residual = 0.0009078905784, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01676307994, Final residual = 0.0012904029, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1243727786, Final residual = 0.009582524936, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.4174520935, Final residual = 0.01551695332, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03271291661, Final residual = 0.001913650288, No Iterations 2
+time step continuity errors : sum local = 5.9702298e-06, global = -1.341466325e-07, cumulative = 5.667278433e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.128793091, Final residual = 0.006699438784, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.06613929143, Final residual = 0.003959502432, No Iterations 4
+ExecutionTime = 0.6 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3140526412, Final residual = 0.1989587254, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80824008 in cell 114 at location (1064.201317 3139.763555 425.3135938) on processor 90
+    min(k) = 0.0004453287031 in cell 76 at location (4543.846488 304.4970767 425.3136125) on processor 19
+    max(k) = 5.321856477 in cell 39 at location (1966.3315 -1757.515 296.437865) on processor 3
+    min(p) = -29.65962581 in cell 163 at location (903.10675 3171.9824 70.905315) on processor 90
+    max(p) = 19.67765631 in cell 0 at location (-482.30755 3719.7043 38.6863775) on processor 89
+    min(epsilon) = 2.648777856e-05 in cell 19 at location (4930.473597 175.6212667 425.3136) on processor 19
+    max(epsilon) = 0.0751083018 in cell 39 at location (1966.3315 -1757.515 296.437865) on processor 3
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 223 at location (2449.6157 -823.165835 70.905315) on processor 22
+    max(no2) = 0.1 in cell 114 at location (725.902625 -33.801821 22.5769108) on processor 10
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = -312.0810377
+
+Time = 20
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01126969237, Final residual = 0.000912768181, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01623242796, Final residual = 0.001328900289, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1233933774, Final residual = 0.009643486445, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.3895954185, Final residual = 0.01447298998, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.03286106859, Final residual = 0.001873757906, No Iterations 2
+time step continuity errors : sum local = 5.66132652e-06, global = 3.766131487e-07, cumulative = 5.704939748e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.1195879029, Final residual = 0.006251311632, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.0634136056, Final residual = 0.003945719197, No Iterations 4
+ExecutionTime = 0.64 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3187124418, Final residual = 0.2007965318, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.81097182 in cell 114 at location (1064.201317 3139.763555 425.3135938) on processor 90
+    min(k) = 0.002995866342 in cell 9 at location (4930.473598 46.74551983 425.3136) on processor 19
+    max(k) = 5.637574257 in cell 55 at location (2095.20735 -1757.515 296.437865) on processor 3
+    min(p) = -30.66414221 in cell 137 at location (1193.07705 1335.50305 296.437865) on processor 81
+    max(p) = 23.23631941 in cell 264 at location (-1384.437834 1851.006203 38.68638896) on processor 64
+    min(epsilon) = 8.049425928e-05 in cell 182 at location (1998.550388 -565.4142542 70.90531083) on processor 4
+    max(epsilon) = 0.08360514939 in cell 55 at location (2095.20735 -1757.515 296.437865) on processor 3
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 145 at location (1813.29145 1198.57255 14.5221758) on processor 61
+    max(no2) = 0.1 in cell 49 at location (1176.9675 -388.210115 22.5769108) on processor 12
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 876.1593193
+
+Time = 21
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01089125832, Final residual = 0.0009548764093, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01588150834, Final residual = 0.001430556339, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1197430549, Final residual = 0.01003309534, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.3700043617, Final residual = 0.01391658378, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02948381225, Final residual = 0.001651669418, No Iterations 2
+time step continuity errors : sum local = 5.150858268e-06, global = 1.274849181e-06, cumulative = 5.832424666e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.115639223, Final residual = 0.006032690102, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.06125041242, Final residual = 0.003882200442, No Iterations 4
+ExecutionTime = 0.68 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3167594727, Final residual = 0.2013545796, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80488776 in cell 114 at location (1064.201317 3139.763555 425.3135938) on processor 90
+    min(k) = 0.008942518594 in cell 9 at location (4930.473598 46.74551983 425.3136) on processor 19
+    max(k) = 5.879774154 in cell 33 at location (2095.207375 -1886.390743 296.4378517) on processor 3
+    min(p) = -32.79059059 in cell 196 at location (1321.95275 1206.62735 296.437865) on processor 80
+    max(p) = 24.35846504 in cell 252 at location (-1513.3136 1464.3788 38.6863775) on processor 64
+    min(epsilon) = 9.69290204e-05 in cell 215 at location (1869.67465 -629.85212 70.905315) on processor 4
+    max(epsilon) = 0.08925194245 in cell 77 at location (2224.08315 -1757.515 296.437865) on processor 3
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 148 at location (645.355275 1689.911294 70.90531238) on processor 76
+    max(no2) = 0.1 in cell 89 at location (411.767965 1359.66725 30.631645) on processor 77
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 2965.831104
+
+Time = 22
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01046249276, Final residual = 0.0009453955851, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01538625596, Final residual = 0.001427571518, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1149045983, Final residual = 0.009644546626, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.3450594575, Final residual = 0.01284738366, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02603424452, Final residual = 0.00138138648, No Iterations 2
+time step continuity errors : sum local = 4.688637438e-06, global = 1.532650934e-06, cumulative = 5.985689759e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.110277974, Final residual = 0.00547874492, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.05955632239, Final residual = 0.003732040042, No Iterations 4
+ExecutionTime = 0.72 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.318583156, Final residual = 0.2049530788, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80538033 in cell 167 at location (1450.828502 2882.012098 425.3136) on processor 91
+    min(k) = 0.02833885222 in cell 253 at location (830.61415 215.894945 14.5221758) on processor 11
+    max(k) = 6.230099444 in cell 51 at location (2224.08315 -1886.390752 296.43786) on processor 3
+    min(p) = -36.23165641 in cell 11 at location (1450.8285 1206.62735 296.437865) on processor 51
+    max(p) = 21.86265995 in cell 252 at location (-1513.3136 1464.3788 38.6863775) on processor 64
+    min(epsilon) = 8.7369829e-05 in cell 131 at location (2997.337558 -1242.011975 38.68636917) on processor 23
+    max(epsilon) = 0.09582257911 in cell 77 at location (2224.08315 -1757.515 296.437865) on processor 3
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 137 at location (806.44995 1593.254553 167.5621276) on processor 86
+    max(no2) = 0.1 in cell 88 at location (492.3153525 1359.667253 30.6316475) on processor 78
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 3565.585545
+
+Time = 23
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.01007942742, Final residual = 0.000911695119, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01495355679, Final residual = 0.001391200918, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1108555023, Final residual = 0.00936770872, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.3136542396, Final residual = 0.01082390439, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02706477137, Final residual = 0.001335398328, No Iterations 2
+time step continuity errors : sum local = 4.348565369e-06, global = 1.029123479e-06, cumulative = 6.088602107e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.101830448, Final residual = 0.01005185316, No Iterations 3
+smoothSolver:  Solving for k, Initial residual = 0.05762913167, Final residual = 0.003605716388, No Iterations 4
+ExecutionTime = 0.73 s  ClockTime = 0 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3175370228, Final residual = 0.2055424811, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80912391 in cell 167 at location (1450.828502 2882.012098 425.3136) on processor 91
+    min(k) = 0.0317995852 in cell 218 at location (1700.52525 87.019195 14.5221758) on processor 7
+    max(k) = 6.50281927 in cell 72 at location (2352.958851 -1886.390751 296.4378575) on processor 3
+    min(p) = -37.60298573 in cell 2 at location (1579.70425 948.8758496 296.4378631) on processor 48
+    max(p) = 18.34397816 in cell 77 at location (-224.5560518 3010.887871 38.68637883) on processor 89
+    min(epsilon) = 8.202029536e-05 in cell 175 at location (2739.586113 -1113.136245 38.6863775) on processor 22
+    max(epsilon) = 0.1063851272 in cell 149 at location (1837.455701 304.4970078 296.4378651) on processor 7
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 273 at location (1821.3462 1190.5178 54.79585) on processor 58
+    max(no2) = 0.1 in cell 141 at location (443.986895 1359.66725 30.631645) on processor 77
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 2394.170596
+
+Time = 24
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.009861708033, Final residual = 0.0009096386858, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.0146740803, Final residual = 0.001383680241, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1068908342, Final residual = 0.009505672108, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2906028873, Final residual = 0.009941501857, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02794108262, Final residual = 0.001470214984, No Iterations 2
+time step continuity errors : sum local = 4.388082137e-06, global = 5.080506967e-07, cumulative = 6.139407177e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.09539128672, Final residual = 0.004744626677, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.05517422646, Final residual = 0.00363344972, No Iterations 4
+ExecutionTime = 0.77 s  ClockTime = 1 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3170886354, Final residual = 0.2047972004, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.80526806 in cell 167 at location (1450.828502 2882.012098 425.3136) on processor 91
+    min(k) = 0.03750692735 in cell 218 at location (1700.52525 87.019195 14.5221758) on processor 7
+    max(k) = 6.766306233 in cell 72 at location (2352.958851 -1886.390751 296.4378575) on processor 3
+    min(p) = -37.61826436 in cell 4 at location (1708.579945 820.0000859 296.4378702) on processor 37
+    max(p) = 18.60996228 in cell 77 at location (-224.5560518 3010.887871 38.68637883) on processor 89
+    min(epsilon) = 0.0001078525282 in cell 175 at location (2739.586113 -1113.136245 38.6863775) on processor 22
+    max(epsilon) = 0.1167203726 in cell 149 at location (1837.455701 304.4970078 296.4378651) on processor 7
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 35 at location (1700.525246 892.4926625 30.63164083) on processor 52
+    max(no2) = 0.1 in cell 89 at location (411.767965 1359.66725 30.631645) on processor 77
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 1181.937896
+
+Time = 25
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.009614097658, Final residual = 0.0009107759464, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01437209272, Final residual = 0.001403245324, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.1009937166, Final residual = 0.009203321176, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2793226014, Final residual = 0.00947517332, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02661278761, Final residual = 0.001362398452, No Iterations 2
+time step continuity errors : sum local = 3.713069571e-06, global = 2.449395027e-07, cumulative = 6.163901127e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.08566420295, Final residual = 0.00431477825, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.05226071413, Final residual = 0.003596877956, No Iterations 4
+ExecutionTime = 0.79 s  ClockTime = 1 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3244398259, Final residual = 0.205268202, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.79823599 in cell 140 at location (1450.828502 3010.887852 425.3136) on processor 91
+    min(k) = 0.04118515379 in cell 221 at location (1072.25605 312.55174 14.5221758) on processor 47
+    max(k) = 7.323983372 in cell 233 at location (1966.331538 175.6212649 296.4378695) on processor 5
+    min(p) = -35.93269301 in cell 130 at location (1837.455699 820.0001026 296.4378655) on processor 53
+    max(p) = 17.52801385 in cell 77 at location (-224.5560518 3010.887871 38.68637883) on processor 89
+    min(epsilon) = 0.0001506419321 in cell 111 at location (3126.21325 -1113.13625 38.6863775) on processor 22
+    max(epsilon) = 0.1308203074 in cell 233 at location (1966.331538 175.6212649 296.4378695) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 119 at location (1015.872861 -291.5533238 22.57691705) on processor 13
+    max(no2) = 0.1 in cell 259 at location (1217.241258 811.9454025 30.63164083) on processor 40
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 569.8314801
+
+Time = 26
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.009186325641, Final residual = 0.0008613798807, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01372964988, Final residual = 0.001332147015, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.09836323629, Final residual = 0.008607374452, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2638151609, Final residual = 0.008620078082, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02683592353, Final residual = 0.001187098454, No Iterations 2
+time step continuity errors : sum local = 2.844085713e-06, global = 2.932026097e-07, cumulative = 6.193221388e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.076976667, Final residual = 0.00398732736, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.04984491646, Final residual = 0.00359249689, No Iterations 4
+ExecutionTime = 0.82 s  ClockTime = 1 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3257352114, Final residual = 0.2044439855, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.79355888 in cell 121 at location (1579.704248 3010.887852 425.3136) on processor 91
+    min(k) = 0.04185402667 in cell 221 at location (1072.25605 312.55174 14.5221758) on processor 47
+    max(k) = 7.863445747 in cell 233 at location (1966.331538 175.6212649 296.4378695) on processor 5
+    min(p) = -31.72893549 in cell 171 at location (1966.331518 948.8758424 296.4378747) on processor 53
+    max(p) = 16.06965171 in cell 110 at location (-740.059075 2753.13635 38.6863775) on processor 66
+    min(epsilon) = 0.000188397079 in cell 150 at location (2868.461894 -984.2604955 38.6863775) on processor 22
+    max(epsilon) = 0.1419583433 in cell 233 at location (1966.331538 175.6212649 296.4378695) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 100 at location (1160.858107 -114.3491695 70.90531741) on processor 12
+    max(no2) = 0.1 in cell 215 at location (1458.88325 1246.90105 30.631645) on processor 50
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 682.1116039
+
+Time = 27
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.008718565986, Final residual = 0.0008014777939, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01312776039, Final residual = 0.001258265845, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.09351723712, Final residual = 0.008230780329, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2609095058, Final residual = 0.008517366788, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02602529602, Final residual = 0.001314590913, No Iterations 2
+time step continuity errors : sum local = 2.781297688e-06, global = 1.562610038e-07, cumulative = 6.208847488e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.07063439028, Final residual = 0.003636600091, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.04930678888, Final residual = 0.003566814844, No Iterations 4
+ExecutionTime = 0.85 s  ClockTime = 1 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3248661791, Final residual = 0.2083147154, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.79373104 in cell 176 at location (1837.455698 2624.260648 425.3136) on processor 92
+    min(k) = 0.04304464061 in cell 221 at location (1072.25605 312.55174 14.5221758) on processor 47
+    max(k) = 8.338830536 in cell 266 at location (2095.207388 175.6212667 296.4378519) on processor 5
+    min(p) = -32.92842873 in cell 159 at location (1893.838863 1456.324071 30.63164083) on processor 57
+    max(p) = 17.64515402 in cell 260 at location (-1126.686348 2237.633461 38.68637971) on processor 64
+    min(epsilon) = 0.0002235382373 in cell 122 at location (2062.988325 -823.1657933 38.68638) on processor 4
+    max(epsilon) = 0.1528798632 in cell 266 at location (2095.207388 175.6212667 296.4378519) on processor 5
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 136 at location (1176.9675 546.13907 87.014785) on processor 44
+    max(no2) = 0.1 in cell 9 at location (468.1511194 1448.269302 54.79585172) on processor 76
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 363.5282922
+
+Time = 28
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.008221973605, Final residual = 0.0007534588195, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01242625513, Final residual = 0.001191770411, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.08762034951, Final residual = 0.007795273822, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2617794639, Final residual = 0.008470569678, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02582411327, Final residual = 0.001461104588, No Iterations 2
+time step continuity errors : sum local = 2.784495349e-06, global = 5.332219909e-07, cumulative = 6.262169687e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.06306940764, Final residual = 0.003323495398, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.04758300694, Final residual = 0.003552416334, No Iterations 4
+ExecutionTime = 0.87 s  ClockTime = 1 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3249589063, Final residual = 0.2086606473, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.798276 in cell 175 at location (1966.331452 2495.384902 425.3136) on processor 92
+    min(k) = 0.04667180506 in cell 221 at location (1072.25605 312.55174 14.5221758) on processor 47
+    max(k) = 8.579025533 in cell 25 at location (2224.083149 175.6212654 296.4378571) on processor 6
+    min(p) = -32.20603538 in cell 159 at location (1893.838863 1456.324071 30.63164083) on processor 57
+    max(p) = 18.46629386 in cell 264 at location (-1384.437834 1851.006203 38.68638896) on processor 64
+    min(epsilon) = 0.0002597974033 in cell 121 at location (2127.426296 -823.1657975 70.90531083) on processor 4
+    max(epsilon) = 0.1577701095 in cell 25 at location (2224.083149 175.6212654 296.4378571) on processor 6
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 98 at location (1950.2219 1319.3935 54.79585) on processor 56
+    max(no2) = 0.1 in cell 96 at location (492.31536 1343.55775 30.631645) on processor 78
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 1240.496829
+
+Time = 29
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.00794980033, Final residual = 0.0007259513581, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01191980105, Final residual = 0.001154938218, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.08359183639, Final residual = 0.007576441975, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2745729034, Final residual = 0.00785653771, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02471509046, Final residual = 0.001355283699, No Iterations 2
+time step continuity errors : sum local = 2.308514552e-06, global = 6.190431792e-07, cumulative = 6.324074005e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.05645665448, Final residual = 0.002995325468, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.04593414953, Final residual = 0.00346117764, No Iterations 4
+ExecutionTime = 0.9 s  ClockTime = 1 s
+
+myScalarTransportVarD2 execute: no2
+smoothSolver:  Solving for no2, Initial residual = 0.3251587958, Final residual = 0.2079226612, No Iterations 100
+
+fieldMinMax minMax1 write:
+    min(mag(U)) = 0 in cell 43 at location (387.603765 -1693.0771 6.4674425) on processor 0
+    max(mag(U)) = 21.79869591 in cell 202 at location (1966.331452 2624.260648 425.3136) on processor 92
+    min(k) = 0.05127539488 in cell 221 at location (1072.25605 312.55174 14.5221758) on processor 47
+    max(k) = 8.701275961 in cell 204 at location (2352.958849 46.74552233 296.4378625) on processor 16
+    min(p) = -29.95620584 in cell 96 at location (2224.083155 3010.887864 38.6863775) on processor 31
+    max(p) = 18.47442218 in cell 264 at location (-1384.437834 1851.006203 38.68638896) on processor 64
+    min(epsilon) = 0.0003 in cell 120 at location (2739.5861 -1886.39075 489.75147) on processor 3
+    max(epsilon) = 0.1617423303 in cell 204 at location (2352.958849 46.74552233 296.4378625) on processor 16
+
+fieldMinMax minMax2 write:
+    min(no2) = 0.1 in cell 39 at location (709.7931532 530.0295962 135.3431929) on processor 96
+    max(no2) = 0.1 in cell 165 at location (653.41005 1440.21455 30.631645) on processor 78
+
+volFieldValue pollutionMass write:
+    volIntegrate(region0) of no2 = 2326417233
+
+surfaceFieldValue pollutionMassFlow write:
+    weightedSum(inlet) of no2 = 1440.15272
+
+Time = 30
+
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for Ux, Initial residual = 0.007656390554, Final residual = 0.0006898680204, No Iterations 4
+smoothSolver:  Solving for Uy, Initial residual = 0.01135410004, Final residual = 0.001073127528, No Iterations 4
+smoothSolver:  Solving for Uz, Initial residual = 0.08089022492, Final residual = 0.007040656189, No Iterations 4
+GAMG:  Solving for p, Initial residual = 0.2830029361, Final residual = 0.008542179195, No Iterations 2
+GAMG:  Solving for p, Initial residual = 0.02275781736, Final residual = 0.00123061678, No Iterations 2
+time step continuity errors : sum local = 2.144625281e-06, global = 5.102812446e-07, cumulative = 6.37510213e-05
+TableBasedVelocity: timeSteady = 0
+TableBasedVelocity: using already calculated value @ 0
+smoothSolver:  Solving for epsilon, Initial residual = 0.0514011966, Final residual = 0.002668361221, No Iterations 4
+smoothSolver:  Solving for k, Initial residual = 0.04498962659, Final residual = 0.003350014328, No Iterations 4
+ExecutionTime = 0.93 s  ClockTime = 1 s

@@ -21,7 +21,6 @@ This module can also be executed directly::
 from __future__ import annotations
 
 from argparse import Namespace
-from importlib import util
 from pathlib import Path
 
 from .models import DBBase
@@ -30,6 +29,7 @@ from .utils import (
     create_db_engine,
     discover_extensions,
     get_db_session,
+    import_extension_module,
     load_settings,
 )
 
@@ -64,31 +64,16 @@ def create_db(_: Namespace) -> None:
     data_dir_path = Path(settings["preprocessed_data_directory_path"])
 
     for extension_path in discover_extensions():
-        path = extension_path / "models.py"
-        if not path.exists():
-            continue
-        spec = util.spec_from_file_location(path.stem, path)
-        if spec is not None:
-            module = util.module_from_spec(spec)
-            if spec.loader is not None:
-                module.__package__ = "quare.extensions." + extension_path.stem
-                spec.loader.exec_module(module)
+        import_extension_module(extension_path, "models")
 
     DBBase.metadata.create_all(create_db_engine())
 
     try:
         for extension_path in discover_extensions():
-            path = extension_path / "loader.py"
-            if not path.exists():
+            module = import_extension_module(extension_path, "loader")
+            if module is None:
                 continue
-            spec = util.spec_from_file_location(path.stem, path)
-            if spec is not None:
-                module = util.module_from_spec(spec)
-                if spec.loader is not None:
-                    module.__package__ = "quare.extensions." + extension_path.stem
-                    spec.loader.exec_module(module)
-                    module.ExtensionDataLoaderImpl().load(data_dir_path)
-
+            module.ExtensionDataLoaderImpl().load(data_dir_path)
             get_db_session().commit()
     finally:
         close_db_session()

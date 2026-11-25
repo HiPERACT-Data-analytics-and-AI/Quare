@@ -13,3 +13,4 @@ preprocessed_data/
 *.svg
 *.png
 !docs/source/db_diagram.png
+!tests/data/**/*.csv

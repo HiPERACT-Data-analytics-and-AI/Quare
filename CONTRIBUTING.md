@@ -51,6 +51,18 @@ memorise rules; just run the hooks and let them fix things.
 | **flake8** | Linting (with `flake8-bugbear`; max line length 88) |
 | **pyupgrade** | Modernises syntax to Python 3.10+ |
 
+### File headers
+
+Modules that contain analysis methods ported from existing scripts, and new
+modules, start with an author line naming everyone who contributed to the
+code or the method, for example:
+
+```python
+# Authors: Marcin Lawenda, Łukasz Szustak
+```
+
+Keep the original author when you port a script, and add yourself.
+
 ### Docstrings
 
 All public modules, classes, and functions must have Sphinx RST-format

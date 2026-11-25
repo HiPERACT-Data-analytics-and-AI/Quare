@@ -31,6 +31,66 @@ from .models import (
 )
 
 
+def _to_bool(value: object) -> bool:
+    """
+    Convert a CSV cell such as ``"True"``, ``"False"``, ``1`` or an empty cell
+    to a bool.  ``bool("False")`` would be ``True``, so strings are compared.
+
+    :param value: The raw cell value read by pandas.
+    :type value: object
+    :returns: ``True`` only for ``"true"``, ``"yes"``, ``"1"`` (any case) or a
+        non-zero number.
+    :rtype: bool
+    """
+    if isinstance(value, str):
+        return value.strip().lower() in ("true", "yes", "1")
+    if value is None or pd.isna(value):
+        return False
+    return bool(value)
+
+
+def _text(value: object) -> str:
+    """
+    Return *value* as text, using an empty string for a missing cell.
+
+    :param value: The raw cell value read by pandas.
+    :type value: object
+    :rtype: str
+    """
+    return "" if value is None or pd.isna(value) else str(value)
+
+
+AGGREGATE_ROW = "System (Aggregated)"
+"""Row (column of the raw file) with the value of the whole system; present in
+newer uProf versions, which also write files with only this row."""
+
+
+def _load_with_aggregate(
+    data_loader: DataLoader,
+    context: MetricContext,
+    metrics_csv: pd.DataFrame,
+    index_trimmer: int,
+    processing_unit: str,
+) -> list[MetricsBase]:
+    """
+    Like :meth:`~quare.data_loader.DataLoader.load_generic_metrics`, but a row
+    named ``System (Aggregated)`` is stored with the processing unit
+    ``"system"`` and no index instead of failing on its name.
+    """
+    instances: list[MetricsBase] = []
+    if AGGREGATE_ROW in metrics_csv.index:
+        for name, value in metrics_csv.loc[AGGREGATE_ROW].items():
+            instances.append(
+                data_loader.create_metric_instance(
+                    context, str(name), value, "", None, "system"
+                )
+            )
+        metrics_csv = metrics_csv.drop(index=AGGREGATE_ROW)
+    return instances + data_loader.load_generic_metrics(
+        context, metrics_csv, index_trimmer, processing_unit
+    )
+
+
 class Loaders:
     """
     Collection of static loader functions, one per preprocessed CSV file type.
@@ -73,14 +133,14 @@ class Loaders:
         row = machine_csv.iloc[0]
         machine_uprof = AMDuProfPCM_machine_info(
             repetition=context.repetition_id,
-            system=row.get("System:", default=None),
+            system=_text(row.get("System:", default=None)),
             num_of_sockets=row.get("Number of Sockets :", default=None),
             num_of_ccds=row.get("Number of CCDs :", default=None),
             num_of_ccxs=row.get("Number of Core Complexes(CCX) :", default=None),
             num_of_cores=row.get("Number of Cores :", default=None),
             num_of_threads=row.get("Number of Threads :", default=None),
-            smt_enabled_in_hw=bool(row.get("SMT Enabled in HW:")),
-            smt_enabled_in_os=bool(row.get("SMT Enabled by OS :")),
+            smt_enabled_in_hw=_to_bool(row.get("SMT Enabled in HW:")),
+            smt_enabled_in_os=_to_bool(row.get("SMT Enabled by OS :")),
             num_of_threads_sharing_l3=row.get(
                 "Number of Threads sharing L3:", default=None
             ),
@@ -201,7 +261,7 @@ class Loaders:
         except FileNotFoundError:
             return []
 
-        return data_loader.load_generic_metrics(context, metrics_csv, 5, "core")
+        return _load_with_aggregate(data_loader, context, metrics_csv, 5, "core")
 
     @staticmethod
     def load_l3_metrics(
@@ -228,7 +288,7 @@ class Loaders:
         except FileNotFoundError:
             return []
 
-        return data_loader.load_generic_metrics(context, metrics_csv, 4, "ccx")
+        return _load_with_aggregate(data_loader, context, metrics_csv, 4, "ccx")
 
 
 class ExtensionDataLoaderImpl(ExtensionDataLoader):

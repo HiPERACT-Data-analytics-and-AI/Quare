@@ -7,6 +7,149 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- End-to-end tests on a synthetic AMD uProf PCM data set (`tests/`) and a
+  test step in CI
+- Łukasz Szustak added as author (`CITATION.cff`, package metadata)
+- `OpenFOAMlogs_ext`: parser, models and loader for `checkMesh` and
+  `simpleFoam`/`pimpleFoam` logs (cells, ranks, number of time steps, first and
+  last step time, total time) stored as run-level metrics
+- `quare import-data` with the `motorbike-2024` layout: converts the 2024
+  single-node motorBike measurements into the raw layout
+  (`examples/motorbike_2024_import.json`)
+- Date directories may carry a tag after the timestamp
+  (`YYYYMMDD_HHMMSS_<tag>`); the tag is part of the repetition name
+- Test data and tests for the import and loading of the 2024 measurements; the
+  loaded values equal the results of the original analysis scripts
+- OpenFOAM analyses (`OpenFOAMlogs_ext/plotter.py`): FVOPS, L3 and L2 ratios,
+  top-down values (Backend Bound Memory, Frontend Bound, Retiring) and MPI
+  ratios (min/avg/max), selected by the run tags `counters`, `trace` and
+  `topdown`; plus a combined `Summary.png` (FVOPS and ratios); results equal
+  the original scripts to 1e-12
+- Import of all seven 2024 platforms (Rome, Milan, Milan X, Genoa 128/192,
+  Genoa X, Bergamo); `trace_logs` in the import mapping selects the log of the
+  traced run when `mpi.trace0` belongs to another run (Bergamo `xsmall`).
+  Tests on `xsmall` data of Rome, Genoa 192 and Bergamo 256 reproduce the
+  original scripts to 1e-12
+- Optional setting `compare_machines`: `Comparison.png` with one panel per
+  machine
+- UAP data: `quare import-data --layout uap` (`examples/uap_import.json`)
+  imports the runs `1n1r`/`1n2r`/`1n4r` (timing, uProf PCM of `1n4r`), `1n5r`
+  (top-down), `1n6r` (MPI trace) and the LIKWID runs of simpleFoam as tagged
+  runs (`counters-1n2r`, ...); the mesh size is read from `log.renumberMesh`
+  when there is no `checkMesh` log. Settings `fvops_time_run` /
+  `fvops_steps_run` reproduce the UAP FVOPS (time of `1n2r`, steps of `1n4r`);
+  analysis `MPI ratio (mid-range)` is the UAP "avg" ratio, (min + max) / 2.
+  Results equal the UAP scripts to 1e-12 on the Rome `uxlow`/`ulow` test data
+  and, checked on the full files, on `uxlow`/`ulow` of all seven platforms
+  (Bergamo has no LIKWID runs); run names stay unique across the sizes when a
+  log has no date
+  Also checked on `mlow`, `low`, `mid` and `high` of all seven platforms: equal
+  except the Genoa 128 `high` clock (0.03 MHz). There `run_likL2` also holds an
+  `L3` file and the script's `glob(...)[0]` takes whichever the file system lists
+  first; Quare reads the file of the run's own group
+- UAP figures in the folder of `compare_machines`: `Solver timing comparison.png`
+  (simpleFoam and pimpleFoam, all runs of a size, as `timing_comp.py`),
+  `LIKWID L2/L3/Memory.png` and `Clock frequency.png` (as `likwid.py`) and,
+  with the setting `pti_sizes`, `PTI.png` (as `pti.py`: counters above 2 per
+  thousand instructions against FVOPS). The setting `comparison_series` chooses
+  the analyses on the right axis of `Comparison.png` (UAP: L2 hit ratios and
+  `MPI ratio (mid-range)`). `Timing comparison.png` no longer fails for logs
+  without a `Total Time` line. Not reproduced: `timing_comp.py` draws `high` three times, Quare once
+- UAP: the LIKWID files of pimpleFoam are imported as a second run
+  (`likwid-pimpleFoam`); analyses `pimpleFoam Clock frequency (min/max/avg)` and
+  `pimpleFoam L2/L3/Memory data volume / bandwidth (sum/avg)`, equal to the
+  `likwid.py` values to 1e-12 on the Rome test data. `LIKWID L2/L3/Memory.png`
+  gets a pimpleFoam column and `Clock frequency pimpleFoam.png` is written
+- The tables of `mpi_summary.py`: analyses `MPI time (min/avg/max)` [s] and
+  `<MPI function> share of MPI time` [%] (Isend, Irecv, Waitall, Scatter,
+  Allreduce) next to `MPI volume (aggregate)`; with `compare_machines` the files
+  `MPI time.csv`, `MPI calls.csv` and `MPI volume.csv` (two decimals, as the
+  script) are written beside the figures
+- The PTI variant with the MPI volume (`pti.py --mpi`): analysis `MPI receive
+  volume per cell` (`MPI_Recv` + `MPI_Irecv` bytes per step, cell and rank of the
+  trace run) and, with `pti_sizes`, `PTI MPI volume.png`
+- UAP: the MilanX MPI profiling runs (`run_PROF_*`, tag `profile`, and the
+  control run `run_PROFend_*`, tag `profile-end`) are imported; the OpenFOAM log
+  loader stores the per-step `ExecutionTime` and the average MPI reduce, all-all
+  and other times of the built-in profiling (processing unit `step`). With
+  `compare_machines` the file `MPI profile <machine>.png` is written for
+  machines that have such a run (as `mpi_profiling.py`, the last two steps are
+  dropped as there). The control run is imported but not drawn; the script
+  only prints its last step time
+- Settings for the quirks of the original scripts; the defaults still reproduce
+  them: `median_of_even_runs` (`lower`/`average`) and `mpi_ratio_basis`
+  (`last_step`/`total_time`). The UAP maximum MPI ratio passed 100% because the
+  profiler's MPI times cover the whole run (`Total Time`), while the scripts
+  divide by the last `ExecutionTime`; with `total_time` it is below 100% on
+  the test data. Not setting `fvops_time_run`/`fvops_steps_run` gives the
+  median FVOPS: up to 7.9% (Milan `mlow`) away from the UAP value on the full
+  data, within 2% in most cases. `MPI ratio (avg)` is the true mean, next to the
+  UAP `MPI ratio (mid-range)`
+- `LIKWID_ext`: `likwid-perfctr` output (groups L2, L3, NUMA) keeps the `STAT`
+  rows of the metric tables (sum/min/max/avg over threads); import role
+  `likwid` of the 2024 layout; analyses `Clock frequency (min/max/avg)` (as
+  `freqRange.py`) and data volume / bandwidth of L2, L3 and memory (sum/avg, as
+  the UAP `likwid.py` reads them), equal to the scripts to 1e-12 on the test
+  data
+- Optional setting `predicted_fvops` (`{machine: {label, cells_per_rank,
+  fvops}}`): predicted points drawn as red stars on the panel of that machine
+  in `Comparison.png`, as in `128_uProfAMD_AOCC_hipic.py`. The values are
+  input, not computed: in the script they are hard-coded and no script derives
+  them
+- With `compare_machines`: `Timing comparison.png` (all runs per machine and
+  size, as `timingComp.py`) and the pairwise speed-up ranges `Speedup.csv` /
+  `Speedup.png` (as `speddup.py`, computed from unrounded times); optional
+  setting `machine_labels` for display names; new analyses `Time stepping
+  time` and `Total time` (median of the timing runs)
+- 2026 multi-node data: `quare import-data --layout motorbike-2026`
+  (`examples/motorbike_2026_import.json`) turns every run configuration into a
+  machine `<platform>_<N>N_<C>PCCX_<R>` (nodes, ranks per CCX, ranks) with
+  `counters`, `topdown`, `trace` and `power` runs
+- `AMDuProfTimechart_ext`: node power traces of the uProf timechart
+- New analyses `CVOPTS`, `Aggregate node power`, `Average node power`,
+  `Aggregate energy`, `MPI volume (aggregate)` and `MPI volume (per rank)`;
+  they equal `app_info.py`, `en_info.py` and `mpi_info.py` of the dataset
+  scripts to 1e-12 on the test data
+- PCM files with a `System (Aggregated)` row are loaded (processing unit
+  `system`); analyses use the aggregate when present, as `uProf_info.py`
+- OpenFOAM logs with `Total time = <s>` (2026 runs) are parsed
+- `quare export-dataset`: builds the machine-learning input table of the
+  motorBike study (hardware, application, power, MPI volume and uProf PCM
+  features per configuration and mesh size) from the database. Output style
+  `legacy` is byte-identical to `build_dataset_power.py` (checked against a row
+  of the real dataset), `--style csv` writes a plain CSV; `--no-power` gives the
+  `build_dataset.py` columns. Hardware table: `quare/data/cpu_features.json`
+
+### Fixed
+
+- `quare import-data` no longer registers its shared arguments once per importer
+- Plot file names no longer break on units that contain `/`
+- `quare create-db` failed on a clean install: extension modules are now
+  imported as regular package modules, so SQLAlchemy can resolve the
+  annotations of the ORM models
+- `plot` mixed metrics and analyses in each other's output; they are now
+  queried separately
+- `plot` wrote the analyses of all extensions into one folder and they
+  overwrote each other; they now go to `analyses/<profiler>/`
+- A repetition can now be shared by several extensions: the second extension
+  used to skip a repetition that the first one had created
+- AMD uProf PCM machine info: `SMT Enabled in HW/OS` was always `True`
+  (`bool("False")`), and an empty `System:` value violated the NOT NULL
+  constraint
+- `repetition_name_contains` is optional, as the settings reference implies
+- README described the raw data layout in the wrong order
+
+### Removed
+
+- Two stray files that were never importable
+  (`fvops_aocc_analyzer.py.`, `plotter_BACKUP.py.`); they stay in the git history
+
+---
+
 ## [0.1.0] — 2026-06-20
 
 Initial public release.

@@ -1,0 +1,27 @@
+AMDPROFILER POWER PROFILE REPORT
+
+AMDuProfCLI Version 5.1.701.0,
+
+LAUNCHED APPLICATION DETAILS
+Target Path:,simpleFoam,
+Command Line Arguments:,-parallel -decomposeParDict system/decomposeParDict.6 ,
+Working Directory:,/home/lszustak/OpenFOAM/motorRun/run/EN_Genoa_192_2_nodes_192_MPI_96_PER_NODE_4_PER_CCX/xsmall,
+CPU Core Affinity Mask:,,
+
+PROFILE DETAILS
+CPU Details:,Family(0x19) Model(0x11)
+Sampling Interval:,1000 milli-seconds
+Profile Start Time:,Apr-20-2026_18-48-50,
+
+PROFILED COUNTERS
+COUNTER ID,NAME,CATEGORY,UNIT,DESCRIPTION
+1152.,socket0-package-power,Power,W,Socket0-Average Package Power reported in Watts.
+1154.,socket1-package-power,Power,W,Socket1-Average Package Power reported in Watts.
+
+PROFILE RECORDS
+RecordId,Timestamp,socket0-package-power,socket1-package-power
+1,18:48:51:695,  233.55,  230.53
+2,18:48:52:695,  337.42,  335.45
+3,18:48:53:695,  337.36,  337.46
+4,18:48:54:695,  336.73,  336.95
+5,18:48:55:695,  334.31,  334.69

@@ -24,7 +24,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from importlib import util
 from itertools import chain
 
 import numpy as np
@@ -40,7 +39,12 @@ from .models import (
     TaskSizesDict,
     UseCase,
 )
-from .utils import InMemoryTaskSizesDict, get_db_session, get_extension_path
+from .utils import (
+    InMemoryTaskSizesDict,
+    get_db_session,
+    get_extension_path,
+    import_extension_module,
+)
 
 
 @dataclass
@@ -597,20 +601,16 @@ class DataRetrieversManager:
         :param name: Bare extension name without the ``_ext`` suffix
             (e.g. ``"AMDuProfPCM"``).
         :type name: str
-        :raises RuntimeError: If the extension's ``plotter.py`` cannot be
-            imported (spec is ``None`` or has no loader).
+        :raises RuntimeError: If the extension has no ``plotter.py``.
         :raises ValueError: If no extension directory named ``<name>_ext``
             exists (propagated from :func:`~quare.utils.get_extension_path`).
         """
-        path = get_extension_path(name) / "plotter.py"
-        spec = util.spec_from_file_location(path.stem, path)
-        if spec is None:
-            raise RuntimeError(f"Could not load spec for extension '{name}' at {path}")
-        module = util.module_from_spec(spec)
-        if spec.loader is None:
-            raise RuntimeError(f"Spec for extension '{name}' has no loader")
-        module.__package__ = "quare.extensions." + path.parent.stem
-        spec.loader.exec_module(module)
+        extension_path = get_extension_path(name)
+        module = import_extension_module(extension_path, "plotter")
+        if module is None:
+            raise RuntimeError(
+                f"Extension '{name}' has no plotter.py in {extension_path}"
+            )
         retriever: DataRetriever = module.__extension_data_retriever__(
             get_db_session(),
             module.__extension_metrics_table__,

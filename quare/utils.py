@@ -15,10 +15,12 @@ Provides:
 
 from __future__ import annotations
 
+from importlib import import_module
 from itertools import islice
 from json import load
 from os import environ
 from pathlib import Path
+from types import ModuleType
 from typing import TypeVar
 
 from sqlalchemy import Engine
@@ -190,6 +192,34 @@ def get_extension_path(name: str) -> Path:
     if not extension_path.exists():
         raise ValueError(f'Extension "{name}" does not exist')
     return extension_path.resolve()
+
+
+def import_extension_module(
+    extension_path: Path, module_name: str
+) -> ModuleType | None:
+    """
+    Import a module of an extension through the normal package machinery.
+
+    The module is imported as ``quare.extensions.<extension>.<module_name>``
+    and therefore registered in :data:`sys.modules`.  This is required by
+    SQLAlchemy, which resolves the string annotations of ORM models (created
+    by ``from __future__ import annotations``) through the module the model
+    class belongs to.  It also guarantees that a module is executed only once
+    even when several workflow steps import it.
+
+    :param extension_path: Path to the extension directory, as returned by
+        :func:`discover_extensions`.
+    :type extension_path: pathlib.Path
+    :param module_name: Bare module name without the ``.py`` suffix, e.g.
+        ``"models"`` or ``"plotter"``.
+    :type module_name: str
+    :returns: The imported module, or ``None`` if the extension has no such
+        module file.
+    :rtype: types.ModuleType or None
+    """
+    if not (extension_path / f"{module_name}.py").exists():
+        return None
+    return import_module(f"quare.extensions.{extension_path.name}.{module_name}")
 
 
 # ---------------------------------------------------------------------------

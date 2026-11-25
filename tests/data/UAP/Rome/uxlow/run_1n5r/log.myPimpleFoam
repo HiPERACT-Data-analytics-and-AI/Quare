@@ -1,0 +1,146 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2212                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _66908158ae-20221220 OPENFOAM=2212 version=v2212
+Arch   : "LSB;label=32;scalar=64"
+Exec   : myPimpleFoam -parallel
+Date   : Mar 05 2024
+Time   : 08:12:04
+ExecutionTime = 0.35 s  ClockTime = 0 s
+ExecutionTime = 0.54 s  ClockTime = 0 s
+ExecutionTime = 0.76 s  ClockTime = 1 s
+ExecutionTime = 1 s  ClockTime = 1 s
+ExecutionTime = 1.24 s  ClockTime = 1 s
+ExecutionTime = 1.49 s  ClockTime = 1 s
+ExecutionTime = 1.72 s  ClockTime = 2 s
+ExecutionTime = 1.95 s  ClockTime = 2 s
+ExecutionTime = 2.19 s  ClockTime = 2 s
+ExecutionTime = 2.41 s  ClockTime = 2 s
+ExecutionTime = 2.64 s  ClockTime = 3 s
+ExecutionTime = 2.86 s  ClockTime = 3 s
+ExecutionTime = 3.07 s  ClockTime = 3 s
+ExecutionTime = 3.29 s  ClockTime = 3 s
+ExecutionTime = 3.5 s  ClockTime = 3 s
+ExecutionTime = 3.69 s  ClockTime = 4 s
+ExecutionTime = 3.9 s  ClockTime = 4 s
+ExecutionTime = 4.1 s  ClockTime = 4 s
+ExecutionTime = 4.31 s  ClockTime = 4 s
+ExecutionTime = 4.5 s  ClockTime = 4 s
+ExecutionTime = 4.71 s  ClockTime = 5 s
+ExecutionTime = 4.91 s  ClockTime = 5 s
+ExecutionTime = 5.12 s  ClockTime = 5 s
+ExecutionTime = 5.33 s  ClockTime = 5 s
+ExecutionTime = 5.54 s  ClockTime = 6 s
+ExecutionTime = 5.75 s  ClockTime = 6 s
+ExecutionTime = 5.95 s  ClockTime = 6 s
+ExecutionTime = 6.16 s  ClockTime = 6 s
+ExecutionTime = 6.37 s  ClockTime = 6 s
+ExecutionTime = 6.57 s  ClockTime = 7 s
+ExecutionTime = 6.77 s  ClockTime = 7 s
+ExecutionTime = 6.98 s  ClockTime = 7 s
+ExecutionTime = 7.18 s  ClockTime = 7 s
+ExecutionTime = 7.39 s  ClockTime = 8 s
+ExecutionTime = 7.59 s  ClockTime = 8 s
+ExecutionTime = 7.79 s  ClockTime = 8 s
+ExecutionTime = 7.99 s  ClockTime = 8 s
+ExecutionTime = 8.2 s  ClockTime = 8 s
+ExecutionTime = 8.4 s  ClockTime = 9 s
+ExecutionTime = 8.6 s  ClockTime = 9 s
+ExecutionTime = 8.81 s  ClockTime = 9 s
+ExecutionTime = 9.01 s  ClockTime = 9 s
+ExecutionTime = 9.21 s  ClockTime = 9 s
+ExecutionTime = 9.41 s  ClockTime = 10 s
+ExecutionTime = 9.62 s  ClockTime = 10 s
+ExecutionTime = 9.82 s  ClockTime = 10 s
+ExecutionTime = 10.02 s  ClockTime = 10 s
+ExecutionTime = 10.21 s  ClockTime = 11 s
+ExecutionTime = 10.41 s  ClockTime = 11 s
+ExecutionTime = 10.61 s  ClockTime = 11 s
+ExecutionTime = 10.82 s  ClockTime = 11 s
+ExecutionTime = 11.02 s  ClockTime = 11 s
+ExecutionTime = 11.22 s  ClockTime = 12 s
+ExecutionTime = 11.42 s  ClockTime = 12 s
+ExecutionTime = 11.63 s  ClockTime = 12 s
+ExecutionTime = 11.83 s  ClockTime = 12 s
+ExecutionTime = 12.03 s  ClockTime = 12 s
+ExecutionTime = 12.23 s  ClockTime = 13 s
+ExecutionTime = 12.42 s  ClockTime = 13 s
+ExecutionTime = 12.62 s  ClockTime = 13 s
+ExecutionTime = 12.82 s  ClockTime = 13 s
+ExecutionTime = 13.02 s  ClockTime = 14 s
+ExecutionTime = 13.23 s  ClockTime = 14 s
+ExecutionTime = 13.42 s  ClockTime = 14 s
+ExecutionTime = 13.62 s  ClockTime = 14 s
+ExecutionTime = 13.82 s  ClockTime = 14 s
+ExecutionTime = 14.02 s  ClockTime = 15 s
+ExecutionTime = 14.23 s  ClockTime = 15 s
+ExecutionTime = 14.42 s  ClockTime = 15 s
+ExecutionTime = 14.62 s  ClockTime = 15 s
+ExecutionTime = 14.82 s  ClockTime = 15 s
+ExecutionTime = 15.02 s  ClockTime = 16 s
+ExecutionTime = 15.21 s  ClockTime = 16 s
+ExecutionTime = 15.41 s  ClockTime = 16 s
+ExecutionTime = 15.61 s  ClockTime = 16 s
+ExecutionTime = 15.81 s  ClockTime = 16 s
+ExecutionTime = 16.01 s  ClockTime = 17 s
+ExecutionTime = 16.2 s  ClockTime = 17 s
+ExecutionTime = 16.4 s  ClockTime = 17 s
+ExecutionTime = 16.6 s  ClockTime = 17 s
+ExecutionTime = 16.8 s  ClockTime = 18 s
+ExecutionTime = 17.01 s  ClockTime = 18 s
+ExecutionTime = 17.22 s  ClockTime = 18 s
+ExecutionTime = 17.42 s  ClockTime = 18 s
+ExecutionTime = 17.63 s  ClockTime = 18 s
+ExecutionTime = 17.83 s  ClockTime = 19 s
+ExecutionTime = 18.04 s  ClockTime = 19 s
+ExecutionTime = 18.24 s  ClockTime = 19 s
+ExecutionTime = 18.45 s  ClockTime = 19 s
+ExecutionTime = 18.65 s  ClockTime = 19 s
+ExecutionTime = 18.86 s  ClockTime = 20 s
+ExecutionTime = 19.05 s  ClockTime = 20 s
+ExecutionTime = 19.27 s  ClockTime = 20 s
+ExecutionTime = 19.48 s  ClockTime = 20 s
+ExecutionTime = 19.68 s  ClockTime = 21 s
+ExecutionTime = 19.9 s  ClockTime = 21 s
+ExecutionTime = 20.1 s  ClockTime = 21 s
+ExecutionTime = 20.31 s  ClockTime = 21 s
+ExecutionTime = 20.55 s  ClockTime = 21 s
+ExecutionTime = 20.75 s  ClockTime = 22 s
+ExecutionTime = 20.96 s  ClockTime = 22 s
+ExecutionTime = 21.17 s  ClockTime = 22 s
+ExecutionTime = 21.37 s  ClockTime = 22 s
+ExecutionTime = 21.58 s  ClockTime = 23 s
+ExecutionTime = 21.79 s  ClockTime = 23 s
+ExecutionTime = 21.99 s  ClockTime = 23 s
+ExecutionTime = 22.2 s  ClockTime = 23 s
+ExecutionTime = 22.41 s  ClockTime = 23 s
+ExecutionTime = 22.62 s  ClockTime = 24 s
+ExecutionTime = 22.82 s  ClockTime = 24 s
+ExecutionTime = 23.02 s  ClockTime = 24 s
+ExecutionTime = 23.23 s  ClockTime = 24 s
+ExecutionTime = 23.44 s  ClockTime = 25 s
+ExecutionTime = 23.65 s  ClockTime = 25 s
+ExecutionTime = 23.86 s  ClockTime = 25 s
+ExecutionTime = 24.06 s  ClockTime = 25 s
+ExecutionTime = 24.27 s  ClockTime = 25 s
+ExecutionTime = 24.47 s  ClockTime = 26 s
+ExecutionTime = 24.68 s  ClockTime = 26 s
+ExecutionTime = 24.89 s  ClockTime = 26 s
+ExecutionTime = 25.1 s  ClockTime = 26 s
+ExecutionTime = 25.31 s  ClockTime = 27 s
+ExecutionTime = 25.51 s  ClockTime = 27 s
+ExecutionTime = 25.73 s  ClockTime = 27 s
+ExecutionTime = 25.93 s  ClockTime = 27 s
+ExecutionTime = 26.15 s  ClockTime = 27 s
+ExecutionTime = 26.35 s  ClockTime = 28 s
+ExecutionTime = 26.55 s  ClockTime = 28 s
+ExecutionTime = 26.76 s  ClockTime = 28 s
+ExecutionTime = 26.97 s  ClockTime = 28 s
+ExecutionTime = 27.17 s  ClockTime = 28 s
+ExecutionTime = 27.38 s  ClockTime = 29 s
+ExecutionTime = 27.61 s  ClockTime = 29 s
+Total Time: 34.110848661

@@ -1,0 +1,35 @@
+{
+    "session": "UAP",
+    "use_case": "UAP",
+    "sizes": [
+        "uxlow",
+        "ulow",
+        "mlow",
+        "low",
+        "mid",
+        "high"
+    ],
+    "machines": {
+        "ROME_128": {
+            "source": "Rome"
+        },
+        "MILAN_128": {
+            "source": "Milan"
+        },
+        "MILANX_128": {
+            "source": "MilanX"
+        },
+        "GENOA_128": {
+            "source": "Geano_9554_128"
+        },
+        "GENOA_192": {
+            "source": "Geano_9654_192"
+        },
+        "GENOAX_192": {
+            "source": "GeanoX_9684X_192"
+        },
+        "BERGAMO_256": {
+            "source": "Bergamo_9754_256"
+        }
+    }
+}
